@@ -171,10 +171,21 @@ export default function MitarbeiterPage() {
             key={person.id}
             className="grid grid-cols-6 py-4 border-b border-zinc-200 items-center"
           >
-            <div className="text-zinc-900 font-medium">{person.name}</div>
-            <div className="text-zinc-800">{person.rolle}</div>
-            <div className="text-zinc-800">{person.wochenstunden}h</div>
-            <div className="text-zinc-800">{person.urlaubstage}</div>
+            <div className="text-zinc-900 font-medium">
+              {person.name}
+            </div>
+
+            <div className="text-zinc-800">
+              {person.rolle}
+            </div>
+
+            <div className="text-zinc-800">
+              {person.wochenstunden}h
+            </div>
+
+            <div className="text-zinc-800">
+              {person.urlaubstage}
+            </div>
 
             <div>
               <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">

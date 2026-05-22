@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 export default function ArbeitszeitenPage() {
-
   const [zeiten, setZeiten] = useState<any[]>([]);
   const [projekte, setProjekte] = useState<any[]>([]);
 
@@ -16,11 +15,8 @@ export default function ArbeitszeitenPage() {
   const [pause, setPause] = useState("");
 
   useEffect(() => {
-
     async function ladeDaten() {
-
       const userData = await supabase.auth.getUser();
-
       const user = userData.data.user;
 
       if (!user) return;
@@ -43,15 +39,12 @@ export default function ArbeitszeitenPage() {
       if (projektData) {
         setProjekte(projektData);
       }
-
     }
 
     ladeDaten();
-
   }, []);
 
   function berechneStunden() {
-
     if (!startzeit || !endzeit) return 0;
 
     const [startH, startM] = startzeit.split(":").map(Number);
@@ -68,16 +61,17 @@ export default function ArbeitszeitenPage() {
     if (arbeitsMinuten <= 0) return 0;
 
     return Number((arbeitsMinuten / 60).toFixed(2));
-
   }
 
   async function zeitHinzufuegen() {
-
     const userData = await supabase.auth.getUser();
-
     const user = userData.data.user;
 
-    if (!user) return;
+    if (!user) {
+      alert("Bitte zuerst einloggen.");
+      window.location.href = "/login";
+      return;
+    }
 
     const berechneteStunden = berechneStunden();
 
@@ -96,17 +90,17 @@ export default function ArbeitszeitenPage() {
       ]);
 
     if (!error) {
+      alert("Arbeitszeit gespeichert.");
       location.reload();
     }
 
     if (error) {
+      alert(error.message);
       console.log(error);
     }
-
   }
 
   async function zeitLoeschen(id: number) {
-
     const { error } = await supabase
       .from("arbeitszeiten")
       .delete()
@@ -117,17 +111,15 @@ export default function ArbeitszeitenPage() {
     }
 
     if (error) {
+      alert(error.message);
       console.log(error);
     }
-
   }
 
   const vorschauStunden = berechneStunden();
 
   return (
-
     <main>
-
       <h1 className="text-5xl font-extrabold text-zinc-900 mb-3">
         Arbeitszeiten
       </h1>
@@ -137,13 +129,11 @@ export default function ArbeitszeitenPage() {
       </p>
 
       <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm mb-8">
-
         <h2 className="text-2xl font-bold text-zinc-900 mb-6">
           Arbeitszeit erfassen
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-
           <input
             type="date"
             value={datum}
@@ -156,22 +146,18 @@ export default function ArbeitszeitenPage() {
             onChange={(e) => setProjekt(e.target.value)}
             className="border border-zinc-300 rounded-xl p-3 text-zinc-900"
           >
-
             <option value="">
               Projekt auswählen
             </option>
 
             {projekte.map((projektItem) => (
-
               <option
                 key={projektItem.id}
                 value={projektItem.name}
               >
                 {projektItem.name}
               </option>
-
             ))}
-
           </select>
 
           <input
@@ -202,31 +188,24 @@ export default function ArbeitszeitenPage() {
           >
             Speichern
           </button>
-
         </div>
 
         <div className="mt-5 bg-zinc-100 border border-zinc-200 rounded-xl p-4">
-
           <span className="font-bold text-zinc-900">
             Berechnete Arbeitszeit:
           </span>{" "}
-
           <span className="text-orange-600 font-extrabold">
             {vorschauStunden}h
           </span>
-
         </div>
-
       </div>
 
       <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6">
-
         <h2 className="text-2xl font-bold text-zinc-900 mb-6">
           Eigene Arbeitszeiten
         </h2>
 
         <div className="grid grid-cols-7 font-bold text-zinc-800 border-b border-zinc-300 pb-4 mb-4">
-
           <div>Datum</div>
           <div>Projekt</div>
           <div>Start</div>
@@ -234,16 +213,13 @@ export default function ArbeitszeitenPage() {
           <div>Pause</div>
           <div>Stunden</div>
           <div>Aktion</div>
-
         </div>
 
         {zeiten.map((zeit) => (
-
           <div
             key={zeit.id}
             className="grid grid-cols-7 py-4 border-b border-zinc-200 items-center"
           >
-
             <div className="text-zinc-900 font-medium">
               {zeit.datum}
             </div>
@@ -269,23 +245,16 @@ export default function ArbeitszeitenPage() {
             </div>
 
             <div>
-
               <button
                 onClick={() => zeitLoeschen(zeit.id)}
                 className="bg-red-600 hover:bg-red-700 transition text-white px-4 py-2 rounded-lg font-semibold"
               >
                 Löschen
               </button>
-
             </div>
-
           </div>
-
         ))}
-
       </div>
-
     </main>
-
   );
 }
