@@ -7,7 +7,10 @@ export default function MitarbeiterPage() {
   const [mitarbeiter, setMitarbeiter] = useState<any[]>([]);
 
   const [name, setName] = useState("");
-  const [rolle, setRolle] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [rolle, setRolle] = useState("Mitarbeiter");
   const [wochenstunden, setWochenstunden] = useState("");
   const [urlaubstage, setUrlaubstage] = useState("");
 
@@ -26,18 +29,38 @@ export default function MitarbeiterPage() {
   }, []);
 
   async function mitarbeiterHinzufuegen() {
-    const { error } = await supabase.from("mitarbeiter").insert([
-      {
-        name,
-        rolle,
-        wochenstunden,
-        urlaubstage,
-        status: "Aktiv",
+    const response = await fetch("/api/create-user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    ]);
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        rolle,
+        wochenstunden: Number(wochenstunden),
+        urlaubstage: Number(urlaubstage),
+      }),
+    });
 
-    if (!error) location.reload();
-    if (error) console.log(error);
+    const result = await response.json();
+
+    if (!response.ok) {
+      alert(result.error);
+      return;
+    }
+
+    alert("Mitarbeiter wurde erstellt.");
+
+    setName("");
+    setEmail("");
+    setPassword("");
+    setRolle("Mitarbeiter");
+    setWochenstunden("");
+    setUrlaubstage("");
+
+    location.reload();
   }
 
   async function mitarbeiterLoeschen(id: number) {
@@ -47,7 +70,11 @@ export default function MitarbeiterPage() {
       .eq("id", id);
 
     if (!error) location.reload();
-    if (error) console.log(error);
+
+    if (error) {
+      alert(error.message);
+      console.log(error);
+    }
   }
 
   return (
@@ -57,15 +84,15 @@ export default function MitarbeiterPage() {
       </h1>
 
       <p className="text-zinc-700 text-lg mb-10 font-medium">
-        Mitarbeiterverwaltung
+        Mitarbeiter & Login-Zugänge verwalten
       </p>
 
       <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm mb-8">
         <h2 className="text-2xl font-bold text-zinc-900 mb-6">
-          Mitarbeiter hinzufügen
+          Mitarbeiter mit Login erstellen
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input
             type="text"
             placeholder="Name"
@@ -75,15 +102,33 @@ export default function MitarbeiterPage() {
           />
 
           <input
-            type="text"
-            placeholder="Rolle"
-            value={rolle}
-            onChange={(e) => setRolle(e.target.value)}
+            type="email"
+            placeholder="E-Mail"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="border border-zinc-300 rounded-xl p-3 text-zinc-900"
           />
 
           <input
+            type="password"
+            placeholder="Start-Passwort"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="border border-zinc-300 rounded-xl p-3 text-zinc-900"
+          />
+
+          <select
+            value={rolle}
+            onChange={(e) => setRolle(e.target.value)}
+            className="border border-zinc-300 rounded-xl p-3 text-zinc-900"
+          >
+            <option value="Mitarbeiter">Mitarbeiter</option>
+            <option value="Admin">Admin</option>
+          </select>
+
+          <input
             type="number"
+            step="0.5"
             placeholder="Wochenstunden"
             value={wochenstunden}
             onChange={(e) => setWochenstunden(e.target.value)}
@@ -103,7 +148,7 @@ export default function MitarbeiterPage() {
           onClick={mitarbeiterHinzufuegen}
           className="mt-6 bg-zinc-900 hover:bg-orange-500 transition text-white px-5 py-3 rounded-xl font-bold"
         >
-          Speichern
+          Mitarbeiter erstellen
         </button>
       </div>
 
