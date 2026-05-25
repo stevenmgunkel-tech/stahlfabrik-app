@@ -22,7 +22,11 @@ export default function MitarbeiterPage() {
         .order("id", { ascending: false });
 
       if (data) setMitarbeiter(data);
-      if (error) console.log(error);
+
+      if (error) {
+        alert(error.message);
+        console.log(error);
+      }
     }
 
     ladeMitarbeiter();
@@ -69,7 +73,9 @@ export default function MitarbeiterPage() {
       .delete()
       .eq("id", id);
 
-    if (!error) location.reload();
+    if (!error) {
+      location.reload();
+    }
 
     if (error) {
       alert(error.message);
@@ -124,6 +130,9 @@ export default function MitarbeiterPage() {
           >
             <option value="Mitarbeiter">Mitarbeiter</option>
             <option value="Admin">Admin</option>
+            <option value="Lehrling">Lehrling</option>
+            <option value="Temporär">Temporär</option>
+            <option value="Aushilfe">Aushilfe</option>
           </select>
 
           <input
