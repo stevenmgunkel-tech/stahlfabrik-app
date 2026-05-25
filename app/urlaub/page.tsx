@@ -103,19 +103,17 @@ export default function UrlaubPage() {
 
     setLoading(true);
 
-    const { error } = await supabase
-      .from("urlaub")
-      .insert([
-        {
-          mitarbeiter: mitarbeiterName,
-          typ,
-          von,
-          bis,
-          tage,
-          status: "Beantragt",
-          user_id: user.id,
-        },
-      ]);
+    const { error } = await supabase.from("urlaub").insert([
+      {
+        mitarbeiter: mitarbeiterName,
+        typ,
+        von,
+        bis,
+        tage,
+        status: "Beantragt",
+        user_id: user.id,
+      },
+    ]);
 
     if (error) {
       setLoading(false);
@@ -195,38 +193,58 @@ export default function UrlaubPage() {
         </h2>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <select
-            value={typ}
-            onChange={(e) => setTyp(e.target.value)}
-            className="rounded-xl border border-zinc-300 p-3 text-zinc-900"
-          >
-            <option value="Urlaub">Urlaub</option>
-            <option value="Krank">Krank</option>
-            <option value="Überstundenabbau">Überstundenabbau</option>
-          </select>
+          <div>
+            <label className="mb-2 block text-sm font-bold text-zinc-700">
+              Typ
+            </label>
 
-          <input
-            type="date"
-            value={von}
-            onChange={(e) => setVon(e.target.value)}
-            className="rounded-xl border border-zinc-300 p-3 text-zinc-900"
-          />
+            <select
+              value={typ}
+              onChange={(e) => setTyp(e.target.value)}
+              className="w-full rounded-xl border border-zinc-300 p-3 text-zinc-900"
+            >
+              <option value="Urlaub">Urlaub</option>
+              <option value="Krank">Krank</option>
+              <option value="Überstundenabbau">Überstundenabbau</option>
+            </select>
+          </div>
 
-          <input
-            type="date"
-            value={bis}
-            onChange={(e) => setBis(e.target.value)}
-            className="rounded-xl border border-zinc-300 p-3 text-zinc-900"
-          />
+          <div>
+            <label className="mb-2 block text-sm font-bold text-zinc-700">
+              Von
+            </label>
 
-          <button
-            type="button"
-            onClick={abwesenheitHinzufuegen}
-            disabled={loading}
-            className="rounded-xl bg-zinc-900 font-bold text-white transition hover:bg-orange-500 disabled:opacity-50"
-          >
-            {loading ? "Speichern..." : "Speichern"}
-          </button>
+            <input
+              type="date"
+              value={von}
+              onChange={(e) => setVon(e.target.value)}
+              className="w-full rounded-xl border border-zinc-300 p-3 text-zinc-900"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-bold text-zinc-700">
+              Bis
+            </label>
+
+            <input
+              type="date"
+              value={bis}
+              onChange={(e) => setBis(e.target.value)}
+              className="w-full rounded-xl border border-zinc-300 p-3 text-zinc-900"
+            />
+          </div>
+
+          <div className="flex flex-col justify-end">
+            <button
+              type="button"
+              onClick={abwesenheitHinzufuegen}
+              disabled={loading}
+              className="rounded-xl bg-zinc-900 p-3 font-bold text-white transition hover:bg-orange-500 disabled:opacity-50"
+            >
+              {loading ? "Speichern..." : "Speichern"}
+            </button>
+          </div>
         </div>
 
         <div className="mt-5 rounded-xl border border-zinc-200 bg-zinc-100 p-4">
