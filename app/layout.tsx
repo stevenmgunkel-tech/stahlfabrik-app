@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+import AppLayout from "../components/AppLayout";
+
 export const metadata: Metadata = {
   title: "StahlFabrik",
   description: "Swiss ERP System",
@@ -13,12 +15,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="de">
-      <body>{children}</body>
+      <body>
+        <AppLayout>
+          {children}
+        </AppLayout>
+      </body>
     </html>
   );
 }
