@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+
 import {
   LayoutDashboard,
   Clock3,
@@ -167,10 +168,13 @@ export default function AppLayout({
 
   return (
     <div className="min-h-screen bg-zinc-100">
-      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center border-b border-zinc-200 bg-white px-5 md:hidden">
+
+      {/* MOBILE HEADER */}
+
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center border-b border-zinc-900 bg-black px-5 md:hidden">
         <Link
           href="/"
-          className="text-[28px] font-black tracking-tight text-zinc-900"
+          className="text-[28px] font-black tracking-tight text-white"
         >
           Stahl
           <span className="text-orange-500">
@@ -183,65 +187,90 @@ export default function AppLayout({
           onClick={() =>
             setSidebarOpen(true)
           }
-          className="ml-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-zinc-200 bg-white text-zinc-900 shadow-sm"
+          className="ml-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900 text-white"
         >
           <Menu size={22} />
         </button>
       </header>
 
-      <aside className="fixed left-0 top-0 hidden h-screen w-72 flex-col border-r border-zinc-200 bg-white md:flex">
-        <div className="border-b border-zinc-200 px-7 py-7">
+      {/* DESKTOP SIDEBAR */}
+
+      <aside className="fixed left-0 top-0 hidden h-screen w-72 flex-col border-r border-zinc-900 bg-black md:flex">
+
+        {/* LOGO */}
+
+        <div className="border-b border-zinc-900 px-7 py-7">
           <Link
             href="/"
             className="flex flex-col"
           >
-            <span className="text-[36px] font-black tracking-tight text-zinc-900">
+            <span className="text-[36px] font-black tracking-tight text-white">
               Stahl
               <span className="text-orange-500">
                 Fabrik
               </span>
             </span>
 
-            <span className="mt-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-zinc-400">
+            <span className="mt-2 text-[11px] font-semibold uppercase tracking-[0.35em] text-zinc-600">
               Swiss ERP System
             </span>
           </Link>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-1 p-4">
-          {navItems.map((item) => {
-            const active =
-              pathname === item.href;
+        {/* NAVIGATION */}
 
-            const Icon = item.icon;
+        <nav className="flex-1 overflow-y-auto p-4">
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold transition-all duration-150 ${
-                  active
-                    ? "bg-zinc-900 text-white shadow-sm"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
-                }`}
-              >
-                <Icon size={18} />
+          <div className="flex flex-col gap-2">
 
-                {item.label}
-              </Link>
-            );
-          })}
+            {navItems.map((item) => {
+              const active =
+                pathname === item.href;
+
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`group flex items-center gap-4 rounded-2xl px-5 py-4 text-[15px] font-semibold transition-all duration-200 ${
+                    active
+                      ? "bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-lg shadow-orange-500/20"
+                      : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
+                  }`}
+                >
+                  <Icon
+                    size={20}
+                    className={`transition-all ${
+                      active
+                        ? "text-white"
+                        : "text-zinc-500 group-hover:text-orange-400"
+                    }`}
+                  />
+
+                  {item.label}
+                </Link>
+              );
+            })}
+
+          </div>
+
         </nav>
 
-        <div className="border-t border-zinc-200 p-4">
-          <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900 text-lg font-bold text-white">
+        {/* USER CARD */}
+
+        <div className="border-t border-zinc-900 p-4">
+
+          <div className="rounded-3xl border border-zinc-900 bg-zinc-950 p-5">
+
+            <div className="flex items-center gap-4">
+
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500 text-xl font-black text-white shadow-lg shadow-orange-500/20">
                 {userName?.charAt(0)}
               </div>
 
               <div>
-                <p className="text-sm font-semibold text-zinc-900">
+                <p className="text-sm font-semibold text-white">
                   {userName ||
                     "Angemeldet"}
                 </p>
@@ -251,44 +280,55 @@ export default function AppLayout({
                     "Benutzer"}
                 </p>
               </div>
+
             </div>
 
             <button
               type="button"
               onClick={logout}
-              className="mt-5 flex items-center justify-center gap-2 rounded-2xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-500"
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-400 shadow-lg shadow-orange-500/20"
             >
               <LogOut size={16} />
 
               Logout
             </button>
+
           </div>
+
         </div>
+
       </aside>
+
+      {/* MOBILE SIDEBAR */}
 
       {sidebarOpen && (
         <div className="fixed inset-0 z-[999] md:hidden">
+
           <button
             type="button"
             onClick={() =>
               setSidebarOpen(false)
             }
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           />
 
-          <aside className="absolute left-0 top-0 flex h-full w-[85%] max-w-xs flex-col bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-6">
+          <aside className="absolute left-0 top-0 flex h-full w-[85%] max-w-xs flex-col bg-black shadow-2xl">
+
+            <div className="flex items-center justify-between border-b border-zinc-900 px-5 py-6">
+
               <div className="flex flex-col">
-                <span className="text-3xl font-black tracking-tight text-zinc-900">
+
+                <span className="text-3xl font-black tracking-tight text-white">
                   Stahl
                   <span className="text-orange-500">
                     Fabrik
                   </span>
                 </span>
 
-                <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-400">
+                <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-600">
                   Swiss ERP
                 </span>
+
               </div>
 
               <button
@@ -296,49 +336,66 @@ export default function AppLayout({
                 onClick={() =>
                   setSidebarOpen(false)
                 }
-                className="flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 text-zinc-900"
+                className="flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900 text-white"
               >
                 <X size={18} />
               </button>
+
             </div>
 
-            <nav className="flex flex-1 flex-col gap-1 p-4">
-              {navItems.map((item) => {
-                const active =
-                  pathname === item.href;
+            <nav className="flex-1 overflow-y-auto p-4">
 
-                const Icon = item.icon;
+              <div className="flex flex-col gap-2">
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() =>
-                      setSidebarOpen(false)
-                    }
-                    className={`flex items-center gap-3 rounded-2xl px-4 py-4 text-[15px] font-semibold transition-all duration-150 ${
-                      active
-                        ? "bg-zinc-900 text-white shadow-sm"
-                        : "text-zinc-700 hover:bg-zinc-100"
-                    }`}
-                  >
-                    <Icon size={18} />
+                {navItems.map((item) => {
+                  const active =
+                    pathname === item.href;
 
-                    {item.label}
-                  </Link>
-                );
-              })}
+                  const Icon = item.icon;
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() =>
+                        setSidebarOpen(false)
+                      }
+                      className={`group flex items-center gap-4 rounded-2xl px-5 py-4 text-[15px] font-semibold transition-all duration-200 ${
+                        active
+                          ? "bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-lg shadow-orange-500/20"
+                          : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
+                      }`}
+                    >
+                      <Icon
+                        size={20}
+                        className={`transition-all ${
+                          active
+                            ? "text-white"
+                            : "text-zinc-500 group-hover:text-orange-400"
+                        }`}
+                      />
+
+                      {item.label}
+                    </Link>
+                  );
+                })}
+
+              </div>
+
             </nav>
 
-            <div className="border-t border-zinc-200 p-4">
-              <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900 text-lg font-bold text-white">
+            <div className="border-t border-zinc-900 p-4">
+
+              <div className="rounded-3xl border border-zinc-900 bg-zinc-950 p-5">
+
+                <div className="flex items-center gap-4">
+
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500 text-xl font-black text-white shadow-lg shadow-orange-500/20">
                     {userName?.charAt(0)}
                   </div>
 
                   <div>
-                    <p className="text-sm font-semibold text-zinc-900">
+                    <p className="text-sm font-semibold text-white">
                       {userName ||
                         "Angemeldet"}
                     </p>
@@ -348,28 +405,36 @@ export default function AppLayout({
                         "Benutzer"}
                     </p>
                   </div>
+
                 </div>
 
                 <button
                   type="button"
                   onClick={logout}
-                  className="mt-5 flex items-center justify-center gap-2 rounded-2xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-500"
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-400 shadow-lg shadow-orange-500/20"
                 >
                   <LogOut size={16} />
 
                   Logout
                 </button>
+
               </div>
+
             </div>
+
           </aside>
+
         </div>
       )}
+
+      {/* CONTENT */}
 
       <main className="pt-16 md:ml-72 md:pt-0">
         <div className="w-full overflow-x-hidden p-4 md:p-8">
           {children}
         </div>
       </main>
+
     </div>
   );
 }
