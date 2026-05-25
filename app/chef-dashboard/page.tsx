@@ -95,17 +95,22 @@ export default function ChefDashboardPage() {
     ladeDaten();
   }, [monat]);
 
-  function berechneArbeitstage() {
+  function berechneArbeitstageAbDatum(startDatum?: string) {
     const jahr = Number(monat.slice(0, 4));
     const monatNummer = Number(monat.slice(5, 7));
     const tageImMonat = new Date(jahr, monatNummer, 0).getDate();
 
     let arbeitstage = 0;
+    const start = startDatum ? new Date(startDatum) : null;
 
     for (let tag = 1; tag <= tageImMonat; tag++) {
       const datum = new Date(jahr, monatNummer - 1, tag);
-      const wochentag = datum.getDay();
 
+      if (start && datum < start) {
+        continue;
+      }
+
+      const wochentag = datum.getDay();
       const istWochenende = wochentag === 0 || wochentag === 6;
       const istFeiertag = istFeiertagSG(datum);
 
@@ -117,7 +122,7 @@ export default function ChefDashboardPage() {
     return arbeitstage;
   }
 
-  const arbeitstage = berechneArbeitstage();
+  const arbeitstage = berechneArbeitstageAbDatum();
 
   const offeneAntraege = urlaub.filter(
     (eintrag) => eintrag.status === "Beantragt"
@@ -187,7 +192,11 @@ export default function ChefDashboardPage() {
 
     const tagesSoll = Number(person.wochenstunden || 0) / 5;
 
-    const sollstunden = tagesSoll * arbeitstage;
+    const personArbeitstage = berechneArbeitstageAbDatum(
+      person.eintrittsdatum || undefined
+    );
+
+    const sollstunden = tagesSoll * personArbeitstage;
 
     const urlaubStunden = urlaubstagePerson * tagesSoll;
     const krankStunden = kranktagePerson * tagesSoll;
@@ -209,6 +218,7 @@ export default function ChefDashboardPage() {
       kranktagePerson,
       ueberstundenabbauPerson,
       ueberstundenAbbauStunden,
+      personArbeitstage,
     };
   });
 
@@ -412,6 +422,13 @@ export default function ChefDashboardPage() {
 
               <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                 <div>
+                  <p className="text-zinc-500">Arbeitstage</p>
+                  <p className="font-semibold text-zinc-900">
+                    {person.personArbeitstage}
+                  </p>
+                </div>
+
+                <div>
                   <p className="text-zinc-500">Soll</p>
                   <p className="font-semibold text-zinc-900">
                     {person.sollstunden.toFixed(2)}h
@@ -461,13 +478,6 @@ export default function ChefDashboardPage() {
                 </div>
 
                 <div>
-                  <p className="text-zinc-500">ÜA Tage</p>
-                  <p className="font-semibold text-orange-600">
-                    {person.ueberstundenabbauPerson}
-                  </p>
-                </div>
-
-                <div>
                   <p className="text-zinc-500">ÜA Stunden</p>
                   <p className="font-bold text-orange-600">
                     -{person.ueberstundenAbbauStunden.toFixed(2)}h
@@ -479,10 +489,11 @@ export default function ChefDashboardPage() {
         </div>
 
         <div className="hidden overflow-x-auto md:block">
-          <div className="min-w-[1150px]">
-            <div className="grid grid-cols-8 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
+          <div className="min-w-[1250px]">
+            <div className="grid grid-cols-9 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
               <div>Name</div>
               <div>Rolle</div>
+              <div>Arbeitstage</div>
               <div>Soll</div>
               <div>Ist</div>
               <div>Angerechnet</div>
@@ -494,11 +505,11 @@ export default function ChefDashboardPage() {
             {mitarbeiterStats.map((person) => (
               <div
                 key={person.id}
-                className="grid grid-cols-8 items-center border-b border-zinc-200 py-4"
+                className="grid grid-cols-9 items-center border-b border-zinc-200 py-4"
               >
                 <div className="font-medium text-zinc-900">{person.name}</div>
-
                 <div className="text-zinc-800">{person.rolle}</div>
+                <div className="text-zinc-800">{person.personArbeitstage}</div>
 
                 <div className="text-zinc-800">
                   {person.sollstunden.toFixed(2)}h
