@@ -41,7 +41,7 @@ export default function AppLayout({
         { href: "/urlaub", label: "Urlaub / Krank" },
         { href: "/monatsansicht", label: "Monatsansicht" },
         { href: "/resturlaub", label: "Resturlaub" },
-        { href: "/team", label: "Team" },
+        
       ];
 
   useEffect(() => {
