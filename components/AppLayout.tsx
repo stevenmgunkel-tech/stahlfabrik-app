@@ -11,24 +11,43 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const [userName, setUserName] = useState("");
   const [userRole, setUserRole] = useState("");
 
   const isLoginPage = pathname === "/login";
 
-  const navItems = [
-    { href: "/", label: "Dashboard" },
-    { href: "/arbeitszeiten", label: "Arbeitszeiten" },
-    { href: "/urlaub", label: "Urlaub / Krank" },
-    { href: "/mitarbeiter", label: "Mitarbeiter" },
-    { href: "/chef-dashboard", label: "Chef Dashboard" },
-    { href: "/projekte", label: "Projekte" },
-  ];
+  const isAdmin = userRole === "Admin";
+
+  const navItems = isAdmin
+    ? [
+        { href: "/", label: "Dashboard" },
+        { href: "/arbeitszeiten", label: "Arbeitszeiten" },
+        { href: "/urlaub", label: "Urlaub / Krank" },
+        { href: "/monatsansicht", label: "Monatsansicht" },
+        { href: "/resturlaub", label: "Resturlaub" },
+        { href: "/team", label: "Team" },
+
+        { href: "/mitarbeiter", label: "Mitarbeiter" },
+        { href: "/chef-dashboard", label: "Chef Dashboard" },
+        { href: "/projekte", label: "Projekte" },
+        { href: "/admin", label: "Admin" },
+      ]
+    : [
+        { href: "/", label: "Dashboard" },
+        { href: "/arbeitszeiten", label: "Arbeitszeiten" },
+        { href: "/urlaub", label: "Urlaub / Krank" },
+        { href: "/monatsansicht", label: "Monatsansicht" },
+        { href: "/resturlaub", label: "Resturlaub" },
+        { href: "/team", label: "Team" },
+      ];
 
   useEffect(() => {
     async function ladeUser() {
       const userData = await supabase.auth.getUser();
+
       const user = userData.data.user;
 
       if (!user) return;
@@ -50,6 +69,7 @@ export default function AppLayout({
 
   async function logout() {
     await supabase.auth.signOut();
+
     window.location.href = "/login";
   }
 
