@@ -94,11 +94,6 @@ export default function ChefDashboardPage() {
     ladeDaten();
   }, [monat]);
 
-  const gesamtstunden = arbeitszeiten.reduce(
-    (sum, eintrag) => sum + Number(eintrag.stunden || 0),
-    0
-  );
-
   const offeneAntraege = urlaub.filter(
     (eintrag) => eintrag.status === "Beantragt"
   ).length;
@@ -109,6 +104,14 @@ export default function ChefDashboardPage() {
 
   const urlaubstage = urlaub
     .filter((eintrag) => eintrag.typ === "Urlaub")
+    .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+
+  const ueberstundenabbauTage = urlaub
+    .filter(
+      (eintrag) =>
+        eintrag.typ === "Überstundenabbau" &&
+        eintrag.status === "Genehmigt"
+    )
     .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
   const projektStunden = projekte.map((projekt) => {
@@ -147,17 +150,27 @@ export default function ChefDashboardPage() {
       .filter((eintrag) => eintrag.typ === "Krank")
       .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
+    const ueberstundenabbauPerson = personUrlaub
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Überstundenabbau" &&
+          eintrag.status === "Genehmigt"
+      )
+      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+
     const tagesSoll = Number(person.wochenstunden || 0) / 5;
 
-    const sollstunden =
-      tagesSoll * arbeitstage -
-      urlaubstagePerson * tagesSoll -
-      kranktagePerson * tagesSoll;
+    const sollstunden = tagesSoll * arbeitstage;
+
+    const urlaubStunden = urlaubstagePerson * tagesSoll;
+    const krankStunden = kranktagePerson * tagesSoll;
+    const ueberstundenAbbauStunden = ueberstundenabbauPerson * tagesSoll;
 
     const angerechneteStunden =
-      iststunden + urlaubstagePerson * tagesSoll + kranktagePerson * tagesSoll;
+      iststunden + urlaubStunden + krankStunden + ueberstundenAbbauStunden;
 
-    const differenz = angerechneteStunden - tagesSoll * arbeitstage;
+    const differenz =
+      angerechneteStunden - sollstunden - ueberstundenAbbauStunden;
 
     return {
       ...person,
@@ -167,6 +180,8 @@ export default function ChefDashboardPage() {
       differenz,
       urlaubstagePerson,
       kranktagePerson,
+      ueberstundenabbauPerson,
+      ueberstundenAbbauStunden,
     };
   });
 
@@ -182,6 +197,11 @@ export default function ChefDashboardPage() {
 
   const teamAngerechnet = mitarbeiterStats.reduce(
     (sum, person) => sum + person.angerechneteStunden,
+    0
+  );
+
+  const teamUeberstundenAbbauStunden = mitarbeiterStats.reduce(
+    (sum, person) => sum + person.ueberstundenAbbauStunden,
     0
   );
 
@@ -211,7 +231,6 @@ export default function ChefDashboardPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl bg-zinc-900 p-5 text-white shadow-sm md:p-6">
           <p className="mb-2 font-semibold text-zinc-300">Team Iststunden</p>
-
           <p className="text-4xl font-extrabold text-orange-400 md:text-5xl">
             {loading ? "..." : `${teamIststunden.toFixed(2)}h`}
           </p>
@@ -221,23 +240,24 @@ export default function ChefDashboardPage() {
           <p className="mb-2 font-semibold text-zinc-600">
             Angerechnete Stunden
           </p>
-
           <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
             {loading ? "..." : `${teamAngerechnet.toFixed(2)}h`}
           </p>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-600">Team Sollstunden</p>
-
-          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
-            {loading ? "..." : `${teamSollstunden.toFixed(2)}h`}
+          <p className="mb-2 font-semibold text-zinc-600">
+            Überstundenabbau
+          </p>
+          <p className="text-4xl font-extrabold text-orange-500 md:text-5xl">
+            {loading
+              ? "..."
+              : `-${teamUeberstundenAbbauStunden.toFixed(2)}h`}
           </p>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
           <p className="mb-2 font-semibold text-zinc-600">Team Überstunden</p>
-
           <p
             className={`text-4xl font-extrabold md:text-5xl ${
               teamDifferenz >= 0 ? "text-green-600" : "text-red-600"
@@ -254,8 +274,14 @@ export default function ChefDashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-600">Mitarbeiter</p>
+          <p className="mb-2 font-semibold text-zinc-600">Team Sollstunden</p>
+          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
+            {loading ? "..." : `${teamSollstunden.toFixed(2)}h`}
+          </p>
+        </div>
 
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
+          <p className="mb-2 font-semibold text-zinc-600">Mitarbeiter</p>
           <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
             {loading ? "..." : mitarbeiter.length}
           </p>
@@ -263,25 +289,17 @@ export default function ChefDashboardPage() {
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
           <p className="mb-2 font-semibold text-zinc-600">Offene Anträge</p>
-
           <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
             {loading ? "..." : offeneAntraege}
           </p>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-600">Urlaubstage</p>
-
-          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
-            {loading ? "..." : urlaubstage}
+          <p className="mb-2 font-semibold text-zinc-600">
+            ÜA Tage
           </p>
-        </div>
-
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-600">Kranktage</p>
-
           <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
-            {loading ? "..." : kranktage}
+            {loading ? "..." : ueberstundenabbauTage}
           </p>
         </div>
       </div>
@@ -292,10 +310,9 @@ export default function ChefDashboardPage() {
             Abwesenheiten diesen Monat
           </h2>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-xl border border-zinc-200 bg-zinc-100 p-5">
               <p className="mb-2 font-semibold text-zinc-600">Urlaubstage</p>
-
               <p className="text-4xl font-extrabold text-zinc-900">
                 {loading ? "..." : urlaubstage}
               </p>
@@ -303,9 +320,17 @@ export default function ChefDashboardPage() {
 
             <div className="rounded-xl border border-zinc-200 bg-zinc-100 p-5">
               <p className="mb-2 font-semibold text-zinc-600">Kranktage</p>
-
               <p className="text-4xl font-extrabold text-zinc-900">
                 {loading ? "..." : kranktage}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-orange-200 bg-orange-50 p-5">
+              <p className="mb-2 font-semibold text-orange-700">
+                Überstundenabbau
+              </p>
+              <p className="text-4xl font-extrabold text-orange-600">
+                {loading ? "..." : ueberstundenabbauTage}
               </p>
             </div>
           </div>
@@ -384,7 +409,6 @@ export default function ChefDashboardPage() {
 
                 <div>
                   <p className="text-zinc-500">Überstunden</p>
-
                   <p
                     className={`font-bold ${
                       person.differenz >= 0
@@ -410,14 +434,28 @@ export default function ChefDashboardPage() {
                     {person.kranktagePerson}
                   </p>
                 </div>
+
+                <div>
+                  <p className="text-zinc-500">ÜA Tage</p>
+                  <p className="font-semibold text-orange-600">
+                    {person.ueberstundenabbauPerson}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-zinc-500">ÜA Stunden</p>
+                  <p className="font-bold text-orange-600">
+                    -{person.ueberstundenAbbauStunden.toFixed(2)}h
+                  </p>
+                </div>
               </div>
             </div>
           ))}
         </div>
 
         <div className="hidden overflow-x-auto md:block">
-          <div className="min-w-[980px]">
-            <div className="grid grid-cols-7 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
+          <div className="min-w-[1150px]">
+            <div className="grid grid-cols-8 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
               <div>Name</div>
               <div>Rolle</div>
               <div>Soll</div>
@@ -425,12 +463,13 @@ export default function ChefDashboardPage() {
               <div>Angerechnet</div>
               <div>Überstunden</div>
               <div>Abwesenheit</div>
+              <div>ÜA Abbau</div>
             </div>
 
             {mitarbeiterStats.map((person) => (
               <div
                 key={person.id}
-                className="grid grid-cols-7 items-center border-b border-zinc-200 py-4"
+                className="grid grid-cols-8 items-center border-b border-zinc-200 py-4"
               >
                 <div className="font-medium text-zinc-900">{person.name}</div>
 
@@ -461,6 +500,10 @@ export default function ChefDashboardPage() {
 
                 <div className="text-zinc-800">
                   U: {person.urlaubstagePerson} / K: {person.kranktagePerson}
+                </div>
+
+                <div className="font-bold text-orange-600">
+                  -{person.ueberstundenAbbauStunden.toFixed(2)}h
                 </div>
               </div>
             ))}
