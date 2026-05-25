@@ -176,9 +176,9 @@ export default function AppLayout({
           href="/"
           className="text-[28px] font-black tracking-tight text-white"
         >
-          SF
+          Stahl
           <span className="text-orange-500">
-            ERP
+            Fabrik
           </span>
         </Link>
 
