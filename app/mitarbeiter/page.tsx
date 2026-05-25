@@ -22,7 +22,6 @@ export default function MitarbeiterPage() {
 
   const [loading, setLoading] = useState(false);
   const [meldung, setMeldung] = useState("");
-
   const [bearbeitenId, setBearbeitenId] = useState<number | null>(null);
 
   async function ladeMitarbeiter() {
@@ -275,26 +274,41 @@ export default function MitarbeiterPage() {
             className="rounded-xl border border-zinc-300 p-3"
           />
 
-          <input
-            type="date"
-            value={eintrittsdatum}
-            onChange={(e) => setEintrittsdatum(e.target.value)}
-            className="rounded-xl border border-zinc-300 p-3"
-          />
+          <div>
+            <p className="mb-2 text-sm font-semibold text-zinc-700">
+              Eintrittsdatum
+            </p>
+            <input
+              type="date"
+              value={eintrittsdatum}
+              onChange={(e) => setEintrittsdatum(e.target.value)}
+              className="w-full rounded-xl border border-zinc-300 p-3"
+            />
+          </div>
 
-          <input
-            type="date"
-            value={probezeitBis}
-            onChange={(e) => setProbezeitBis(e.target.value)}
-            className="rounded-xl border border-zinc-300 p-3"
-          />
+          <div>
+            <p className="mb-2 text-sm font-semibold text-zinc-700">
+              Probezeit bis
+            </p>
+            <input
+              type="date"
+              value={probezeitBis}
+              onChange={(e) => setProbezeitBis(e.target.value)}
+              className="w-full rounded-xl border border-zinc-300 p-3"
+            />
+          </div>
 
-          <input
-            type="date"
-            value={austrittsdatum}
-            onChange={(e) => setAustrittsdatum(e.target.value)}
-            className="rounded-xl border border-zinc-300 p-3"
-          />
+          <div>
+            <p className="mb-2 text-sm font-semibold text-zinc-700">
+              Austrittsdatum
+            </p>
+            <input
+              type="date"
+              value={austrittsdatum}
+              onChange={(e) => setAustrittsdatum(e.target.value)}
+              className="w-full rounded-xl border border-zinc-300 p-3"
+            />
+          </div>
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -443,15 +457,10 @@ export default function MitarbeiterPage() {
                 </div>
 
                 <div>{person.rolle}</div>
-
                 <div>{person.vertragsart || "-"}</div>
-
                 <div>{person.eintrittsdatum || "-"}</div>
-
                 <div>{person.probezeit_bis || "-"}</div>
-
                 <div>{person.wochenstunden}h</div>
-
                 <div>{person.urlaubstage}</div>
 
                 <div>
