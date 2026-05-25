@@ -123,6 +123,73 @@ export default function ChefDashboardPage() {
     };
   });
 
+  const arbeitstage = 21;
+
+  const mitarbeiterStats = mitarbeiter.map((person) => {
+    const personArbeitszeiten = arbeitszeiten.filter(
+      (eintrag) => eintrag.user_id === person.user_id
+    );
+
+    const personUrlaub = urlaub.filter(
+      (eintrag) => eintrag.user_id === person.user_id
+    );
+
+    const iststunden = personArbeitszeiten.reduce(
+      (sum, eintrag) => sum + Number(eintrag.stunden || 0),
+      0
+    );
+
+    const urlaubstagePerson = personUrlaub
+      .filter((eintrag) => eintrag.typ === "Urlaub")
+      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+
+    const kranktagePerson = personUrlaub
+      .filter((eintrag) => eintrag.typ === "Krank")
+      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+
+    const tagesSoll = Number(person.wochenstunden || 0) / 5;
+
+    const sollstunden =
+      tagesSoll * arbeitstage -
+      urlaubstagePerson * tagesSoll -
+      kranktagePerson * tagesSoll;
+
+    const angerechneteStunden =
+      iststunden + urlaubstagePerson * tagesSoll + kranktagePerson * tagesSoll;
+
+    const differenz = angerechneteStunden - tagesSoll * arbeitstage;
+
+    return {
+      ...person,
+      iststunden,
+      sollstunden,
+      angerechneteStunden,
+      differenz,
+      urlaubstagePerson,
+      kranktagePerson,
+    };
+  });
+
+  const teamSollstunden = mitarbeiterStats.reduce(
+    (sum, person) => sum + person.sollstunden,
+    0
+  );
+
+  const teamIststunden = mitarbeiterStats.reduce(
+    (sum, person) => sum + person.iststunden,
+    0
+  );
+
+  const teamAngerechnet = mitarbeiterStats.reduce(
+    (sum, person) => sum + person.angerechneteStunden,
+    0
+  );
+
+  const teamDifferenz = mitarbeiterStats.reduce(
+    (sum, person) => sum + person.differenz,
+    0
+  );
+
   return (
     <main className="space-y-6">
       <div>
@@ -143,15 +210,49 @@ export default function ChefDashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl bg-zinc-900 p-5 text-white shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-300">
-            Gesamtstunden Monat
-          </p>
+          <p className="mb-2 font-semibold text-zinc-300">Team Iststunden</p>
 
           <p className="text-4xl font-extrabold text-orange-400 md:text-5xl">
-            {loading ? "..." : `${gesamtstunden.toFixed(2)}h`}
+            {loading ? "..." : `${teamIststunden.toFixed(2)}h`}
           </p>
         </div>
 
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
+          <p className="mb-2 font-semibold text-zinc-600">
+            Angerechnete Stunden
+          </p>
+
+          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
+            {loading ? "..." : `${teamAngerechnet.toFixed(2)}h`}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
+          <p className="mb-2 font-semibold text-zinc-600">Team Sollstunden</p>
+
+          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
+            {loading ? "..." : `${teamSollstunden.toFixed(2)}h`}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
+          <p className="mb-2 font-semibold text-zinc-600">Team Überstunden</p>
+
+          <p
+            className={`text-4xl font-extrabold md:text-5xl ${
+              teamDifferenz >= 0 ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {loading
+              ? "..."
+              : `${teamDifferenz >= 0 ? "+" : ""}${teamDifferenz.toFixed(
+                  2
+                )}h`}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
           <p className="mb-2 font-semibold text-zinc-600">Mitarbeiter</p>
 
@@ -169,10 +270,18 @@ export default function ChefDashboardPage() {
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-600">Projekte</p>
+          <p className="mb-2 font-semibold text-zinc-600">Urlaubstage</p>
 
           <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
-            {loading ? "..." : projekte.length}
+            {loading ? "..." : urlaubstage}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
+          <p className="mb-2 font-semibold text-zinc-600">Kranktage</p>
+
+          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
+            {loading ? "..." : kranktage}
           </p>
         </div>
       </div>
@@ -234,11 +343,11 @@ export default function ChefDashboardPage() {
 
       <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
         <h2 className="mb-5 text-xl font-bold text-zinc-900 md:text-2xl">
-          Mitarbeiterübersicht
+          Team Monatsübersicht
         </h2>
 
         <div className="space-y-4 md:hidden">
-          {mitarbeiter.map((person) => (
+          {mitarbeiterStats.map((person) => (
             <div
               key={person.id}
               className="rounded-xl border border-zinc-200 bg-zinc-50 p-4"
@@ -247,25 +356,58 @@ export default function ChefDashboardPage() {
                 {person.name}
               </div>
 
+              <div className="mt-1 text-sm font-medium text-zinc-500">
+                {person.rolle}
+              </div>
+
               <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <p className="text-zinc-500">Rolle</p>
+                  <p className="text-zinc-500">Soll</p>
                   <p className="font-semibold text-zinc-900">
-                    {person.rolle}
+                    {person.sollstunden.toFixed(2)}h
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-zinc-500">Wochenstunden</p>
+                  <p className="text-zinc-500">Ist</p>
                   <p className="font-semibold text-zinc-900">
-                    {person.wochenstunden}h
+                    {person.iststunden.toFixed(2)}h
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-zinc-500">Urlaubstage</p>
+                  <p className="text-zinc-500">Angerechnet</p>
                   <p className="font-semibold text-zinc-900">
-                    {person.urlaubstage}
+                    {person.angerechneteStunden.toFixed(2)}h
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-zinc-500">Überstunden</p>
+
+                  <p
+                    className={`font-bold ${
+                      person.differenz >= 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {person.differenz >= 0 ? "+" : ""}
+                    {person.differenz.toFixed(2)}h
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-zinc-500">Urlaub</p>
+                  <p className="font-semibold text-zinc-900">
+                    {person.urlaubstagePerson}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-zinc-500">Krank</p>
+                  <p className="font-semibold text-zinc-900">
+                    {person.kranktagePerson}
                   </p>
                 </div>
               </div>
@@ -274,25 +416,52 @@ export default function ChefDashboardPage() {
         </div>
 
         <div className="hidden overflow-x-auto md:block">
-          <div className="min-w-[760px]">
-            <div className="grid grid-cols-4 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
+          <div className="min-w-[980px]">
+            <div className="grid grid-cols-7 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
               <div>Name</div>
               <div>Rolle</div>
-              <div>Wochenstunden</div>
-              <div>Urlaubstage</div>
+              <div>Soll</div>
+              <div>Ist</div>
+              <div>Angerechnet</div>
+              <div>Überstunden</div>
+              <div>Abwesenheit</div>
             </div>
 
-            {mitarbeiter.map((person) => (
+            {mitarbeiterStats.map((person) => (
               <div
                 key={person.id}
-                className="grid grid-cols-4 items-center border-b border-zinc-200 py-4"
+                className="grid grid-cols-7 items-center border-b border-zinc-200 py-4"
               >
-                <div className="font-medium text-zinc-900">
-                  {person.name}
-                </div>
+                <div className="font-medium text-zinc-900">{person.name}</div>
+
                 <div className="text-zinc-800">{person.rolle}</div>
-                <div className="text-zinc-800">{person.wochenstunden}h</div>
-                <div className="text-zinc-800">{person.urlaubstage}</div>
+
+                <div className="text-zinc-800">
+                  {person.sollstunden.toFixed(2)}h
+                </div>
+
+                <div className="text-zinc-800">
+                  {person.iststunden.toFixed(2)}h
+                </div>
+
+                <div className="font-semibold text-zinc-900">
+                  {person.angerechneteStunden.toFixed(2)}h
+                </div>
+
+                <div
+                  className={`font-bold ${
+                    person.differenz >= 0
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {person.differenz >= 0 ? "+" : ""}
+                  {person.differenz.toFixed(2)}h
+                </div>
+
+                <div className="text-zinc-800">
+                  U: {person.urlaubstagePerson} / K: {person.kranktagePerson}
+                </div>
               </div>
             ))}
           </div>
@@ -311,9 +480,7 @@ export default function ChefDashboardPage() {
               className="rounded-xl border border-zinc-200 bg-zinc-50 p-4"
             >
               <div className="flex items-center justify-between gap-4">
-                <div className="font-bold text-zinc-900">
-                  {projekt.name}
-                </div>
+                <div className="font-bold text-zinc-900">{projekt.name}</div>
 
                 <div className="font-extrabold text-zinc-900">
                   {projekt.stunden.toFixed(2)}h
