@@ -249,7 +249,7 @@ export default function HomePage() {
     <main className="space-y-8">
       <div className="flex flex-col gap-2">
         <span className="text-xs font-bold uppercase tracking-[0.3em] text-orange-500">
-          StahlFabrik ERP
+          StahlFabrik Swiss Made
         </span>
 
         <h1 className="text-4xl font-black tracking-tight text-zinc-900 md:text-6xl">
