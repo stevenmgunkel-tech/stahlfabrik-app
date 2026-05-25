@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { istFeiertagSG } from "../../lib/feiertage";
 
 export default function ChefDashboardPage() {
   const [mitarbeiter, setMitarbeiter] = useState<any[]>([]);
@@ -94,6 +95,30 @@ export default function ChefDashboardPage() {
     ladeDaten();
   }, [monat]);
 
+  function berechneArbeitstage() {
+    const jahr = Number(monat.slice(0, 4));
+    const monatNummer = Number(monat.slice(5, 7));
+    const tageImMonat = new Date(jahr, monatNummer, 0).getDate();
+
+    let arbeitstage = 0;
+
+    for (let tag = 1; tag <= tageImMonat; tag++) {
+      const datum = new Date(jahr, monatNummer - 1, tag);
+      const wochentag = datum.getDay();
+
+      const istWochenende = wochentag === 0 || wochentag === 6;
+      const istFeiertag = istFeiertagSG(datum);
+
+      if (!istWochenende && !istFeiertag) {
+        arbeitstage++;
+      }
+    }
+
+    return arbeitstage;
+  }
+
+  const arbeitstage = berechneArbeitstage();
+
   const offeneAntraege = urlaub.filter(
     (eintrag) => eintrag.status === "Beantragt"
   ).length;
@@ -126,8 +151,6 @@ export default function ChefDashboardPage() {
     };
   });
 
-  const arbeitstage = 21;
-
   const mitarbeiterStats = mitarbeiter.map((person) => {
     const personArbeitszeiten = arbeitszeiten.filter(
       (eintrag) => eintrag.user_id === person.user_id
@@ -143,7 +166,11 @@ export default function ChefDashboardPage() {
     );
 
     const urlaubstagePerson = personUrlaub
-      .filter((eintrag) => eintrag.typ === "Urlaub")
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Urlaub" &&
+          eintrag.status === "Genehmigt"
+      )
       .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
     const kranktagePerson = personUrlaub
@@ -281,6 +308,13 @@ export default function ChefDashboardPage() {
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
+          <p className="mb-2 font-semibold text-zinc-600">Arbeitstage</p>
+          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
+            {loading ? "..." : arbeitstage}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
           <p className="mb-2 font-semibold text-zinc-600">Mitarbeiter</p>
           <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
             {loading ? "..." : mitarbeiter.length}
@@ -291,15 +325,6 @@ export default function ChefDashboardPage() {
           <p className="mb-2 font-semibold text-zinc-600">Offene Anträge</p>
           <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
             {loading ? "..." : offeneAntraege}
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-600">
-            ÜA Tage
-          </p>
-          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
-            {loading ? "..." : ueberstundenabbauTage}
           </p>
         </div>
       </div>
