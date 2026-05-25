@@ -9,6 +9,7 @@ export default function HomePage() {
   const [urlaub, setUrlaub] = useState<any[]>([]);
   const [projekte, setProjekte] = useState<any[]>([]);
 
+  const [userRole, setUserRole] = useState("");
   const [loading, setLoading] = useState(true);
   const [meldung, setMeldung] = useState("");
 
@@ -27,6 +28,25 @@ export default function HomePage() {
         return;
       }
 
+      const { data: eigenerMitarbeiter, error: mitarbeiterCheckError } =
+        await supabase
+          .from("mitarbeiter")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+
+      if (mitarbeiterCheckError) {
+        setMeldung(mitarbeiterCheckError.message);
+        console.log(mitarbeiterCheckError);
+        setLoading(false);
+        return;
+      }
+
+      const rolle = eigenerMitarbeiter?.rolle || "";
+      const isAdmin = rolle === "Admin";
+
+      setUserRole(rolle);
+
       const start = `${monat}-01`;
 
       const ende = new Date(
@@ -37,28 +57,41 @@ export default function HomePage() {
         .toISOString()
         .split("T")[0];
 
-      const { data: mitarbeiterData, error: mitarbeiterError } =
-        await supabase.from("mitarbeiter").select("*");
+      const { data: mitarbeiterData, error: mitarbeiterError } = await supabase
+        .from("mitarbeiter")
+        .select(isAdmin ? "*" : "id, name, rolle")
+        .order("id", { ascending: false });
 
-      const { data: arbeitszeitenData, error: arbeitszeitenError } =
-        await supabase
-          .from("arbeitszeiten")
-          .select("*")
-          .gte("datum", start)
-          .lte("datum", ende)
-          .order("id", { ascending: false });
+      let arbeitszeitenQuery = supabase
+        .from("arbeitszeiten")
+        .select("*")
+        .gte("datum", start)
+        .lte("datum", ende)
+        .order("id", { ascending: false });
 
-      const { data: urlaubData, error: urlaubError } = await supabase
+      let urlaubQuery = supabase
         .from("urlaub")
         .select("*")
         .gte("von", start)
         .lte("bis", ende)
         .order("id", { ascending: false });
 
-      const { data: projekteData, error: projekteError } = await supabase
-        .from("projekte")
-        .select("*")
-        .order("id", { ascending: false });
+      if (!isAdmin) {
+        arbeitszeitenQuery = arbeitszeitenQuery.eq("user_id", user.id);
+        urlaubQuery = urlaubQuery.eq("user_id", user.id);
+      }
+
+      const { data: arbeitszeitenData, error: arbeitszeitenError } =
+        await arbeitszeitenQuery;
+
+      const { data: urlaubData, error: urlaubError } = await urlaubQuery;
+
+      const { data: projekteData, error: projekteError } = isAdmin
+        ? await supabase
+            .from("projekte")
+            .select("*")
+            .order("id", { ascending: false })
+        : { data: [], error: null };
 
       const fehler =
         mitarbeiterError ||
@@ -81,6 +114,8 @@ export default function HomePage() {
 
     ladeDashboard();
   }, [monat]);
+
+  const isAdmin = userRole === "Admin";
 
   const gesamtstunden = arbeitszeiten.reduce(
     (sum, eintrag) => sum + Number(eintrag.stunden || 0),
@@ -121,7 +156,7 @@ export default function HomePage() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl bg-white p-6 shadow">
-          <h2 className="text-sm text-zinc-500">Mitarbeiter</h2>
+          <h2 className="text-sm text-zinc-500">Teammitglieder</h2>
           <p className="mt-2 text-4xl font-extrabold text-zinc-900">
             {loading ? "..." : mitarbeiter.length}
           </p>
@@ -129,7 +164,7 @@ export default function HomePage() {
 
         <div className="rounded-2xl bg-white p-6 shadow">
           <h2 className="text-sm text-zinc-500">
-            Arbeitsstunden Monat
+            {isAdmin ? "Arbeitsstunden Firma" : "Meine Arbeitsstunden"}
           </h2>
 
           <p className="mt-2 text-4xl font-extrabold text-zinc-900">
@@ -139,7 +174,7 @@ export default function HomePage() {
 
         <div className="rounded-2xl bg-white p-6 shadow">
           <h2 className="text-sm text-zinc-500">
-            Offene Urlaube
+            {isAdmin ? "Offene Urlaube" : "Meine offenen Urlaube"}
           </h2>
 
           <p className="mt-2 text-4xl font-extrabold text-zinc-900">
@@ -149,7 +184,7 @@ export default function HomePage() {
 
         <div className="rounded-2xl bg-white p-6 shadow">
           <h2 className="text-sm text-zinc-500">
-            Krankmeldungen
+            {isAdmin ? "Krankmeldungen" : "Meine Krankmeldungen"}
           </h2>
 
           <p className="mt-2 text-4xl font-extrabold text-zinc-900">
@@ -166,7 +201,7 @@ export default function HomePage() {
         <div className="space-y-3">
           {letzteArbeitszeit && (
             <div className="rounded-xl bg-zinc-100 p-4">
-              Letzte Arbeitszeit:{" "}
+              {isAdmin ? "Letzte Arbeitszeit" : "Meine letzte Arbeitszeit"}:{" "}
               <span className="font-semibold">
                 {letzteArbeitszeit.projekt}
               </span>{" "}
@@ -176,7 +211,7 @@ export default function HomePage() {
 
           {letzterUrlaub && (
             <div className="rounded-xl bg-zinc-100 p-4">
-              Letzter Eintrag:{" "}
+              {isAdmin ? "Letzter Eintrag" : "Mein letzter Eintrag"}:{" "}
               <span className="font-semibold">
                 {letzterUrlaub.typ}
               </span>{" "}
@@ -184,7 +219,7 @@ export default function HomePage() {
             </div>
           )}
 
-          {letztesProjekt && (
+          {isAdmin && letztesProjekt && (
             <div className="rounded-xl bg-zinc-100 p-4">
               Neues Projekt:{" "}
               <span className="font-semibold">
@@ -193,7 +228,7 @@ export default function HomePage() {
             </div>
           )}
 
-          {letzterMitarbeiter && (
+          {isAdmin && letzterMitarbeiter && (
             <div className="rounded-xl bg-zinc-100 p-4">
               Letzter Mitarbeiter:{" "}
               <span className="font-semibold">
@@ -205,8 +240,7 @@ export default function HomePage() {
           {!loading &&
             !letzteArbeitszeit &&
             !letzterUrlaub &&
-            !letztesProjekt &&
-            !letzterMitarbeiter && (
+            (!isAdmin || (!letztesProjekt && !letzterMitarbeiter)) && (
               <div className="rounded-xl bg-zinc-100 p-4 text-zinc-600">
                 Noch keine Aktivitäten vorhanden.
               </div>
