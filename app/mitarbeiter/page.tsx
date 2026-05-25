@@ -14,25 +14,38 @@ export default function MitarbeiterPage() {
   const [wochenstunden, setWochenstunden] = useState("");
   const [urlaubstage, setUrlaubstage] = useState("");
 
-  useEffect(() => {
-    async function ladeMitarbeiter() {
-      const { data, error } = await supabase
-        .from("mitarbeiter")
-        .select("*")
-        .order("id", { ascending: false });
+  const [loading, setLoading] = useState(false);
+  const [meldung, setMeldung] = useState("");
 
-      if (data) setMitarbeiter(data);
+  async function ladeMitarbeiter() {
+    const { data, error } = await supabase
+      .from("mitarbeiter")
+      .select("*")
+      .order("id", { ascending: false });
 
-      if (error) {
-        alert(error.message);
-        console.log(error);
-      }
+    if (error) {
+      setMeldung(error.message);
+      console.log(error);
+      return;
     }
 
+    setMitarbeiter(data || []);
+  }
+
+  useEffect(() => {
     ladeMitarbeiter();
   }, []);
 
   async function mitarbeiterHinzufuegen() {
+    setMeldung("");
+
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setMeldung("Bitte Name, E-Mail und Start-Passwort ausfüllen.");
+      return;
+    }
+
+    setLoading(true);
+
     const response = await fetch("/api/create-user", {
       method: "POST",
       headers: {
@@ -51,11 +64,10 @@ export default function MitarbeiterPage() {
     const result = await response.json();
 
     if (!response.ok) {
-      alert(result.error);
+      setLoading(false);
+      setMeldung(result.error || "Mitarbeiter konnte nicht erstellt werden.");
       return;
     }
-
-    alert("Mitarbeiter wurde erstellt.");
 
     setName("");
     setEmail("");
@@ -64,28 +76,34 @@ export default function MitarbeiterPage() {
     setWochenstunden("");
     setUrlaubstage("");
 
-    location.reload();
+    await ladeMitarbeiter();
+
+    setLoading(false);
+    setMeldung("Mitarbeiter wurde erstellt.");
   }
 
   async function mitarbeiterLoeschen(id: number) {
+    const bestaetigen = confirm("Mitarbeiter wirklich löschen?");
+
+    if (!bestaetigen) return;
+
     const { error } = await supabase
       .from("mitarbeiter")
       .delete()
       .eq("id", id);
 
-    if (!error) {
-      location.reload();
+    if (error) {
+      setMeldung(error.message);
+      console.log(error);
+      return;
     }
 
-    if (error) {
-      alert(error.message);
-      console.log(error);
-    }
+    await ladeMitarbeiter();
+    setMeldung("Mitarbeiter gelöscht.");
   }
 
   return (
     <main className="space-y-6">
-      {/* HEADER */}
       <div>
         <h1 className="text-3xl md:text-5xl font-extrabold text-zinc-900">
           Mitarbeiter
@@ -96,7 +114,6 @@ export default function MitarbeiterPage() {
         </p>
       </div>
 
-      {/* FORMULAR */}
       <div className="rounded-2xl border border-zinc-200 bg-white p-4 md:p-6 shadow-sm">
         <h2 className="mb-6 text-xl md:text-2xl font-bold text-zinc-900">
           Mitarbeiter mit Login erstellen
@@ -158,14 +175,21 @@ export default function MitarbeiterPage() {
         </div>
 
         <button
+          type="button"
           onClick={mitarbeiterHinzufuegen}
-          className="mt-6 rounded-xl bg-zinc-900 px-5 py-3 font-bold text-white transition hover:bg-orange-500"
+          disabled={loading}
+          className="mt-6 rounded-xl bg-zinc-900 px-5 py-3 font-bold text-white transition hover:bg-orange-500 disabled:opacity-50"
         >
-          Mitarbeiter erstellen
+          {loading ? "Erstellen..." : "Mitarbeiter erstellen"}
         </button>
+
+        {meldung && (
+          <div className="mt-4 rounded-xl bg-zinc-900 p-3 text-sm font-semibold text-white">
+            {meldung}
+          </div>
+        )}
       </div>
 
-      {/* MOBILE CARDS */}
       <div className="space-y-4 md:hidden">
         {mitarbeiter.map((person) => (
           <div
@@ -184,28 +208,22 @@ export default function MitarbeiterPage() {
 
             <div className="mt-4 space-y-2 text-sm">
               <div>
-                <span className="font-semibold">
-                  Rolle:
-                </span>{" "}
-                {person.rolle}
+                <span className="font-semibold">Rolle:</span> {person.rolle}
               </div>
 
               <div>
-                <span className="font-semibold">
-                  Wochenstunden:
-                </span>{" "}
+                <span className="font-semibold">Wochenstunden:</span>{" "}
                 {person.wochenstunden}h
               </div>
 
               <div>
-                <span className="font-semibold">
-                  Urlaubstage:
-                </span>{" "}
+                <span className="font-semibold">Urlaubstage:</span>{" "}
                 {person.urlaubstage}
               </div>
             </div>
 
             <button
+              type="button"
               onClick={() => mitarbeiterLoeschen(person.id)}
               className="mt-4 rounded-xl bg-red-600 p-3 font-bold text-white"
             >
@@ -215,7 +233,6 @@ export default function MitarbeiterPage() {
         ))}
       </div>
 
-      {/* DESKTOP TABELLE */}
       <div className="hidden rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm md:block">
         <h2 className="mb-6 text-2xl font-bold text-zinc-900">
           Teamübersicht
@@ -255,6 +272,7 @@ export default function MitarbeiterPage() {
 
                 <div>
                   <button
+                    type="button"
                     onClick={() => mitarbeiterLoeschen(person.id)}
                     className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white"
                   >

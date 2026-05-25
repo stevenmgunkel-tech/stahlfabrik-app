@@ -10,23 +10,34 @@ export default function UrlaubPage() {
   const [von, setVon] = useState("");
   const [bis, setBis] = useState("");
 
-  useEffect(() => {
-    async function ladeUrlaub() {
-      const userData = await supabase.auth.getUser();
-      const user = userData.data.user;
+  const [loading, setLoading] = useState(false);
+  const [meldung, setMeldung] = useState("");
 
-      if (!user) return;
+  async function ladeUrlaub() {
+    const userData = await supabase.auth.getUser();
+    const user = userData.data.user;
 
-      const { data, error } = await supabase
-        .from("urlaub")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("id", { ascending: false });
-
-      if (data) setUrlaub(data);
-      if (error) console.log(error);
+    if (!user) {
+      window.location.href = "/login";
+      return;
     }
 
+    const { data, error } = await supabase
+      .from("urlaub")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("id", { ascending: false });
+
+    if (error) {
+      setMeldung(error.message);
+      console.log(error);
+      return;
+    }
+
+    setUrlaub(data || []);
+  }
+
+  useEffect(() => {
     ladeUrlaub();
   }, []);
 
@@ -55,16 +66,30 @@ export default function UrlaubPage() {
   }
 
   async function abwesenheitHinzufuegen() {
+    setMeldung("");
+
+    if (!von || !bis) {
+      setMeldung("Bitte Start- und Enddatum auswählen.");
+      return;
+    }
+
     const userData = await supabase.auth.getUser();
     const user = userData.data.user;
 
     if (!user) {
-      alert("Bitte zuerst einloggen.");
+      setMeldung("Bitte zuerst einloggen.");
       window.location.href = "/login";
       return;
     }
 
     const tage = berechneTage();
+
+    if (tage <= 0) {
+      setMeldung("Bitte gültigen Zeitraum auswählen.");
+      return;
+    }
+
+    setLoading(true);
 
     const { error } = await supabase.from("urlaub").insert([
       {
@@ -77,26 +102,41 @@ export default function UrlaubPage() {
       },
     ]);
 
-    if (!error) location.reload();
-
     if (error) {
-      alert(error.message);
+      setLoading(false);
+      setMeldung(error.message);
       console.log(error);
+      return;
     }
+
+    setTyp("Urlaub");
+    setVon("");
+    setBis("");
+
+    await ladeUrlaub();
+
+    setLoading(false);
+    setMeldung("Abwesenheit gespeichert.");
   }
 
   async function urlaubLoeschen(id: number) {
+    const bestaetigen = confirm("Abwesenheit wirklich löschen?");
+
+    if (!bestaetigen) return;
+
     const { error } = await supabase
       .from("urlaub")
       .delete()
       .eq("id", id);
 
-    if (!error) location.reload();
-
     if (error) {
-      alert(error.message);
+      setMeldung(error.message);
       console.log(error);
+      return;
     }
+
+    await ladeUrlaub();
+    setMeldung("Abwesenheit gelöscht.");
   }
 
   const berechneteTage = berechneTage();
@@ -141,10 +181,12 @@ export default function UrlaubPage() {
           />
 
           <button
+            type="button"
             onClick={abwesenheitHinzufuegen}
-            className="bg-zinc-900 hover:bg-orange-500 transition text-white rounded-xl font-bold"
+            disabled={loading}
+            className="bg-zinc-900 hover:bg-orange-500 transition text-white rounded-xl font-bold disabled:opacity-50"
           >
-            Speichern
+            {loading ? "Speichern..." : "Speichern"}
           </button>
         </div>
 
@@ -156,6 +198,12 @@ export default function UrlaubPage() {
             {berechneteTage} Tage
           </span>
         </div>
+
+        {meldung && (
+          <div className="mt-4 rounded-xl bg-zinc-900 p-3 text-sm font-semibold text-white">
+            {meldung}
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6">
@@ -196,6 +244,7 @@ export default function UrlaubPage() {
 
             <div>
               <button
+                type="button"
                 onClick={() => urlaubLoeschen(eintrag.id)}
                 className="bg-red-600 hover:bg-red-700 transition text-white px-4 py-2 rounded-lg font-semibold"
               >

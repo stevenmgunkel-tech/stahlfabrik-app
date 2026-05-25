@@ -8,7 +8,9 @@ export default function ProjektePage() {
 
   const [name, setName] = useState("");
   const [kunde, setKunde] = useState("");
+
   const [loading, setLoading] = useState(false);
+  const [meldung, setMeldung] = useState("");
 
   async function ladeProjekte() {
     const { data, error } = await supabase
@@ -17,7 +19,7 @@ export default function ProjektePage() {
       .order("name", { ascending: true });
 
     if (error) {
-      alert(error.message);
+      setMeldung(error.message);
       console.log(error);
       return;
     }
@@ -30,8 +32,10 @@ export default function ProjektePage() {
   }, []);
 
   async function projektHinzufuegen() {
+    setMeldung("");
+
     if (!name.trim()) {
-      alert("Bitte Projektname eingeben.");
+      setMeldung("Bitte Projektname eingeben.");
       return;
     }
 
@@ -45,17 +49,20 @@ export default function ProjektePage() {
       },
     ]);
 
-    setLoading(false);
-
     if (error) {
-      alert(error.message);
+      setLoading(false);
+      setMeldung(error.message);
       console.log(error);
       return;
     }
 
     setName("");
     setKunde("");
+
     await ladeProjekte();
+
+    setLoading(false);
+    setMeldung("Projekt gespeichert.");
   }
 
   async function projektLoeschen(id: number) {
@@ -69,12 +76,13 @@ export default function ProjektePage() {
       .eq("id", id);
 
     if (error) {
-      alert(error.message);
+      setMeldung(error.message);
       console.log(error);
       return;
     }
 
     await ladeProjekte();
+    setMeldung("Projekt gelöscht.");
   }
 
   return (
@@ -120,6 +128,12 @@ export default function ProjektePage() {
             {loading ? "Speichern..." : "Speichern"}
           </button>
         </div>
+
+        {meldung && (
+          <div className="mt-4 rounded-xl bg-zinc-900 p-3 text-sm font-semibold text-white">
+            {meldung}
+          </div>
+        )}
       </div>
 
       <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm md:p-6">

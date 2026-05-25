@@ -9,8 +9,13 @@ export default function ResturlaubPage() {
   const [kranktage, setKranktage] = useState(0);
   const [offeneAntraege, setOffeneAntraege] = useState(0);
 
+  const [loading, setLoading] = useState(true);
+  const [meldung, setMeldung] = useState("");
+
   useEffect(() => {
     async function ladeDaten() {
+      setMeldung("");
+
       const userData = await supabase.auth.getUser();
       const user = userData.data.user;
 
@@ -19,20 +24,31 @@ export default function ResturlaubPage() {
         return;
       }
 
-      const { data: mitarbeiter } = await supabase
+      const { data: mitarbeiter, error: mitarbeiterError } = await supabase
         .from("mitarbeiter")
         .select("*")
         .eq("user_id", user.id)
         .single();
 
+      if (mitarbeiterError) {
+        setMeldung(mitarbeiterError.message);
+        console.log(mitarbeiterError);
+      }
+
       if (mitarbeiter?.urlaubstage) {
         setUrlaubstage(Number(mitarbeiter.urlaubstage));
       }
 
-      const { data: abwesenheiten } = await supabase
-        .from("urlaub")
-        .select("*")
-        .eq("user_id", user.id);
+      const { data: abwesenheiten, error: abwesenheitenError } =
+        await supabase
+          .from("urlaub")
+          .select("*")
+          .eq("user_id", user.id);
+
+      if (abwesenheitenError) {
+        setMeldung(abwesenheitenError.message);
+        console.log(abwesenheitenError);
+      }
 
       if (abwesenheiten) {
         const genehmigterUrlaub = abwesenheiten
@@ -61,6 +77,8 @@ export default function ResturlaubPage() {
         setKranktage(krank);
         setOffeneAntraege(offen);
       }
+
+      setLoading(false);
     }
 
     ladeDaten();
@@ -78,6 +96,12 @@ export default function ResturlaubPage() {
         Persönliche Übersicht über Urlaub, Krankheit und offene Anträge
       </p>
 
+      {meldung && (
+        <div className="mb-6 rounded-xl bg-zinc-900 p-3 text-sm font-semibold text-white">
+          {meldung}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
         <div className="bg-zinc-900 text-white p-6 rounded-2xl shadow-sm">
           <p className="text-zinc-300 font-semibold mb-2">
@@ -85,7 +109,7 @@ export default function ResturlaubPage() {
           </p>
 
           <p className="text-5xl font-extrabold text-orange-400">
-            {urlaubstage}
+            {loading ? "..." : urlaubstage}
           </p>
         </div>
 
@@ -95,7 +119,7 @@ export default function ResturlaubPage() {
           </p>
 
           <p className="text-5xl font-extrabold text-zinc-900">
-            {genommenerUrlaub}
+            {loading ? "..." : genommenerUrlaub}
           </p>
         </div>
 
@@ -111,7 +135,7 @@ export default function ResturlaubPage() {
           </p>
 
           <p className="text-5xl font-extrabold">
-            {resturlaub}
+            {loading ? "..." : resturlaub}
           </p>
         </div>
 
@@ -121,7 +145,7 @@ export default function ResturlaubPage() {
           </p>
 
           <p className="text-5xl font-extrabold text-zinc-900">
-            {kranktage}
+            {loading ? "..." : kranktage}
           </p>
         </div>
       </div>
@@ -138,7 +162,7 @@ export default function ResturlaubPage() {
             </p>
 
             <p className="text-4xl font-extrabold text-zinc-900">
-              {offeneAntraege}
+              {loading ? "..." : offeneAntraege}
             </p>
           </div>
 
@@ -148,7 +172,7 @@ export default function ResturlaubPage() {
             </p>
 
             <p className="text-4xl font-extrabold text-zinc-900">
-              {genommenerUrlaub}
+              {loading ? "..." : genommenerUrlaub}
             </p>
           </div>
 
@@ -158,7 +182,7 @@ export default function ResturlaubPage() {
             </p>
 
             <p className="text-4xl font-extrabold text-zinc-900">
-              {resturlaub}
+              {loading ? "..." : resturlaub}
             </p>
           </div>
         </div>

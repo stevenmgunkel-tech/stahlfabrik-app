@@ -13,6 +13,9 @@ export default function ArbeitszeitenPage() {
   const [endzeit, setEndzeit] = useState("");
   const [pause, setPause] = useState("");
 
+  const [saving, setSaving] = useState(false);
+  const [meldung, setMeldung] = useState("");
+
   async function ladeDaten() {
     const userData = await supabase.auth.getUser();
     const user = userData.data.user;
@@ -29,13 +32,11 @@ export default function ArbeitszeitenPage() {
       .order("id", { ascending: false });
 
     if (zeitError) {
-      alert(zeitError.message);
+      setMeldung(zeitError.message);
       console.log(zeitError);
     }
 
-    if (zeitData) {
-      setZeiten(zeitData);
-    }
+    if (zeitData) setZeiten(zeitData);
 
     const { data: projektData, error: projektError } = await supabase
       .from("projekte")
@@ -43,13 +44,11 @@ export default function ArbeitszeitenPage() {
       .order("name", { ascending: true });
 
     if (projektError) {
-      alert(projektError.message);
+      setMeldung(projektError.message);
       console.log(projektError);
     }
 
-    if (projektData) {
-      setProjekte(projektData);
-    }
+    if (projektData) setProjekte(projektData);
   }
 
   useEffect(() => {
@@ -75,8 +74,10 @@ export default function ArbeitszeitenPage() {
   }
 
   async function zeitHinzufuegen() {
+    setMeldung("");
+
     if (!datum || !projekt || !startzeit || !endzeit) {
-      alert("Bitte Datum, Projekt, Start und Ende ausfüllen.");
+      setMeldung("Bitte Datum, Projekt, Start und Ende ausfüllen.");
       return;
     }
 
@@ -84,10 +85,12 @@ export default function ArbeitszeitenPage() {
     const user = userData.data.user;
 
     if (!user) {
-      alert("Bitte zuerst einloggen.");
+      setMeldung("Bitte zuerst einloggen.");
       window.location.href = "/login";
       return;
     }
+
+    setSaving(true);
 
     const berechneteStunden = berechneStunden();
 
@@ -104,7 +107,8 @@ export default function ArbeitszeitenPage() {
     ]);
 
     if (error) {
-      alert(error.message);
+      setSaving(false);
+      setMeldung(error.message);
       console.log(error);
       return;
     }
@@ -116,6 +120,9 @@ export default function ArbeitszeitenPage() {
     setPause("");
 
     await ladeDaten();
+
+    setSaving(false);
+    setMeldung("Arbeitszeit gespeichert.");
   }
 
   async function zeitLoeschen(id: number) {
@@ -129,12 +136,13 @@ export default function ArbeitszeitenPage() {
       .eq("id", id);
 
     if (error) {
-      alert(error.message);
+      setMeldung(error.message);
       console.log(error);
       return;
     }
 
     await ladeDaten();
+    setMeldung("Arbeitszeit gelöscht.");
   }
 
   const vorschauStunden = berechneStunden();
@@ -172,10 +180,7 @@ export default function ArbeitszeitenPage() {
             <option value="">Projekt auswählen</option>
 
             {projekte.map((projektItem) => (
-              <option
-                key={projektItem.id}
-                value={projektItem.name}
-              >
+              <option key={projektItem.id} value={projektItem.name}>
                 {projektItem.name}
               </option>
             ))}
@@ -206,9 +211,10 @@ export default function ArbeitszeitenPage() {
           <button
             type="button"
             onClick={zeitHinzufuegen}
-            className="rounded-xl bg-zinc-900 p-3 font-bold text-white transition hover:bg-orange-500"
+            disabled={saving}
+            className="rounded-xl bg-zinc-900 p-3 font-bold text-white transition hover:bg-orange-500 disabled:opacity-50"
           >
-            Speichern
+            {saving ? "Speichern..." : "Speichern"}
           </button>
         </div>
 
@@ -218,6 +224,12 @@ export default function ArbeitszeitenPage() {
             {vorschauStunden}h
           </span>
         </div>
+
+        {meldung && (
+          <div className="mt-4 rounded-xl bg-zinc-900 p-3 text-sm font-semibold text-white">
+            {meldung}
+          </div>
+        )}
       </div>
 
       <div className="space-y-4 md:hidden">
@@ -227,9 +239,7 @@ export default function ArbeitszeitenPage() {
             className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
           >
             <div className="flex items-center justify-between gap-4">
-              <div className="text-sm text-zinc-500">
-                {zeit.datum}
-              </div>
+              <div className="text-sm text-zinc-500">{zeit.datum}</div>
 
               <div className="font-bold text-orange-500">
                 {zeit.stunden}h

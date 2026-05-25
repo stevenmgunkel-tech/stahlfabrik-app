@@ -9,10 +9,15 @@ export default function ChefDashboardPage() {
   const [urlaub, setUrlaub] = useState<any[]>([]);
   const [projekte, setProjekte] = useState<any[]>([]);
 
+  const [loading, setLoading] = useState(true);
+  const [meldung, setMeldung] = useState("");
+
   const monat = new Date().toISOString().slice(0, 7);
 
   useEffect(() => {
     async function ladeDaten() {
+      setMeldung("");
+
       const userData = await supabase.auth.getUser();
       const user = userData.data.user;
 
@@ -21,11 +26,17 @@ export default function ChefDashboardPage() {
         return;
       }
 
-      const { data: adminCheck } = await supabase
+      const { data: adminCheck, error: adminError } = await supabase
         .from("mitarbeiter")
         .select("*")
         .eq("user_id", user.id)
         .single();
+
+      if (adminError) {
+        setMeldung(adminError.message);
+        setLoading(false);
+        return;
+      }
 
       if (adminCheck?.rolle !== "Admin") {
         window.location.href = "/";
@@ -42,30 +53,42 @@ export default function ChefDashboardPage() {
         .toISOString()
         .split("T")[0];
 
-      const { data: mitarbeiterData } = await supabase
-        .from("mitarbeiter")
-        .select("*");
+      const { data: mitarbeiterData, error: mitarbeiterError } =
+        await supabase.from("mitarbeiter").select("*");
 
-      const { data: arbeitszeitenData } = await supabase
-        .from("arbeitszeiten")
-        .select("*")
-        .gte("datum", start)
-        .lte("datum", ende);
+      const { data: arbeitszeitenData, error: arbeitszeitenError } =
+        await supabase
+          .from("arbeitszeiten")
+          .select("*")
+          .gte("datum", start)
+          .lte("datum", ende);
 
-      const { data: urlaubData } = await supabase
+      const { data: urlaubData, error: urlaubError } = await supabase
         .from("urlaub")
         .select("*")
         .gte("von", start)
         .lte("bis", ende);
 
-      const { data: projekteData } = await supabase
+      const { data: projekteData, error: projekteError } = await supabase
         .from("projekte")
         .select("*");
 
-      if (mitarbeiterData) setMitarbeiter(mitarbeiterData);
-      if (arbeitszeitenData) setArbeitszeiten(arbeitszeitenData);
-      if (urlaubData) setUrlaub(urlaubData);
-      if (projekteData) setProjekte(projekteData);
+      const fehler =
+        mitarbeiterError ||
+        arbeitszeitenError ||
+        urlaubError ||
+        projekteError;
+
+      if (fehler) {
+        setMeldung(fehler.message);
+        console.log(fehler);
+      }
+
+      setMitarbeiter(mitarbeiterData || []);
+      setArbeitszeiten(arbeitszeitenData || []);
+      setUrlaub(urlaubData || []);
+      setProjekte(projekteData || []);
+      setLoading(false);
     }
 
     ladeDaten();
@@ -112,6 +135,12 @@ export default function ChefDashboardPage() {
         </p>
       </div>
 
+      {meldung && (
+        <div className="rounded-xl bg-zinc-900 p-3 text-sm font-semibold text-white">
+          {meldung}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl bg-zinc-900 p-5 text-white shadow-sm md:p-6">
           <p className="mb-2 font-semibold text-zinc-300">
@@ -119,7 +148,7 @@ export default function ChefDashboardPage() {
           </p>
 
           <p className="text-4xl font-extrabold text-orange-400 md:text-5xl">
-            {gesamtstunden.toFixed(2)}h
+            {loading ? "..." : `${gesamtstunden.toFixed(2)}h`}
           </p>
         </div>
 
@@ -127,7 +156,7 @@ export default function ChefDashboardPage() {
           <p className="mb-2 font-semibold text-zinc-600">Mitarbeiter</p>
 
           <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
-            {mitarbeiter.length}
+            {loading ? "..." : mitarbeiter.length}
           </p>
         </div>
 
@@ -135,7 +164,7 @@ export default function ChefDashboardPage() {
           <p className="mb-2 font-semibold text-zinc-600">Offene Anträge</p>
 
           <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
-            {offeneAntraege}
+            {loading ? "..." : offeneAntraege}
           </p>
         </div>
 
@@ -143,7 +172,7 @@ export default function ChefDashboardPage() {
           <p className="mb-2 font-semibold text-zinc-600">Projekte</p>
 
           <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
-            {projekte.length}
+            {loading ? "..." : projekte.length}
           </p>
         </div>
       </div>
@@ -159,7 +188,7 @@ export default function ChefDashboardPage() {
               <p className="mb-2 font-semibold text-zinc-600">Urlaubstage</p>
 
               <p className="text-4xl font-extrabold text-zinc-900">
-                {urlaubstage}
+                {loading ? "..." : urlaubstage}
               </p>
             </div>
 
@@ -167,7 +196,7 @@ export default function ChefDashboardPage() {
               <p className="mb-2 font-semibold text-zinc-600">Kranktage</p>
 
               <p className="text-4xl font-extrabold text-zinc-900">
-                {kranktage}
+                {loading ? "..." : kranktage}
               </p>
             </div>
           </div>
@@ -262,9 +291,7 @@ export default function ChefDashboardPage() {
                   {person.name}
                 </div>
                 <div className="text-zinc-800">{person.rolle}</div>
-                <div className="text-zinc-800">
-                  {person.wochenstunden}h
-                </div>
+                <div className="text-zinc-800">{person.wochenstunden}h</div>
                 <div className="text-zinc-800">{person.urlaubstage}</div>
               </div>
             ))}
@@ -313,9 +340,7 @@ export default function ChefDashboardPage() {
                 key={projekt.name}
                 className="grid grid-cols-3 items-center border-b border-zinc-200 py-4"
               >
-                <div className="font-medium text-zinc-900">
-                  {projekt.name}
-                </div>
+                <div className="font-medium text-zinc-900">{projekt.name}</div>
                 <div className="text-zinc-800">{projekt.kunde}</div>
                 <div className="font-bold text-zinc-900">
                   {projekt.stunden.toFixed(2)}h
