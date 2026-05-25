@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 export default function AppLayout({
   children,
@@ -11,6 +12,9 @@ export default function AppLayout({
 }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const [userName, setUserName] = useState("");
+  const [userRole, setUserRole] = useState("");
 
   const navItems = [
     { href: "/", label: "Dashboard" },
@@ -21,11 +25,37 @@ export default function AppLayout({
     { href: "/projekte", label: "Projekte" },
   ];
 
+  useEffect(() => {
+    async function ladeUser() {
+      const userData = await supabase.auth.getUser();
+      const user = userData.data.user;
+
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("mitarbeiter")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (data) {
+        setUserName(data.name || user.email || "");
+        setUserRole(data.rolle || "");
+      }
+    }
+
+    ladeUser();
+  }, []);
+
+  async function logout() {
+    await supabase.auth.signOut();
+    window.location.href = "/login";
+  }
+
   return (
     <div className="min-h-screen bg-zinc-100">
       {/* MOBILE HEADER */}
       <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center border-b border-zinc-200 bg-white px-5 md:hidden">
-        {/* LOGO */}
         <Link
           href="/"
           className="text-[30px] font-black tracking-tight text-zinc-900"
@@ -36,7 +66,6 @@ export default function AppLayout({
           </span>
         </Link>
 
-        {/* MENU BUTTON */}
         <button
           type="button"
           onClick={() => setSidebarOpen(true)}
@@ -47,7 +76,7 @@ export default function AppLayout({
       </header>
 
       {/* DESKTOP SIDEBAR */}
-      <aside className="fixed left-0 top-0 hidden h-screen w-64 bg-zinc-950 text-white md:block">
+      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col bg-zinc-950 text-white md:flex">
         <div className="border-b border-zinc-800 p-5">
           <Link
             href="/"
@@ -60,7 +89,7 @@ export default function AppLayout({
           </Link>
         </div>
 
-        <nav className="flex flex-col gap-2 p-4">
+        <nav className="flex flex-1 flex-col gap-2 p-4">
           {navItems.map((item) => {
             const active = pathname === item.href;
 
@@ -79,20 +108,38 @@ export default function AppLayout({
             );
           })}
         </nav>
+
+        <div className="border-t border-zinc-800 p-4">
+          <div className="rounded-2xl bg-zinc-900 p-4">
+            <p className="text-sm font-bold text-white">
+              {userName || "Angemeldet"}
+            </p>
+
+            <p className="mt-1 text-xs font-semibold text-orange-400">
+              {userRole || "Benutzer"}
+            </p>
+
+            <button
+              type="button"
+              onClick={logout}
+              className="mt-4 rounded-xl bg-white px-4 py-2 text-sm font-bold text-zinc-950 transition hover:bg-orange-500 hover:text-white"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
       </aside>
 
       {/* MOBILE SIDEBAR */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-[999] md:hidden">
-          {/* OVERLAY */}
           <button
             type="button"
             onClick={() => setSidebarOpen(false)}
             className="absolute inset-0 bg-black/60"
           />
 
-          {/* SIDEBAR */}
-          <aside className="absolute left-0 top-0 h-full w-[82%] max-w-xs bg-zinc-950 text-white shadow-2xl">
+          <aside className="absolute left-0 top-0 flex h-full w-[82%] max-w-xs flex-col bg-zinc-950 text-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-zinc-800 p-5">
               <div className="text-2xl font-black">
                 Stahl
@@ -110,7 +157,7 @@ export default function AppLayout({
               </button>
             </div>
 
-            <nav className="flex flex-col gap-2 p-4">
+            <nav className="flex flex-1 flex-col gap-2 p-4">
               {navItems.map((item) => {
                 const active = pathname === item.href;
 
@@ -130,6 +177,26 @@ export default function AppLayout({
                 );
               })}
             </nav>
+
+            <div className="border-t border-zinc-800 p-4">
+              <div className="rounded-2xl bg-zinc-900 p-4">
+                <p className="text-sm font-bold text-white">
+                  {userName || "Angemeldet"}
+                </p>
+
+                <p className="mt-1 text-xs font-semibold text-orange-400">
+                  {userRole || "Benutzer"}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="mt-4 rounded-xl bg-white px-4 py-2 text-sm font-bold text-zinc-950"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
           </aside>
         </div>
       )}
