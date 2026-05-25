@@ -24,18 +24,23 @@ export default function AppLayout({
   return (
     <div className="min-h-screen bg-zinc-100">
       {/* MOBILE HEADER */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center border-b border-zinc-200 bg-white px-4 md:hidden">
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center border-b border-zinc-200 bg-white px-5 md:hidden">
+        {/* LOGO */}
         <Link
           href="/"
-          className="text-2xl font-extrabold text-zinc-900"
+          className="text-[30px] font-black tracking-tight text-zinc-900"
         >
-          Stahl<span className="text-orange-500">Fabrik</span>
+          Stahl
+          <span className="text-orange-500">
+            Fabrik
+          </span>
         </Link>
 
+        {/* MENU BUTTON */}
         <button
           type="button"
           onClick={() => setSidebarOpen(true)}
-          className="ml-auto rounded-lg bg-zinc-900 px-4 py-2 text-sm font-bold text-white"
+          className="ml-auto flex h-11 w-11 items-center justify-center rounded-xl bg-black text-[22px] font-bold text-white shadow-lg transition active:scale-95"
         >
           ☰
         </button>
@@ -46,9 +51,12 @@ export default function AppLayout({
         <div className="border-b border-zinc-800 p-5">
           <Link
             href="/"
-            className="text-3xl font-black text-white"
+            className="text-3xl font-black tracking-tight"
           >
-            Stahl<span className="text-orange-500">Fabrik</span>
+            Stahl
+            <span className="text-orange-500">
+              Fabrik
+            </span>
           </Link>
         </div>
 
@@ -60,7 +68,7 @@ export default function AppLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-xl px-4 py-3 font-bold transition ${
+                className={`rounded-xl px-4 py-3 text-base font-bold transition ${
                   active
                     ? "bg-white text-zinc-950"
                     : "text-zinc-200 hover:bg-zinc-800"
@@ -76,22 +84,27 @@ export default function AppLayout({
       {/* MOBILE SIDEBAR */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-[999] md:hidden">
+          {/* OVERLAY */}
           <button
             type="button"
             onClick={() => setSidebarOpen(false)}
             className="absolute inset-0 bg-black/60"
           />
 
-          <aside className="absolute left-0 top-0 h-full w-[80%] max-w-xs bg-zinc-950 text-white shadow-2xl">
+          {/* SIDEBAR */}
+          <aside className="absolute left-0 top-0 h-full w-[82%] max-w-xs bg-zinc-950 text-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-zinc-800 p-5">
               <div className="text-2xl font-black">
-                Stahl<span className="text-orange-500">Fabrik</span>
+                Stahl
+                <span className="text-orange-500">
+                  Fabrik
+                </span>
               </div>
 
               <button
                 type="button"
                 onClick={() => setSidebarOpen(false)}
-                className="rounded-lg bg-zinc-800 px-3 py-2 text-white"
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800 text-white"
               >
                 ✕
               </button>
@@ -106,7 +119,7 @@ export default function AppLayout({
                     key={item.href}
                     href={item.href}
                     onClick={() => setSidebarOpen(false)}
-                    className={`rounded-xl px-4 py-4 font-bold transition ${
+                    className={`rounded-xl px-4 py-4 text-lg font-bold transition ${
                       active
                         ? "bg-white text-zinc-950"
                         : "bg-zinc-900 text-white"
@@ -123,7 +136,7 @@ export default function AppLayout({
 
       {/* CONTENT */}
       <main className="pt-16 md:ml-64 md:pt-0">
-        <div className="w-full overflow-x-hidden p-3 md:p-8">
+        <div className="w-full overflow-x-hidden p-4 md:p-8">
           {children}
         </div>
       </main>
