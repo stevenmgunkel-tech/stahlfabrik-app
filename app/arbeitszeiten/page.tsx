@@ -16,6 +16,8 @@ export default function ArbeitszeitenPage() {
   const [saving, setSaving] = useState(false);
   const [meldung, setMeldung] = useState("");
 
+  const [bearbeitenId, setBearbeitenId] = useState<number | null>(null);
+
   async function ladeDaten() {
     const userData = await supabase.auth.getUser();
     const user = userData.data.user;
@@ -73,44 +75,73 @@ export default function ArbeitszeitenPage() {
     return Number((arbeitsMinuten / 60).toFixed(2));
   }
 
-  async function zeitHinzufuegen() {
+  async function zeitSpeichern() {
     setMeldung("");
 
     if (!datum || !projekt || !startzeit || !endzeit) {
-      setMeldung("Bitte Datum, Projekt, Start und Ende ausfüllen.");
+      setMeldung(
+        "Bitte Datum, Projekt, Start und Ende ausfüllen."
+      );
       return;
     }
-
-    const userData = await supabase.auth.getUser();
-    const user = userData.data.user;
-
-    if (!user) {
-      setMeldung("Bitte zuerst einloggen.");
-      window.location.href = "/login";
-      return;
-    }
-
-    setSaving(true);
 
     const berechneteStunden = berechneStunden();
 
-    const { error } = await supabase.from("arbeitszeiten").insert([
-      {
-        datum,
-        projekt,
-        startzeit,
-        endzeit,
-        pause: Number(pause || 0),
-        stunden: berechneteStunden,
-        user_id: user.id,
-      },
-    ]);
+    setSaving(true);
 
-    if (error) {
-      setSaving(false);
-      setMeldung(error.message);
-      console.log(error);
-      return;
+    if (bearbeitenId) {
+      const { error } = await supabase
+        .from("arbeitszeiten")
+        .update({
+          datum,
+          projekt,
+          startzeit,
+          endzeit,
+          pause: Number(pause || 0),
+          stunden: berechneteStunden,
+        })
+        .eq("id", bearbeitenId);
+
+      if (error) {
+        setSaving(false);
+        setMeldung(error.message);
+        console.log(error);
+        return;
+      }
+
+      setMeldung("Arbeitszeit aktualisiert.");
+    } else {
+      const userData = await supabase.auth.getUser();
+      const user = userData.data.user;
+
+      if (!user) {
+        setSaving(false);
+        setMeldung("Bitte zuerst einloggen.");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("arbeitszeiten")
+        .insert([
+          {
+            datum,
+            projekt,
+            startzeit,
+            endzeit,
+            pause: Number(pause || 0),
+            stunden: berechneteStunden,
+            user_id: user.id,
+          },
+        ]);
+
+      if (error) {
+        setSaving(false);
+        setMeldung(error.message);
+        console.log(error);
+        return;
+      }
+
+      setMeldung("Arbeitszeit gespeichert.");
     }
 
     setDatum("");
@@ -119,14 +150,17 @@ export default function ArbeitszeitenPage() {
     setEndzeit("");
     setPause("");
 
+    setBearbeitenId(null);
+
     await ladeDaten();
 
     setSaving(false);
-    setMeldung("Arbeitszeit gespeichert.");
   }
 
   async function zeitLoeschen(id: number) {
-    const bestaetigen = confirm("Arbeitszeit wirklich löschen?");
+    const bestaetigen = confirm(
+      "Arbeitszeit wirklich löschen?"
+    );
 
     if (!bestaetigen) return;
 
@@ -161,7 +195,9 @@ export default function ArbeitszeitenPage() {
 
       <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm md:p-6">
         <h2 className="mb-6 text-xl font-bold text-zinc-900 md:text-2xl">
-          Arbeitszeit erfassen
+          {bearbeitenId
+            ? "Arbeitszeit bearbeiten"
+            : "Arbeitszeit erfassen"}
         </h2>
 
         <div className="flex flex-col gap-4 lg:grid lg:grid-cols-6">
@@ -180,7 +216,10 @@ export default function ArbeitszeitenPage() {
             <option value="">Projekt auswählen</option>
 
             {projekte.map((projektItem) => (
-              <option key={projektItem.id} value={projektItem.name}>
+              <option
+                key={projektItem.id}
+                value={projektItem.name}
+              >
                 {projektItem.name}
               </option>
             ))}
@@ -210,16 +249,39 @@ export default function ArbeitszeitenPage() {
 
           <button
             type="button"
-            onClick={zeitHinzufuegen}
+            onClick={zeitSpeichern}
             disabled={saving}
             className="rounded-xl bg-zinc-900 p-3 font-bold text-white transition hover:bg-orange-500 disabled:opacity-50"
           >
-            {saving ? "Speichern..." : "Speichern"}
+            {saving
+              ? "Speichern..."
+              : bearbeitenId
+              ? "Änderung speichern"
+              : "Speichern"}
           </button>
         </div>
 
+        {bearbeitenId && (
+          <button
+            type="button"
+            onClick={() => {
+              setBearbeitenId(null);
+              setDatum("");
+              setProjekt("");
+              setStartzeit("");
+              setEndzeit("");
+              setPause("");
+            }}
+            className="mt-4 rounded-xl bg-zinc-200 px-4 py-3 font-bold text-zinc-900"
+          >
+            Bearbeiten abbrechen
+          </button>
+        )}
+
         <div className="mt-5 rounded-xl border border-zinc-200 bg-zinc-100 p-4">
-          <span className="font-bold">Berechnete Arbeitszeit:</span>{" "}
+          <span className="font-bold">
+            Berechnete Arbeitszeit:
+          </span>{" "}
           <span className="font-extrabold text-orange-500">
             {vorschauStunden}h
           </span>
@@ -239,7 +301,9 @@ export default function ArbeitszeitenPage() {
             className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
           >
             <div className="flex items-center justify-between gap-4">
-              <div className="text-sm text-zinc-500">{zeit.datum}</div>
+              <div className="text-sm text-zinc-500">
+                {zeit.datum}
+              </div>
 
               <div className="font-bold text-orange-500">
                 {zeit.stunden}h
@@ -254,7 +318,8 @@ export default function ArbeitszeitenPage() {
 
               <div>
                 <span className="font-semibold">Zeit:</span>{" "}
-                {zeit.startzeit || "-"} - {zeit.endzeit || "-"}
+                {zeit.startzeit || "-"} -{" "}
+                {zeit.endzeit || "-"}
               </div>
 
               <div>
@@ -265,8 +330,23 @@ export default function ArbeitszeitenPage() {
 
             <button
               type="button"
+              onClick={() => {
+                setBearbeitenId(zeit.id);
+                setDatum(zeit.datum || "");
+                setProjekt(zeit.projekt || "");
+                setStartzeit(zeit.startzeit || "");
+                setEndzeit(zeit.endzeit || "");
+                setPause(String(zeit.pause || ""));
+              }}
+              className="mt-4 w-full rounded-xl bg-zinc-900 p-3 font-bold text-white"
+            >
+              Bearbeiten
+            </button>
+
+            <button
+              type="button"
               onClick={() => zeitLoeschen(zeit.id)}
-              className="mt-4 rounded-xl bg-red-600 p-3 font-bold text-white"
+              className="mt-3 w-full rounded-xl bg-red-600 p-3 font-bold text-white"
             >
               Löschen
             </button>
@@ -280,7 +360,7 @@ export default function ArbeitszeitenPage() {
         </h2>
 
         <div className="overflow-x-auto">
-          <table className="min-w-[900px]">
+          <table className="min-w-[1000px]">
             <thead>
               <tr className="border-b border-zinc-300 text-left">
                 <th className="pb-4">Datum</th>
@@ -295,18 +375,40 @@ export default function ArbeitszeitenPage() {
 
             <tbody>
               {zeiten.map((zeit) => (
-                <tr key={zeit.id} className="border-b border-zinc-200">
+                <tr
+                  key={zeit.id}
+                  className="border-b border-zinc-200"
+                >
                   <td className="py-4">{zeit.datum}</td>
                   <td>{zeit.projekt}</td>
                   <td>{zeit.startzeit || "-"}</td>
                   <td>{zeit.endzeit || "-"}</td>
                   <td>{zeit.pause || 0} Min.</td>
-                  <td className="font-bold">{zeit.stunden}h</td>
+                  <td className="font-bold">
+                    {zeit.stunden}h
+                  </td>
 
-                  <td>
+                  <td className="flex gap-2 py-4">
                     <button
                       type="button"
-                      onClick={() => zeitLoeschen(zeit.id)}
+                      onClick={() => {
+                        setBearbeitenId(zeit.id);
+                        setDatum(zeit.datum || "");
+                        setProjekt(zeit.projekt || "");
+                        setStartzeit(zeit.startzeit || "");
+                        setEndzeit(zeit.endzeit || "");
+                        setPause(String(zeit.pause || ""));
+                      }}
+                      className="rounded-lg bg-zinc-900 px-4 py-2 text-white"
+                    >
+                      Bearbeiten
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        zeitLoeschen(zeit.id)
+                      }
                       className="rounded-lg bg-red-600 px-4 py-2 text-white"
                     >
                       Löschen
