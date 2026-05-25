@@ -5,6 +5,8 @@ import { supabase } from "../../lib/supabase";
 
 export default function MitarbeiterPage() {
   const [mitarbeiter, setMitarbeiter] = useState<any[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [seiteGeprueft, setSeiteGeprueft] = useState(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -25,7 +27,36 @@ export default function MitarbeiterPage() {
   const [meldung, setMeldung] = useState("");
   const [bearbeitenId, setBearbeitenId] = useState<number | null>(null);
 
+  async function pruefeAdmin() {
+    const userData = await supabase.auth.getUser();
+    const user = userData.data.user;
+
+    if (!user) {
+      window.location.href = "/login";
+      return false;
+    }
+
+    const { data, error } = await supabase
+      .from("mitarbeiter")
+      .select("rolle")
+      .eq("user_id", user.id)
+      .single();
+
+    if (error || data?.rolle !== "Admin") {
+      window.location.href = "/";
+      return false;
+    }
+
+    setIsAdmin(true);
+    setSeiteGeprueft(true);
+    return true;
+  }
+
   async function ladeMitarbeiter() {
+    const erlaubt = await pruefeAdmin();
+
+    if (!erlaubt) return;
+
     const { data, error } = await supabase
       .from("mitarbeiter")
       .select("*")
@@ -99,6 +130,11 @@ export default function MitarbeiterPage() {
   }
 
   async function mitarbeiterSpeichern() {
+    if (!isAdmin) {
+      setMeldung("Keine Berechtigung.");
+      return;
+    }
+
     setMeldung("");
 
     if (!name.trim()) {
@@ -173,6 +209,11 @@ export default function MitarbeiterPage() {
   }
 
   async function mitarbeiterLoeschen(id: number) {
+    if (!isAdmin) {
+      setMeldung("Keine Berechtigung.");
+      return;
+    }
+
     const bestaetigen = confirm("Mitarbeiter wirklich löschen?");
     if (!bestaetigen) return;
 
@@ -189,6 +230,11 @@ export default function MitarbeiterPage() {
   }
 
   function mitarbeiterBearbeiten(person: any) {
+    if (!isAdmin) {
+      setMeldung("Keine Berechtigung.");
+      return;
+    }
+
     setBearbeitenId(person.id);
     setName(person.name || "");
     setRolle(person.rolle || "Mitarbeiter");
@@ -200,6 +246,16 @@ export default function MitarbeiterPage() {
     setProbezeitBis(person.probezeit_bis || "");
     setAustrittsdatum(person.austrittsdatum || "");
     setVertragsart(person.vertragsart || "Unbefristet");
+  }
+
+  if (!seiteGeprueft) {
+    return (
+      <main className="space-y-6">
+        <div className="rounded-2xl bg-white p-6 font-bold text-zinc-900 shadow-sm">
+          Berechtigung wird geprüft...
+        </div>
+      </main>
+    );
   }
 
   return (

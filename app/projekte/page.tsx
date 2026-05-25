@@ -15,7 +15,41 @@ export default function ProjektePage() {
 
   const [bearbeitenId, setBearbeitenId] = useState<number | null>(null);
 
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [seiteGeprueft, setSeiteGeprueft] = useState(false);
+
+  async function pruefeAdmin() {
+    const userData = await supabase.auth.getUser();
+
+    const user = userData.data.user;
+
+    if (!user) {
+      window.location.href = "/login";
+      return false;
+    }
+
+    const { data, error } = await supabase
+      .from("mitarbeiter")
+      .select("rolle")
+      .eq("user_id", user.id)
+      .single();
+
+    if (error || data?.rolle !== "Admin") {
+      window.location.href = "/";
+      return false;
+    }
+
+    setIsAdmin(true);
+    setSeiteGeprueft(true);
+
+    return true;
+  }
+
   async function ladeProjekte() {
+    const erlaubt = await pruefeAdmin();
+
+    if (!erlaubt) return;
+
     const { data, error } = await supabase
       .from("projekte")
       .select("*")
@@ -35,6 +69,11 @@ export default function ProjektePage() {
   }, []);
 
   async function projektSpeichern() {
+    if (!isAdmin) {
+      setMeldung("Keine Berechtigung.");
+      return;
+    }
+
     setMeldung("");
 
     if (!name.trim()) {
@@ -95,6 +134,11 @@ export default function ProjektePage() {
   }
 
   async function projektLoeschen(id: number) {
+    if (!isAdmin) {
+      setMeldung("Keine Berechtigung.");
+      return;
+    }
+
     const bestaetigen = confirm(
       "Projekt wirklich löschen?"
     );
@@ -114,6 +158,16 @@ export default function ProjektePage() {
 
     await ladeProjekte();
     setMeldung("Projekt gelöscht.");
+  }
+
+  if (!seiteGeprueft) {
+    return (
+      <main className="space-y-6">
+        <div className="rounded-2xl bg-white p-6 font-bold text-zinc-900 shadow-sm">
+          Berechtigung wird geprüft...
+        </div>
+      </main>
+    );
   }
 
   return (
