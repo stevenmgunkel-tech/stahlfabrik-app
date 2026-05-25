@@ -176,9 +176,9 @@ export default function AppLayout({
           href="/"
           className="text-[28px] font-black tracking-tight text-white"
         >
-          Stahl
+          SF
           <span className="text-orange-500">
-            Fabrik
+            ERP
           </span>
         </Link>
 
@@ -205,9 +205,9 @@ export default function AppLayout({
             className="flex flex-col"
           >
             <span className="text-[36px] font-black tracking-tight text-white">
-              SF
+              Stahl
               <span className="text-orange-500">
-                ERP
+                Fabrik
               </span>
             </span>
 
