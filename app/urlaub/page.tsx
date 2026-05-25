@@ -50,7 +50,6 @@ export default function UrlaubPage() {
     if (ende < start) return 0;
 
     let tage = 0;
-
     const aktuell = new Date(start);
 
     while (aktuell <= ende) {
@@ -70,18 +69,14 @@ export default function UrlaubPage() {
     setMeldung("");
 
     if (!von || !bis) {
-      setMeldung(
-        "Bitte Start- und Enddatum auswählen."
-      );
+      setMeldung("Bitte Start- und Enddatum auswählen.");
       return;
     }
 
     const tage = berechneTage();
 
     if (tage <= 0) {
-      setMeldung(
-        "Bitte gültigen Zeitraum auswählen."
-      );
+      setMeldung("Bitte gültigen Zeitraum auswählen.");
       return;
     }
 
@@ -94,12 +89,25 @@ export default function UrlaubPage() {
       return;
     }
 
+    let mitarbeiterName = user.email || "Unbekannt";
+
+    const { data: mitarbeiterData } = await supabase
+      .from("mitarbeiter")
+      .select("name")
+      .eq("user_id", user.id)
+      .single();
+
+    if (mitarbeiterData?.name) {
+      mitarbeiterName = mitarbeiterData.name;
+    }
+
     setLoading(true);
 
     const { error } = await supabase
       .from("urlaub")
       .insert([
         {
+          mitarbeiter: mitarbeiterName,
           typ,
           von,
           bis,
@@ -123,14 +131,11 @@ export default function UrlaubPage() {
     await ladeUrlaub();
 
     setLoading(false);
-
     setMeldung("Abwesenheit gespeichert.");
   }
 
   async function urlaubLoeschen(id: number) {
-    const bestaetigen = confirm(
-      "Abwesenheit wirklich löschen?"
-    );
+    const bestaetigen = confirm("Abwesenheit wirklich löschen?");
 
     if (!bestaetigen) return;
 
@@ -156,35 +161,19 @@ export default function UrlaubPage() {
     }
 
     await ladeUrlaub();
-
     setMeldung("Abwesenheit gelöscht.");
   }
 
   function typFarbe(typ: string) {
-    if (typ === "Urlaub") {
-      return "bg-blue-100 text-blue-800";
-    }
-
-    if (typ === "Krank") {
-      return "bg-red-100 text-red-800";
-    }
-
-    if (typ === "Überstundenabbau") {
-      return "bg-orange-100 text-orange-800";
-    }
-
+    if (typ === "Urlaub") return "bg-blue-100 text-blue-800";
+    if (typ === "Krank") return "bg-red-100 text-red-800";
+    if (typ === "Überstundenabbau") return "bg-orange-100 text-orange-800";
     return "bg-zinc-100 text-zinc-800";
   }
 
   function statusFarbe(status: string) {
-    if (status === "Genehmigt") {
-      return "bg-green-100 text-green-800";
-    }
-
-    if (status === "Abgelehnt") {
-      return "bg-red-100 text-red-800";
-    }
-
+    if (status === "Genehmigt") return "bg-green-100 text-green-800";
+    if (status === "Abgelehnt") return "bg-red-100 text-red-800";
     return "bg-yellow-100 text-yellow-800";
   }
 
@@ -212,14 +201,8 @@ export default function UrlaubPage() {
             className="rounded-xl border border-zinc-300 p-3 text-zinc-900"
           >
             <option value="Urlaub">Urlaub</option>
-
-            <option value="Krank">
-              Krank
-            </option>
-
-            <option value="Überstundenabbau">
-              Überstundenabbau
-            </option>
+            <option value="Krank">Krank</option>
+            <option value="Überstundenabbau">Überstundenabbau</option>
           </select>
 
           <input
@@ -242,9 +225,7 @@ export default function UrlaubPage() {
             disabled={loading}
             className="rounded-xl bg-zinc-900 font-bold text-white transition hover:bg-orange-500 disabled:opacity-50"
           >
-            {loading
-              ? "Speichern..."
-              : "Speichern"}
+            {loading ? "Speichern..." : "Speichern"}
           </button>
         </div>
 
@@ -258,8 +239,7 @@ export default function UrlaubPage() {
 
           {typ === "Überstundenabbau" && (
             <p className="mt-2 text-sm font-medium text-zinc-600">
-              Diese Tage werden später vom
-              Überstundenkonto abgezogen und nicht
+              Diese Tage werden später vom Überstundenkonto abgezogen und nicht
               vom Urlaub.
             </p>
           )}
@@ -319,9 +299,7 @@ export default function UrlaubPage() {
 
               <button
                 type="button"
-                onClick={() =>
-                  urlaubLoeschen(eintrag.id)
-                }
+                onClick={() => urlaubLoeschen(eintrag.id)}
                 className="mt-4 w-full rounded-lg bg-red-600 px-4 py-2 font-semibold text-white transition hover:bg-red-700"
               >
                 Löschen
@@ -356,13 +334,8 @@ export default function UrlaubPage() {
                   </span>
                 </div>
 
-                <div className="text-zinc-800">
-                  {eintrag.von}
-                </div>
-
-                <div className="text-zinc-800">
-                  {eintrag.bis}
-                </div>
+                <div className="text-zinc-800">{eintrag.von}</div>
+                <div className="text-zinc-800">{eintrag.bis}</div>
 
                 <div className="font-bold text-zinc-900">
                   {eintrag.tage || 0}
@@ -381,9 +354,7 @@ export default function UrlaubPage() {
                 <div>
                   <button
                     type="button"
-                    onClick={() =>
-                      urlaubLoeschen(eintrag.id)
-                    }
+                    onClick={() => urlaubLoeschen(eintrag.id)}
                     className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white transition hover:bg-red-700"
                   >
                     Löschen
