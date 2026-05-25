@@ -1,17 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabaseAdmin = createClient(
-  supabaseUrl,
-  serviceRoleKey
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
+    const body = await req.json();
 
     const {
       name,
@@ -22,15 +19,8 @@ export async function POST(request: Request) {
       urlaubstage,
     } = body;
 
-    if (!name || !email || !password) {
-      return NextResponse.json(
-        { error: "Name, E-Mail und Passwort sind erforderlich." },
-        { status: 400 }
-      );
-    }
-
     const { data: authData, error: authError } =
-      await supabaseAdmin.auth.admin.createUser({
+      await supabase.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
@@ -45,15 +35,14 @@ export async function POST(request: Request) {
 
     const userId = authData.user.id;
 
-    const { error: mitarbeiterError } = await supabaseAdmin
-      .from("mitarbeiter")
-      .insert([
+    const { error: mitarbeiterError } =
+      await supabase.from("mitarbeiter").insert([
         {
           name,
           rolle,
           wochenstunden,
           urlaubstage,
-          status: "Aktiv",
+          status: "Aktive",
           user_id: userId,
           ueberstunden_start: 0,
         },
@@ -68,12 +57,15 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "Mitarbeiter wurde erstellt.",
     });
   } catch (error) {
     return NextResponse.json(
-      { error: "Serverfehler beim Erstellen des Mitarbeiters." },
-      { status: 500 }
+      {
+        error: "Serverfehler",
+      },
+      {
+        status: 500,
+      }
     );
   }
 }
