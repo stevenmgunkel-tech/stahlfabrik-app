@@ -1,91 +1,319 @@
-@import "tailwindcss";
+"use client";
 
-:root {
-  --background: #f4f4f5;
-  --foreground: #18181b;
-}
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 
-html,
-body {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-  scroll-behavior: smooth;
-}
+export default function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
 
-body {
-  background: linear-gradient(
-    to bottom right,
-    #f4f4f5,
-    #f4f4f5,
-    #fff7ed
+  const [sidebarOpen, setSidebarOpen] =
+    useState(false);
+
+  const [userName, setUserName] =
+    useState("");
+
+  const [userRole, setUserRole] =
+    useState("");
+
+  const isLoginPage =
+    pathname === "/login";
+
+  const isAdmin =
+    userRole === "Admin";
+
+  const navItems = isAdmin
+    ? [
+        {
+          href: "/",
+          label: "Dashboard",
+        },
+        {
+          href: "/arbeitszeiten",
+          label: "Arbeitszeiten",
+        },
+        {
+          href: "/urlaub",
+          label: "Urlaub / Krank",
+        },
+        {
+          href: "/monatsansicht",
+          label: "Monatsansicht",
+        },
+        {
+          href: "/resturlaub",
+          label: "Resturlaub",
+        },
+        {
+          href: "/mitarbeiter",
+          label: "Mitarbeiter",
+        },
+        {
+          href: "/chef-dashboard",
+          label: "Chef Dashboard",
+        },
+        {
+          href: "/projekte",
+          label: "Projekte",
+        },
+        {
+          href: "/admin",
+          label: "Admin",
+        },
+      ]
+    : [
+        {
+          href: "/",
+          label: "Dashboard",
+        },
+        {
+          href: "/arbeitszeiten",
+          label: "Arbeitszeiten",
+        },
+        {
+          href: "/urlaub",
+          label: "Urlaub / Krank",
+        },
+        {
+          href: "/monatsansicht",
+          label: "Monatsansicht",
+        },
+        {
+          href: "/resturlaub",
+          label: "Resturlaub",
+        },
+      ];
+
+  useEffect(() => {
+    async function ladeUser() {
+      const userData =
+        await supabase.auth.getUser();
+
+      const user =
+        userData.data.user;
+
+      if (!user) return;
+
+      const { data } =
+        await supabase
+          .from("mitarbeiter")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+
+      if (data) {
+        setUserName(
+          data.name ||
+            user.email ||
+            ""
+        );
+
+        setUserRole(
+          data.rolle || ""
+        );
+      }
+    }
+
+    ladeUser();
+  }, []);
+
+  async function logout() {
+    await supabase.auth.signOut();
+
+    window.location.href =
+      "/login";
+  }
+
+  if (isLoginPage) {
+    return (
+      <div className="min-h-screen bg-zinc-100">
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-zinc-100">
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center border-b border-zinc-200 bg-white px-5 md:hidden">
+        <Link
+          href="/"
+          className="text-[30px] font-black tracking-tight text-zinc-900"
+        >
+          Stahl
+          <span className="text-orange-500">
+            Fabrik
+          </span>
+        </Link>
+
+        <button
+          type="button"
+          onClick={() =>
+            setSidebarOpen(true)
+          }
+          className="ml-auto flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-900 text-[22px] font-bold text-white"
+        >
+          ☰
+        </button>
+      </header>
+
+      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col overflow-y-auto border-r border-zinc-200 bg-white md:flex">
+        <div className="border-b border-zinc-200 p-6">
+          <Link
+            href="/"
+            className="flex flex-col"
+          >
+            <span className="text-3xl font-black tracking-tight text-zinc-900">
+              Stahl
+              <span className="text-orange-500">
+                Fabrik
+              </span>
+            </span>
+
+            <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-400">
+              Swiss ERP
+            </span>
+          </Link>
+        </div>
+
+        <nav className="flex flex-1 flex-col gap-1 p-4">
+          {navItems.map((item) => {
+            const active =
+              pathname === item.href;
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`rounded-xl px-4 py-3 text-sm font-bold transition ${
+                  active
+                    ? "bg-zinc-900 text-white"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="border-t border-zinc-200 p-4">
+          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+            <p className="text-sm font-bold text-zinc-900">
+              {userName ||
+                "Angemeldet"}
+            </p>
+
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-orange-500">
+              {userRole ||
+                "Benutzer"}
+            </p>
+
+            <button
+              type="button"
+              onClick={logout}
+              className="mt-4 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-orange-500"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-[999] md:hidden">
+          <button
+            type="button"
+            onClick={() =>
+              setSidebarOpen(false)
+            }
+            className="absolute inset-0 bg-black/50"
+          />
+
+          <aside className="absolute left-0 top-0 flex h-full w-[82%] max-w-xs flex-col overflow-y-auto bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-zinc-200 p-5">
+              <div className="flex flex-col">
+                <span className="text-3xl font-black text-zinc-900">
+                  Stahl
+                  <span className="text-orange-500">
+                    Fabrik
+                  </span>
+                </span>
+
+                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-400">
+                  Swiss ERP
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setSidebarOpen(false)
+                }
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-900"
+              >
+                ✕
+              </button>
+            </div>
+
+            <nav className="flex flex-1 flex-col gap-1 p-4">
+              {navItems.map((item) => {
+                const active =
+                  pathname === item.href;
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() =>
+                      setSidebarOpen(false)
+                    }
+                    className={`rounded-xl px-4 py-4 text-base font-bold transition ${
+                      active
+                        ? "bg-zinc-900 text-white"
+                        : "text-zinc-700 hover:bg-zinc-100"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="border-t border-zinc-200 p-4">
+              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                <p className="text-sm font-bold text-zinc-900">
+                  {userName ||
+                    "Angemeldet"}
+                </p>
+
+                <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-orange-500">
+                  {userRole ||
+                    "Benutzer"}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="mt-4 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-orange-500"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      <main className="pt-16 md:ml-64 md:pt-0">
+        <div className="w-full overflow-x-hidden p-4 md:p-8">
+          {children}
+        </div>
+      </main>
+    </div>
   );
-
-  color: var(--foreground);
-
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-input,
-select,
-textarea,
-button {
-  width: 100%;
-  max-width: 100%;
-}
-
-table {
-  width: 100%;
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #000000;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #3f3f46;
-  border-radius: 999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
-}
-
-::selection {
-  background: #f97316;
-  color: white;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-  border-color: #f97316;
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
-}
-
-button {
-  transition:
-    transform 0.15s ease,
-    opacity 0.15s ease;
-}
-
-button:hover {
-  transform: translateY(-1px);
-}
-
-button:active {
-  transform: scale(0.98);
 }
