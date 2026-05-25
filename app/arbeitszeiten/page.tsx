@@ -87,6 +87,21 @@ export default function ArbeitszeitenPage() {
 
     const berechneteStunden = berechneStunden();
 
+    if (berechneteStunden <= 0) {
+      setMeldung("Bitte gültige Arbeitszeit eingeben.");
+      return;
+    }
+
+    const userData = await supabase.auth.getUser();
+    const user = userData.data.user;
+
+    if (!user) {
+      setSaving(false);
+      setMeldung("Bitte zuerst einloggen.");
+      window.location.href = "/login";
+      return;
+    }
+
     setSaving(true);
 
     if (bearbeitenId) {
@@ -100,7 +115,8 @@ export default function ArbeitszeitenPage() {
           pause: Number(pause || 0),
           stunden: berechneteStunden,
         })
-        .eq("id", bearbeitenId);
+        .eq("id", bearbeitenId)
+        .eq("user_id", user.id);
 
       if (error) {
         setSaving(false);
@@ -111,15 +127,6 @@ export default function ArbeitszeitenPage() {
 
       setMeldung("Arbeitszeit aktualisiert.");
     } else {
-      const userData = await supabase.auth.getUser();
-      const user = userData.data.user;
-
-      if (!user) {
-        setSaving(false);
-        setMeldung("Bitte zuerst einloggen.");
-        return;
-      }
-
       const { error } = await supabase
         .from("arbeitszeiten")
         .insert([
@@ -149,7 +156,6 @@ export default function ArbeitszeitenPage() {
     setStartzeit("");
     setEndzeit("");
     setPause("");
-
     setBearbeitenId(null);
 
     await ladeDaten();
@@ -164,10 +170,20 @@ export default function ArbeitszeitenPage() {
 
     if (!bestaetigen) return;
 
+    const userData = await supabase.auth.getUser();
+    const user = userData.data.user;
+
+    if (!user) {
+      setMeldung("Bitte zuerst einloggen.");
+      window.location.href = "/login";
+      return;
+    }
+
     const { error } = await supabase
       .from("arbeitszeiten")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .eq("user_id", user.id);
 
     if (error) {
       setMeldung(error.message);
@@ -418,6 +434,12 @@ export default function ArbeitszeitenPage() {
               ))}
             </tbody>
           </table>
+
+          {zeiten.length === 0 && (
+            <div className="rounded-xl bg-zinc-100 p-4 text-zinc-600">
+              Noch keine Arbeitszeiten vorhanden.
+            </div>
+          )}
         </div>
       </div>
     </main>
