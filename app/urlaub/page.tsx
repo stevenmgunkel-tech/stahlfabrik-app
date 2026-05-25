@@ -50,6 +50,7 @@ export default function UrlaubPage() {
     if (ende < start) return 0;
 
     let tage = 0;
+
     const aktuell = new Date(start);
 
     while (aktuell <= ende) {
@@ -69,7 +70,18 @@ export default function UrlaubPage() {
     setMeldung("");
 
     if (!von || !bis) {
-      setMeldung("Bitte Start- und Enddatum auswählen.");
+      setMeldung(
+        "Bitte Start- und Enddatum auswählen."
+      );
+      return;
+    }
+
+    const tage = berechneTage();
+
+    if (tage <= 0) {
+      setMeldung(
+        "Bitte gültigen Zeitraum auswählen."
+      );
       return;
     }
 
@@ -82,25 +94,20 @@ export default function UrlaubPage() {
       return;
     }
 
-    const tage = berechneTage();
-
-    if (tage <= 0) {
-      setMeldung("Bitte gültigen Zeitraum auswählen.");
-      return;
-    }
-
     setLoading(true);
 
-    const { error } = await supabase.from("urlaub").insert([
-      {
-        typ,
-        von,
-        bis,
-        tage,
-        status: "Beantragt",
-        user_id: user.id,
-      },
-    ]);
+    const { error } = await supabase
+      .from("urlaub")
+      .insert([
+        {
+          typ,
+          von,
+          bis,
+          tage,
+          status: "Beantragt",
+          user_id: user.id,
+        },
+      ]);
 
     if (error) {
       setLoading(false);
@@ -116,15 +123,31 @@ export default function UrlaubPage() {
     await ladeUrlaub();
 
     setLoading(false);
+
     setMeldung("Abwesenheit gespeichert.");
   }
 
   async function urlaubLoeschen(id: number) {
-    const bestaetigen = confirm("Abwesenheit wirklich löschen?");
+    const bestaetigen = confirm(
+      "Abwesenheit wirklich löschen?"
+    );
 
     if (!bestaetigen) return;
 
-    const { error } = await supabase.from("urlaub").delete().eq("id", id);
+    const userData = await supabase.auth.getUser();
+    const user = userData.data.user;
+
+    if (!user) {
+      setMeldung("Bitte zuerst einloggen.");
+      window.location.href = "/login";
+      return;
+    }
+
+    const { error } = await supabase
+      .from("urlaub")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id);
 
     if (error) {
       setMeldung(error.message);
@@ -133,6 +156,7 @@ export default function UrlaubPage() {
     }
 
     await ladeUrlaub();
+
     setMeldung("Abwesenheit gelöscht.");
   }
 
@@ -188,8 +212,14 @@ export default function UrlaubPage() {
             className="rounded-xl border border-zinc-300 p-3 text-zinc-900"
           >
             <option value="Urlaub">Urlaub</option>
-            <option value="Krank">Krank</option>
-            <option value="Überstundenabbau">Überstundenabbau</option>
+
+            <option value="Krank">
+              Krank
+            </option>
+
+            <option value="Überstundenabbau">
+              Überstundenabbau
+            </option>
           </select>
 
           <input
@@ -212,7 +242,9 @@ export default function UrlaubPage() {
             disabled={loading}
             className="rounded-xl bg-zinc-900 font-bold text-white transition hover:bg-orange-500 disabled:opacity-50"
           >
-            {loading ? "Speichern..." : "Speichern"}
+            {loading
+              ? "Speichern..."
+              : "Speichern"}
           </button>
         </div>
 
@@ -226,7 +258,8 @@ export default function UrlaubPage() {
 
           {typ === "Überstundenabbau" && (
             <p className="mt-2 text-sm font-medium text-zinc-600">
-              Diese Tage werden später vom Überstundenkonto abgezogen und nicht
+              Diese Tage werden später vom
+              Überstundenkonto abgezogen und nicht
               vom Urlaub.
             </p>
           )}
@@ -243,6 +276,12 @@ export default function UrlaubPage() {
         <h2 className="mb-6 text-2xl font-bold text-zinc-900">
           Meine Abwesenheiten
         </h2>
+
+        {urlaub.length === 0 && (
+          <div className="rounded-xl bg-zinc-100 p-4 text-zinc-600">
+            Noch keine Abwesenheiten vorhanden.
+          </div>
+        )}
 
         <div className="space-y-4 md:hidden">
           {urlaub.map((eintrag) => (
@@ -280,7 +319,9 @@ export default function UrlaubPage() {
 
               <button
                 type="button"
-                onClick={() => urlaubLoeschen(eintrag.id)}
+                onClick={() =>
+                  urlaubLoeschen(eintrag.id)
+                }
                 className="mt-4 w-full rounded-lg bg-red-600 px-4 py-2 font-semibold text-white transition hover:bg-red-700"
               >
                 Löschen
@@ -315,9 +356,13 @@ export default function UrlaubPage() {
                   </span>
                 </div>
 
-                <div className="text-zinc-800">{eintrag.von}</div>
+                <div className="text-zinc-800">
+                  {eintrag.von}
+                </div>
 
-                <div className="text-zinc-800">{eintrag.bis}</div>
+                <div className="text-zinc-800">
+                  {eintrag.bis}
+                </div>
 
                 <div className="font-bold text-zinc-900">
                   {eintrag.tage || 0}
@@ -336,7 +381,9 @@ export default function UrlaubPage() {
                 <div>
                   <button
                     type="button"
-                    onClick={() => urlaubLoeschen(eintrag.id)}
+                    onClick={() =>
+                      urlaubLoeschen(eintrag.id)
+                    }
                     className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white transition hover:bg-red-700"
                   >
                     Löschen
