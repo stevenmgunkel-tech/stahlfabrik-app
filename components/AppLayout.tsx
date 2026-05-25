@@ -24,15 +24,18 @@ export default function AppLayout({
   return (
     <div className="min-h-screen bg-zinc-100">
       {/* MOBILE HEADER */}
-      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center border-b border-zinc-200 bg-white px-4 md:hidden">
-        <Link href="/" className="text-3xl font-black tracking-tight text-zinc-900">
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-14 items-center border-b border-zinc-200 bg-white px-4 md:hidden">
+        <Link
+          href="/"
+          className="text-2xl font-extrabold tracking-tight text-zinc-900"
+        >
           Stahl<span className="text-orange-500">Fabrik</span>
         </Link>
 
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
-          className="ml-auto w-auto rounded-xl bg-zinc-950 px-5 py-2 text-lg text-white shadow-lg"
+          className="ml-auto w-auto rounded-lg bg-zinc-950 px-4 py-1.5 text-base text-white shadow-md"
         >
           ☰
         </button>
@@ -119,7 +122,7 @@ export default function AppLayout({
       )}
 
       {/* CONTENT */}
-      <main className="pt-20 md:ml-64 md:pt-0">
+      <main className="pt-16 md:ml-64 md:pt-0">
         <div className="w-full overflow-x-hidden p-3 md:p-8">
           {children}
         </div>
