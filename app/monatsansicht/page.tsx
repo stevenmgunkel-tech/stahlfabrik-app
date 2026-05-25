@@ -12,6 +12,8 @@ export default function MonatsansichtPage() {
   const [wochenstunden, setWochenstunden] = useState(40);
   const [ueberstundenStart, setUeberstundenStart] = useState(0);
 
+  const [eintrittsdatum, setEintrittsdatum] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [meldung, setMeldung] = useState("");
 
@@ -42,6 +44,7 @@ export default function MonatsansichtPage() {
       if (mitarbeiter) {
         setWochenstunden(Number(mitarbeiter.wochenstunden || 40));
         setUeberstundenStart(Number(mitarbeiter.ueberstunden_start || 0));
+        setEintrittsdatum(mitarbeiter.eintrittsdatum || "");
       }
 
       const start = `${monat}-01`;
@@ -94,19 +97,59 @@ export default function MonatsansichtPage() {
     0
   );
 
+  function monatVorEintritt() {
+    if (!eintrittsdatum) return false;
+
+    const ausgewaehlterMonat = new Date(`${monat}-01`);
+    const eintritt = new Date(eintrittsdatum);
+
+    return (
+      ausgewaehlterMonat.getFullYear() < eintritt.getFullYear() ||
+      (ausgewaehlterMonat.getFullYear() ===
+        eintritt.getFullYear() &&
+        ausgewaehlterMonat.getMonth() <
+          eintritt.getMonth())
+    );
+  }
+
   function berechneArbeitstage() {
+    if (monatVorEintritt()) {
+      return 0;
+    }
+
     const jahr = Number(monat.slice(0, 4));
     const monatNummer = Number(monat.slice(5, 7));
-    const tageImMonat = new Date(jahr, monatNummer, 0).getDate();
+
+    const tageImMonat = new Date(
+      jahr,
+      monatNummer,
+      0
+    ).getDate();
 
     let arbeitstage = 0;
 
     for (let tag = 1; tag <= tageImMonat; tag++) {
-      const datum = new Date(jahr, monatNummer - 1, tag);
+      const datum = new Date(
+        jahr,
+        monatNummer - 1,
+        tag
+      );
+
+      if (eintrittsdatum) {
+        const eintritt = new Date(eintrittsdatum);
+
+        if (datum < eintritt) {
+          continue;
+        }
+      }
+
       const wochentag = datum.getDay();
 
-      const istWochenende = wochentag === 0 || wochentag === 6;
-      const istFeiertag = istFeiertagSG(datum);
+      const istWochenende =
+        wochentag === 0 || wochentag === 6;
+
+      const istFeiertag =
+        istFeiertagSG(datum);
 
       if (!istWochenende && !istFeiertag) {
         arbeitstage++;
@@ -117,11 +160,16 @@ export default function MonatsansichtPage() {
   }
 
   function feiertageImMonat() {
+    if (monatVorEintritt()) {
+      return [];
+    }
+
     const jahr = Number(monat.slice(0, 4));
     const monatNummer = Number(monat.slice(5, 7));
 
     return getFeiertageSG(jahr).filter((feiertag) => {
       const datum = new Date(feiertag.datum);
+
       const wochentag = datum.getDay();
 
       return (
@@ -178,22 +226,6 @@ export default function MonatsansichtPage() {
     ueberstundenStart +
     differenz -
     ueberstundenAbbauStunden;
-
-  function typFarbe(typ: string) {
-    if (typ === "Urlaub") {
-      return "bg-blue-100 text-blue-800";
-    }
-
-    if (typ === "Krank") {
-      return "bg-red-100 text-red-800";
-    }
-
-    if (typ === "Überstundenabbau") {
-      return "bg-orange-100 text-orange-800";
-    }
-
-    return "bg-zinc-100 text-zinc-800";
-  }
 
   return (
     <main>
