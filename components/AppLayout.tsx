@@ -319,9 +319,9 @@ export default function AppLayout({
               <div className="flex flex-col">
 
                 <span className="text-3xl font-black tracking-tight text-white">
-                  SF
+                  Stahl
                   <span className="text-orange-500">
-                    ERP
+                    Fabrik
                   </span>
                 </span>
 
