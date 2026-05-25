@@ -17,6 +17,8 @@ export default function MitarbeiterPage() {
   const [loading, setLoading] = useState(false);
   const [meldung, setMeldung] = useState("");
 
+  const [bearbeitenId, setBearbeitenId] = useState<number | null>(null);
+
   async function ladeMitarbeiter() {
     const { data, error } = await supabase
       .from("mitarbeiter")
@@ -36,37 +38,71 @@ export default function MitarbeiterPage() {
     ladeMitarbeiter();
   }, []);
 
-  async function mitarbeiterHinzufuegen() {
+  async function mitarbeiterSpeichern() {
     setMeldung("");
 
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      setMeldung("Bitte Name, E-Mail und Start-Passwort ausfüllen.");
+    if (!name.trim()) {
+      setMeldung("Bitte Namen eingeben.");
       return;
     }
 
     setLoading(true);
 
-    const response = await fetch("/api/create-user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name,
-        email,
-        password,
-        rolle,
-        wochenstunden: Number(wochenstunden),
-        urlaubstage: Number(urlaubstage),
-      }),
-    });
+    if (bearbeitenId) {
+      const { error } = await supabase
+        .from("mitarbeiter")
+        .update({
+          name,
+          rolle,
+          wochenstunden: Number(wochenstunden),
+          urlaubstage: Number(urlaubstage),
+        })
+        .eq("id", bearbeitenId);
 
-    const result = await response.json();
+      if (error) {
+        setLoading(false);
+        setMeldung(error.message);
+        console.log(error);
+        return;
+      }
 
-    if (!response.ok) {
-      setLoading(false);
-      setMeldung(result.error || "Mitarbeiter konnte nicht erstellt werden.");
-      return;
+      setMeldung("Mitarbeiter aktualisiert.");
+    } else {
+      if (!email.trim() || !password.trim()) {
+        setLoading(false);
+        setMeldung(
+          "Bitte E-Mail und Start-Passwort ausfüllen."
+        );
+        return;
+      }
+
+      const response = await fetch("/api/create-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          rolle,
+          wochenstunden: Number(wochenstunden),
+          urlaubstage: Number(urlaubstage),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setLoading(false);
+        setMeldung(
+          result.error ||
+            "Mitarbeiter konnte nicht erstellt werden."
+        );
+        return;
+      }
+
+      setMeldung("Mitarbeiter wurde erstellt.");
     }
 
     setName("");
@@ -76,14 +112,17 @@ export default function MitarbeiterPage() {
     setWochenstunden("");
     setUrlaubstage("");
 
+    setBearbeitenId(null);
+
     await ladeMitarbeiter();
 
     setLoading(false);
-    setMeldung("Mitarbeiter wurde erstellt.");
   }
 
   async function mitarbeiterLoeschen(id: number) {
-    const bestaetigen = confirm("Mitarbeiter wirklich löschen?");
+    const bestaetigen = confirm(
+      "Mitarbeiter wirklich löschen?"
+    );
 
     if (!bestaetigen) return;
 
@@ -116,7 +155,9 @@ export default function MitarbeiterPage() {
 
       <div className="rounded-2xl border border-zinc-200 bg-white p-4 md:p-6 shadow-sm">
         <h2 className="mb-6 text-xl md:text-2xl font-bold text-zinc-900">
-          Mitarbeiter mit Login erstellen
+          {bearbeitenId
+            ? "Mitarbeiter bearbeiten"
+            : "Mitarbeiter mit Login erstellen"}
         </h2>
 
         <div className="flex flex-col gap-4 lg:grid lg:grid-cols-3">
@@ -128,21 +169,25 @@ export default function MitarbeiterPage() {
             className="rounded-xl border border-zinc-300 p-3"
           />
 
-          <input
-            type="email"
-            placeholder="E-Mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="rounded-xl border border-zinc-300 p-3"
-          />
+          {!bearbeitenId && (
+            <>
+              <input
+                type="email"
+                placeholder="E-Mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="rounded-xl border border-zinc-300 p-3"
+              />
 
-          <input
-            type="password"
-            placeholder="Start-Passwort"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rounded-xl border border-zinc-300 p-3"
-          />
+              <input
+                type="password"
+                placeholder="Start-Passwort"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="rounded-xl border border-zinc-300 p-3"
+              />
+            </>
+          )}
 
           <select
             value={rolle}
@@ -174,14 +219,38 @@ export default function MitarbeiterPage() {
           />
         </div>
 
-        <button
-          type="button"
-          onClick={mitarbeiterHinzufuegen}
-          disabled={loading}
-          className="mt-6 rounded-xl bg-zinc-900 px-5 py-3 font-bold text-white transition hover:bg-orange-500 disabled:opacity-50"
-        >
-          {loading ? "Erstellen..." : "Mitarbeiter erstellen"}
-        </button>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={mitarbeiterSpeichern}
+            disabled={loading}
+            className="rounded-xl bg-zinc-900 px-5 py-3 font-bold text-white transition hover:bg-orange-500 disabled:opacity-50"
+          >
+            {loading
+              ? "Speichern..."
+              : bearbeitenId
+              ? "Änderung speichern"
+              : "Mitarbeiter erstellen"}
+          </button>
+
+          {bearbeitenId && (
+            <button
+              type="button"
+              onClick={() => {
+                setBearbeitenId(null);
+                setName("");
+                setEmail("");
+                setPassword("");
+                setRolle("Mitarbeiter");
+                setWochenstunden("");
+                setUrlaubstage("");
+              }}
+              className="rounded-xl bg-zinc-200 px-5 py-3 font-bold text-zinc-900"
+            >
+              Abbrechen
+            </button>
+          )}
+        </div>
 
         {meldung && (
           <div className="mt-4 rounded-xl bg-zinc-900 p-3 text-sm font-semibold text-white">
@@ -208,24 +277,49 @@ export default function MitarbeiterPage() {
 
             <div className="mt-4 space-y-2 text-sm">
               <div>
-                <span className="font-semibold">Rolle:</span> {person.rolle}
+                <span className="font-semibold">Rolle:</span>{" "}
+                {person.rolle}
               </div>
 
               <div>
-                <span className="font-semibold">Wochenstunden:</span>{" "}
+                <span className="font-semibold">
+                  Wochenstunden:
+                </span>{" "}
                 {person.wochenstunden}h
               </div>
 
               <div>
-                <span className="font-semibold">Urlaubstage:</span>{" "}
+                <span className="font-semibold">
+                  Urlaubstage:
+                </span>{" "}
                 {person.urlaubstage}
               </div>
             </div>
 
             <button
               type="button"
-              onClick={() => mitarbeiterLoeschen(person.id)}
-              className="mt-4 rounded-xl bg-red-600 p-3 font-bold text-white"
+              onClick={() => {
+                setBearbeitenId(person.id);
+                setName(person.name || "");
+                setRolle(person.rolle || "Mitarbeiter");
+                setWochenstunden(
+                  String(person.wochenstunden || "")
+                );
+                setUrlaubstage(
+                  String(person.urlaubstage || "")
+                );
+              }}
+              className="mt-4 w-full rounded-xl bg-zinc-900 p-3 font-bold text-white"
+            >
+              Bearbeiten
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                mitarbeiterLoeschen(person.id)
+              }
+              className="mt-3 w-full rounded-xl bg-red-600 p-3 font-bold text-white"
             >
               Löschen
             </button>
@@ -239,7 +333,7 @@ export default function MitarbeiterPage() {
         </h2>
 
         <div className="overflow-x-auto">
-          <div className="min-w-[900px]">
+          <div className="min-w-[1000px]">
             <div className="grid grid-cols-6 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
               <div>Name</div>
               <div>Rolle</div>
@@ -270,10 +364,32 @@ export default function MitarbeiterPage() {
                   </span>
                 </div>
 
-                <div>
+                <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => mitarbeiterLoeschen(person.id)}
+                    onClick={() => {
+                      setBearbeitenId(person.id);
+                      setName(person.name || "");
+                      setRolle(
+                        person.rolle || "Mitarbeiter"
+                      );
+                      setWochenstunden(
+                        String(person.wochenstunden || "")
+                      );
+                      setUrlaubstage(
+                        String(person.urlaubstage || "")
+                      );
+                    }}
+                    className="rounded-lg bg-zinc-900 px-4 py-2 font-semibold text-white"
+                  >
+                    Bearbeiten
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      mitarbeiterLoeschen(person.id)
+                    }
                     className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white"
                   >
                     Löschen
