@@ -7,12 +7,18 @@ export default function HomePage() {
   const [mitarbeiter, setMitarbeiter] = useState<any[]>([]);
   const [arbeitszeiten, setArbeitszeiten] = useState<any[]>([]);
   const [urlaub, setUrlaub] = useState<any[]>([]);
+  const [projekte, setProjekte] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(true);
+  const [meldung, setMeldung] = useState("");
 
   const monat = new Date().toISOString().slice(0, 7);
 
   useEffect(() => {
     async function ladeDashboard() {
+      setLoading(true);
+      setMeldung("");
+
       const userData = await supabase.auth.getUser();
       const user = userData.data.user;
 
@@ -31,25 +37,45 @@ export default function HomePage() {
         .toISOString()
         .split("T")[0];
 
-      const { data: mitarbeiterData } = await supabase
-        .from("mitarbeiter")
-        .select("*");
+      const { data: mitarbeiterData, error: mitarbeiterError } =
+        await supabase.from("mitarbeiter").select("*");
 
-      const { data: arbeitszeitenData } = await supabase
-        .from("arbeitszeiten")
-        .select("*")
-        .gte("datum", start)
-        .lte("datum", ende);
+      const { data: arbeitszeitenData, error: arbeitszeitenError } =
+        await supabase
+          .from("arbeitszeiten")
+          .select("*")
+          .gte("datum", start)
+          .lte("datum", ende)
+          .order("id", { ascending: false });
 
-      const { data: urlaubData } = await supabase
+      const { data: urlaubData, error: urlaubError } = await supabase
         .from("urlaub")
         .select("*")
         .gte("von", start)
-        .lte("bis", ende);
+        .lte("bis", ende)
+        .order("id", { ascending: false });
+
+      const { data: projekteData, error: projekteError } = await supabase
+        .from("projekte")
+        .select("*")
+        .order("id", { ascending: false });
+
+      const fehler =
+        mitarbeiterError ||
+        arbeitszeitenError ||
+        urlaubError ||
+        projekteError;
+
+      if (fehler) {
+        setMeldung(fehler.message);
+        console.log(fehler);
+      }
 
       setMitarbeiter(mitarbeiterData || []);
       setArbeitszeiten(arbeitszeitenData || []);
       setUrlaub(urlaubData || []);
+      setProjekte(projekteData || []);
+
       setLoading(false);
     }
 
@@ -72,6 +98,8 @@ export default function HomePage() {
 
   const letzteArbeitszeit = arbeitszeiten[0];
   const letzterUrlaub = urlaub[0];
+  const letztesProjekt = projekte[0];
+  const letzterMitarbeiter = mitarbeiter[0];
 
   return (
     <main className="space-y-6">
@@ -85,6 +113,12 @@ export default function HomePage() {
         </p>
       </div>
 
+      {meldung && (
+        <div className="rounded-xl bg-zinc-900 p-3 text-sm font-semibold text-white">
+          {meldung}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl bg-white p-6 shadow">
           <h2 className="text-sm text-zinc-500">Mitarbeiter</h2>
@@ -97,6 +131,7 @@ export default function HomePage() {
           <h2 className="text-sm text-zinc-500">
             Arbeitsstunden Monat
           </h2>
+
           <p className="mt-2 text-4xl font-extrabold text-zinc-900">
             {loading ? "..." : `${gesamtstunden.toFixed(2)}h`}
           </p>
@@ -106,13 +141,17 @@ export default function HomePage() {
           <h2 className="text-sm text-zinc-500">
             Offene Urlaube
           </h2>
+
           <p className="mt-2 text-4xl font-extrabold text-zinc-900">
             {loading ? "..." : offeneUrlaube}
           </p>
         </div>
 
         <div className="rounded-2xl bg-white p-6 shadow">
-          <h2 className="text-sm text-zinc-500">Krankmeldungen</h2>
+          <h2 className="text-sm text-zinc-500">
+            Krankmeldungen
+          </h2>
+
           <p className="mt-2 text-4xl font-extrabold text-zinc-900">
             {loading ? "..." : krankmeldungen}
           </p>
@@ -127,23 +166,51 @@ export default function HomePage() {
         <div className="space-y-3">
           {letzteArbeitszeit && (
             <div className="rounded-xl bg-zinc-100 p-4">
-              Letzte Arbeitszeit: {letzteArbeitszeit.projekt} —{" "}
-              {letzteArbeitszeit.stunden}h
+              Letzte Arbeitszeit:{" "}
+              <span className="font-semibold">
+                {letzteArbeitszeit.projekt}
+              </span>{" "}
+              — {letzteArbeitszeit.stunden}h
             </div>
           )}
 
           {letzterUrlaub && (
             <div className="rounded-xl bg-zinc-100 p-4">
-              Letzter Eintrag: {letzterUrlaub.typ} —{" "}
-              {letzterUrlaub.status}
+              Letzter Eintrag:{" "}
+              <span className="font-semibold">
+                {letzterUrlaub.typ}
+              </span>{" "}
+              — {letzterUrlaub.status}
             </div>
           )}
 
-          {!letzteArbeitszeit && !letzterUrlaub && (
-            <div className="rounded-xl bg-zinc-100 p-4 text-zinc-600">
-              Noch keine Aktivitäten vorhanden.
+          {letztesProjekt && (
+            <div className="rounded-xl bg-zinc-100 p-4">
+              Neues Projekt:{" "}
+              <span className="font-semibold">
+                {letztesProjekt.name}
+              </span>
             </div>
           )}
+
+          {letzterMitarbeiter && (
+            <div className="rounded-xl bg-zinc-100 p-4">
+              Letzter Mitarbeiter:{" "}
+              <span className="font-semibold">
+                {letzterMitarbeiter.name}
+              </span>
+            </div>
+          )}
+
+          {!loading &&
+            !letzteArbeitszeit &&
+            !letzterUrlaub &&
+            !letztesProjekt &&
+            !letzterMitarbeiter && (
+              <div className="rounded-xl bg-zinc-100 p-4 text-zinc-600">
+                Noch keine Aktivitäten vorhanden.
+              </div>
+            )}
         </div>
       </div>
     </main>
