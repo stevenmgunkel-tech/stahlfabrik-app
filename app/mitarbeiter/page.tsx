@@ -13,6 +13,7 @@ export default function MitarbeiterPage() {
   const [rolle, setRolle] = useState("Mitarbeiter");
   const [wochenstunden, setWochenstunden] = useState("");
   const [urlaubstage, setUrlaubstage] = useState("");
+  const [ueberstundenStart, setUeberstundenStart] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [meldung, setMeldung] = useState("");
@@ -38,6 +39,17 @@ export default function MitarbeiterPage() {
     ladeMitarbeiter();
   }, []);
 
+  function formularLeeren() {
+    setBearbeitenId(null);
+    setName("");
+    setEmail("");
+    setPassword("");
+    setRolle("Mitarbeiter");
+    setWochenstunden("");
+    setUrlaubstage("");
+    setUeberstundenStart("");
+  }
+
   async function mitarbeiterSpeichern() {
     setMeldung("");
 
@@ -56,6 +68,7 @@ export default function MitarbeiterPage() {
           rolle,
           wochenstunden: Number(wochenstunden),
           urlaubstage: Number(urlaubstage),
+          ueberstunden_start: Number(ueberstundenStart || 0),
         })
         .eq("id", bearbeitenId);
 
@@ -70,9 +83,7 @@ export default function MitarbeiterPage() {
     } else {
       if (!email.trim() || !password.trim()) {
         setLoading(false);
-        setMeldung(
-          "Bitte E-Mail und Start-Passwort ausfüllen."
-        );
+        setMeldung("Bitte E-Mail und Start-Passwort ausfüllen.");
         return;
       }
 
@@ -88,6 +99,7 @@ export default function MitarbeiterPage() {
           rolle,
           wochenstunden: Number(wochenstunden),
           urlaubstage: Number(urlaubstage),
+          ueberstunden_start: Number(ueberstundenStart || 0),
         }),
       });
 
@@ -96,8 +108,7 @@ export default function MitarbeiterPage() {
       if (!response.ok) {
         setLoading(false);
         setMeldung(
-          result.error ||
-            "Mitarbeiter konnte nicht erstellt werden."
+          result.error || "Mitarbeiter konnte nicht erstellt werden."
         );
         return;
       }
@@ -105,24 +116,14 @@ export default function MitarbeiterPage() {
       setMeldung("Mitarbeiter wurde erstellt.");
     }
 
-    setName("");
-    setEmail("");
-    setPassword("");
-    setRolle("Mitarbeiter");
-    setWochenstunden("");
-    setUrlaubstage("");
-
-    setBearbeitenId(null);
-
+    formularLeeren();
     await ladeMitarbeiter();
 
     setLoading(false);
   }
 
   async function mitarbeiterLoeschen(id: number) {
-    const bestaetigen = confirm(
-      "Mitarbeiter wirklich löschen?"
-    );
+    const bestaetigen = confirm("Mitarbeiter wirklich löschen?");
 
     if (!bestaetigen) return;
 
@@ -139,6 +140,15 @@ export default function MitarbeiterPage() {
 
     await ladeMitarbeiter();
     setMeldung("Mitarbeiter gelöscht.");
+  }
+
+  function mitarbeiterBearbeiten(person: any) {
+    setBearbeitenId(person.id);
+    setName(person.name || "");
+    setRolle(person.rolle || "Mitarbeiter");
+    setWochenstunden(String(person.wochenstunden || ""));
+    setUrlaubstage(String(person.urlaubstage || ""));
+    setUeberstundenStart(String(person.ueberstunden_start || 0));
   }
 
   return (
@@ -217,6 +227,15 @@ export default function MitarbeiterPage() {
             onChange={(e) => setUrlaubstage(e.target.value)}
             className="rounded-xl border border-zinc-300 p-3"
           />
+
+          <input
+            type="number"
+            step="0.5"
+            placeholder="Überstunden Start"
+            value={ueberstundenStart}
+            onChange={(e) => setUeberstundenStart(e.target.value)}
+            className="rounded-xl border border-zinc-300 p-3"
+          />
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -236,15 +255,7 @@ export default function MitarbeiterPage() {
           {bearbeitenId && (
             <button
               type="button"
-              onClick={() => {
-                setBearbeitenId(null);
-                setName("");
-                setEmail("");
-                setPassword("");
-                setRolle("Mitarbeiter");
-                setWochenstunden("");
-                setUrlaubstage("");
-              }}
+              onClick={formularLeeren}
               className="rounded-xl bg-zinc-200 px-5 py-3 font-bold text-zinc-900"
             >
               Abbrechen
@@ -277,38 +288,28 @@ export default function MitarbeiterPage() {
 
             <div className="mt-4 space-y-2 text-sm">
               <div>
-                <span className="font-semibold">Rolle:</span>{" "}
-                {person.rolle}
+                <span className="font-semibold">Rolle:</span> {person.rolle}
               </div>
 
               <div>
-                <span className="font-semibold">
-                  Wochenstunden:
-                </span>{" "}
+                <span className="font-semibold">Wochenstunden:</span>{" "}
                 {person.wochenstunden}h
               </div>
 
               <div>
-                <span className="font-semibold">
-                  Urlaubstage:
-                </span>{" "}
+                <span className="font-semibold">Urlaubstage:</span>{" "}
                 {person.urlaubstage}
+              </div>
+
+              <div>
+                <span className="font-semibold">Überstunden Start:</span>{" "}
+                {Number(person.ueberstunden_start || 0).toFixed(2)}h
               </div>
             </div>
 
             <button
               type="button"
-              onClick={() => {
-                setBearbeitenId(person.id);
-                setName(person.name || "");
-                setRolle(person.rolle || "Mitarbeiter");
-                setWochenstunden(
-                  String(person.wochenstunden || "")
-                );
-                setUrlaubstage(
-                  String(person.urlaubstage || "")
-                );
-              }}
+              onClick={() => mitarbeiterBearbeiten(person)}
               className="mt-4 w-full rounded-xl bg-zinc-900 p-3 font-bold text-white"
             >
               Bearbeiten
@@ -316,9 +317,7 @@ export default function MitarbeiterPage() {
 
             <button
               type="button"
-              onClick={() =>
-                mitarbeiterLoeschen(person.id)
-              }
+              onClick={() => mitarbeiterLoeschen(person.id)}
               className="mt-3 w-full rounded-xl bg-red-600 p-3 font-bold text-white"
             >
               Löschen
@@ -333,12 +332,13 @@ export default function MitarbeiterPage() {
         </h2>
 
         <div className="overflow-x-auto">
-          <div className="min-w-[1000px]">
-            <div className="grid grid-cols-6 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
+          <div className="min-w-[1150px]">
+            <div className="grid grid-cols-7 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
               <div>Name</div>
               <div>Rolle</div>
               <div>Wochenstunden</div>
               <div>Urlaubstage</div>
+              <div>Ü-Start</div>
               <div>Status</div>
               <div>Aktion</div>
             </div>
@@ -346,7 +346,7 @@ export default function MitarbeiterPage() {
             {mitarbeiter.map((person) => (
               <div
                 key={person.id}
-                className="grid grid-cols-6 items-center border-b border-zinc-200 py-4"
+                className="grid grid-cols-7 items-center border-b border-zinc-200 py-4"
               >
                 <div className="font-medium text-zinc-900">
                   {person.name}
@@ -358,6 +358,8 @@ export default function MitarbeiterPage() {
 
                 <div>{person.urlaubstage}</div>
 
+                <div>{Number(person.ueberstunden_start || 0).toFixed(2)}h</div>
+
                 <div>
                   <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-800">
                     {person.status}
@@ -367,19 +369,7 @@ export default function MitarbeiterPage() {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setBearbeitenId(person.id);
-                      setName(person.name || "");
-                      setRolle(
-                        person.rolle || "Mitarbeiter"
-                      );
-                      setWochenstunden(
-                        String(person.wochenstunden || "")
-                      );
-                      setUrlaubstage(
-                        String(person.urlaubstage || "")
-                      );
-                    }}
+                    onClick={() => mitarbeiterBearbeiten(person)}
                     className="rounded-lg bg-zinc-900 px-4 py-2 font-semibold text-white"
                   >
                     Bearbeiten
@@ -387,9 +377,7 @@ export default function MitarbeiterPage() {
 
                   <button
                     type="button"
-                    onClick={() =>
-                      mitarbeiterLoeschen(person.id)
-                    }
+                    onClick={() => mitarbeiterLoeschen(person.id)}
                     className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white"
                   >
                     Löschen
