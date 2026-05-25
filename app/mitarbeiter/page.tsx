@@ -84,27 +84,31 @@ export default function MitarbeiterPage() {
   }
 
   return (
-    <main>
-      <h1 className="text-5xl font-extrabold text-zinc-900 mb-3">
-        Mitarbeiter
-      </h1>
+    <main className="space-y-6">
+      {/* HEADER */}
+      <div>
+        <h1 className="text-3xl md:text-5xl font-extrabold text-zinc-900">
+          Mitarbeiter
+        </h1>
 
-      <p className="text-zinc-700 text-lg mb-10 font-medium">
-        Mitarbeiter & Login-Zugänge verwalten
-      </p>
+        <p className="mt-2 text-sm md:text-lg text-zinc-600">
+          Mitarbeiter & Login-Zugänge verwalten
+        </p>
+      </div>
 
-      <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm mb-8">
-        <h2 className="text-2xl font-bold text-zinc-900 mb-6">
+      {/* FORMULAR */}
+      <div className="rounded-2xl border border-zinc-200 bg-white p-4 md:p-6 shadow-sm">
+        <h2 className="mb-6 text-xl md:text-2xl font-bold text-zinc-900">
           Mitarbeiter mit Login erstellen
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-3">
           <input
             type="text"
             placeholder="Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="border border-zinc-300 rounded-xl p-3 text-zinc-900"
+            className="rounded-xl border border-zinc-300 p-3"
           />
 
           <input
@@ -112,7 +116,7 @@ export default function MitarbeiterPage() {
             placeholder="E-Mail"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border border-zinc-300 rounded-xl p-3 text-zinc-900"
+            className="rounded-xl border border-zinc-300 p-3"
           />
 
           <input
@@ -120,13 +124,13 @@ export default function MitarbeiterPage() {
             placeholder="Start-Passwort"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="border border-zinc-300 rounded-xl p-3 text-zinc-900"
+            className="rounded-xl border border-zinc-300 p-3"
           />
 
           <select
             value={rolle}
             onChange={(e) => setRolle(e.target.value)}
-            className="border border-zinc-300 rounded-xl p-3 text-zinc-900"
+            className="rounded-xl border border-zinc-300 p-3"
           >
             <option value="Mitarbeiter">Mitarbeiter</option>
             <option value="Admin">Admin</option>
@@ -141,7 +145,7 @@ export default function MitarbeiterPage() {
             placeholder="Wochenstunden"
             value={wochenstunden}
             onChange={(e) => setWochenstunden(e.target.value)}
-            className="border border-zinc-300 rounded-xl p-3 text-zinc-900"
+            className="rounded-xl border border-zinc-300 p-3"
           />
 
           <input
@@ -149,69 +153,118 @@ export default function MitarbeiterPage() {
             placeholder="Urlaubstage"
             value={urlaubstage}
             onChange={(e) => setUrlaubstage(e.target.value)}
-            className="border border-zinc-300 rounded-xl p-3 text-zinc-900"
+            className="rounded-xl border border-zinc-300 p-3"
           />
         </div>
 
         <button
           onClick={mitarbeiterHinzufuegen}
-          className="mt-6 bg-zinc-900 hover:bg-orange-500 transition text-white px-5 py-3 rounded-xl font-bold"
+          className="mt-6 rounded-xl bg-zinc-900 px-5 py-3 font-bold text-white transition hover:bg-orange-500"
         >
           Mitarbeiter erstellen
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6">
-        <h2 className="text-2xl font-bold text-zinc-900 mb-6">
-          Teamübersicht
-        </h2>
-
-        <div className="grid grid-cols-6 font-bold text-zinc-800 border-b border-zinc-300 pb-4 mb-4">
-          <div>Name</div>
-          <div>Rolle</div>
-          <div>Wochenstunden</div>
-          <div>Urlaubstage</div>
-          <div>Status</div>
-          <div>Aktion</div>
-        </div>
-
+      {/* MOBILE CARDS */}
+      <div className="space-y-4 md:hidden">
         {mitarbeiter.map((person) => (
           <div
             key={person.id}
-            className="grid grid-cols-6 py-4 border-b border-zinc-200 items-center"
+            className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
           >
-            <div className="text-zinc-900 font-medium">
-              {person.name}
-            </div>
+            <div className="flex items-center justify-between">
+              <div className="text-lg font-bold text-zinc-900">
+                {person.name}
+              </div>
 
-            <div className="text-zinc-800">
-              {person.rolle}
-            </div>
-
-            <div className="text-zinc-800">
-              {person.wochenstunden}h
-            </div>
-
-            <div className="text-zinc-800">
-              {person.urlaubstage}
-            </div>
-
-            <div>
-              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
                 {person.status}
               </span>
             </div>
 
-            <div>
-              <button
-                onClick={() => mitarbeiterLoeschen(person.id)}
-                className="bg-red-600 hover:bg-red-700 transition text-white px-4 py-2 rounded-lg font-semibold"
-              >
-                Löschen
-              </button>
+            <div className="mt-4 space-y-2 text-sm">
+              <div>
+                <span className="font-semibold">
+                  Rolle:
+                </span>{" "}
+                {person.rolle}
+              </div>
+
+              <div>
+                <span className="font-semibold">
+                  Wochenstunden:
+                </span>{" "}
+                {person.wochenstunden}h
+              </div>
+
+              <div>
+                <span className="font-semibold">
+                  Urlaubstage:
+                </span>{" "}
+                {person.urlaubstage}
+              </div>
             </div>
+
+            <button
+              onClick={() => mitarbeiterLoeschen(person.id)}
+              className="mt-4 rounded-xl bg-red-600 p-3 font-bold text-white"
+            >
+              Löschen
+            </button>
           </div>
         ))}
+      </div>
+
+      {/* DESKTOP TABELLE */}
+      <div className="hidden rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm md:block">
+        <h2 className="mb-6 text-2xl font-bold text-zinc-900">
+          Teamübersicht
+        </h2>
+
+        <div className="overflow-x-auto">
+          <div className="min-w-[900px]">
+            <div className="grid grid-cols-6 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
+              <div>Name</div>
+              <div>Rolle</div>
+              <div>Wochenstunden</div>
+              <div>Urlaubstage</div>
+              <div>Status</div>
+              <div>Aktion</div>
+            </div>
+
+            {mitarbeiter.map((person) => (
+              <div
+                key={person.id}
+                className="grid grid-cols-6 items-center border-b border-zinc-200 py-4"
+              >
+                <div className="font-medium text-zinc-900">
+                  {person.name}
+                </div>
+
+                <div>{person.rolle}</div>
+
+                <div>{person.wochenstunden}h</div>
+
+                <div>{person.urlaubstage}</div>
+
+                <div>
+                  <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-800">
+                    {person.status}
+                  </span>
+                </div>
+
+                <div>
+                  <button
+                    onClick={() => mitarbeiterLoeschen(person.id)}
+                    className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white"
+                  >
+                    Löschen
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </main>
   );

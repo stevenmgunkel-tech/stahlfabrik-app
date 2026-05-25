@@ -69,7 +69,7 @@ export default function ChefDashboardPage() {
     }
 
     ladeDaten();
-  }, []);
+  }, [monat]);
 
   const gesamtstunden = arbeitszeiten.reduce(
     (sum, eintrag) => sum + Number(eintrag.stunden || 0),
@@ -101,78 +101,70 @@ export default function ChefDashboardPage() {
   });
 
   return (
-    <main>
-      <h1 className="text-5xl font-extrabold text-zinc-900 mb-3">
-        Chef Dashboard
-      </h1>
+    <main className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-extrabold text-zinc-900 md:text-5xl">
+          Chef Dashboard
+        </h1>
 
-      <p className="text-zinc-700 text-lg mb-10 font-medium">
-        Firmenübersicht für StahlFabrik
-      </p>
+        <p className="mt-2 text-sm font-medium text-zinc-600 md:text-lg">
+          Firmenübersicht für StahlFabrik
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
-        <div className="bg-zinc-900 text-white p-6 rounded-2xl shadow-sm">
-          <p className="text-zinc-300 font-semibold mb-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-2xl bg-zinc-900 p-5 text-white shadow-sm md:p-6">
+          <p className="mb-2 font-semibold text-zinc-300">
             Gesamtstunden Monat
           </p>
 
-          <p className="text-5xl font-extrabold text-orange-400">
+          <p className="text-4xl font-extrabold text-orange-400 md:text-5xl">
             {gesamtstunden.toFixed(2)}h
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
-          <p className="text-zinc-600 font-semibold mb-2">
-            Mitarbeiter
-          </p>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
+          <p className="mb-2 font-semibold text-zinc-600">Mitarbeiter</p>
 
-          <p className="text-5xl font-extrabold text-zinc-900">
+          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
             {mitarbeiter.length}
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
-          <p className="text-zinc-600 font-semibold mb-2">
-            Offene Anträge
-          </p>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
+          <p className="mb-2 font-semibold text-zinc-600">Offene Anträge</p>
 
-          <p className="text-5xl font-extrabold text-zinc-900">
+          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
             {offeneAntraege}
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
-          <p className="text-zinc-600 font-semibold mb-2">
-            Projekte
-          </p>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
+          <p className="mb-2 font-semibold text-zinc-600">Projekte</p>
 
-          <p className="text-5xl font-extrabold text-zinc-900">
+          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
             {projekte.length}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-        <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6">
-          <h2 className="text-2xl font-bold text-zinc-900 mb-6">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
+          <h2 className="mb-5 text-xl font-bold text-zinc-900 md:text-2xl">
             Abwesenheiten diesen Monat
           </h2>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-zinc-100 border border-zinc-200 p-5 rounded-xl">
-              <p className="text-zinc-600 font-semibold mb-2">
-                Urlaubstage
-              </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-zinc-200 bg-zinc-100 p-5">
+              <p className="mb-2 font-semibold text-zinc-600">Urlaubstage</p>
 
               <p className="text-4xl font-extrabold text-zinc-900">
                 {urlaubstage}
               </p>
             </div>
 
-            <div className="bg-zinc-100 border border-zinc-200 p-5 rounded-xl">
-              <p className="text-zinc-600 font-semibold mb-2">
-                Kranktage
-              </p>
+            <div className="rounded-xl border border-zinc-200 bg-zinc-100 p-5">
+              <p className="mb-2 font-semibold text-zinc-600">Kranktage</p>
 
               <p className="text-4xl font-extrabold text-zinc-900">
                 {kranktage}
@@ -181,29 +173,29 @@ export default function ChefDashboardPage() {
           </div>
         </div>
 
-        <div className="bg-zinc-900 text-white rounded-2xl shadow-sm p-6">
-          <h2 className="text-2xl font-bold mb-6">
+        <div className="rounded-2xl bg-zinc-900 p-5 text-white shadow-sm md:p-6">
+          <h2 className="mb-5 text-xl font-bold md:text-2xl">
             Schnellzugriff
           </h2>
 
           <div className="space-y-3">
             <a
               href="/admin"
-              className="block bg-zinc-800 hover:bg-orange-500 transition p-4 rounded-xl font-bold"
+              className="block rounded-xl bg-zinc-800 p-4 font-bold transition hover:bg-orange-500"
             >
               Urlaubsanträge prüfen
             </a>
 
             <a
               href="/monatsansicht"
-              className="block bg-zinc-800 hover:bg-orange-500 transition p-4 rounded-xl font-bold"
+              className="block rounded-xl bg-zinc-800 p-4 font-bold transition hover:bg-orange-500"
             >
               Monatsansicht öffnen
             </a>
 
             <a
               href="/projekte"
-              className="block bg-zinc-800 hover:bg-orange-500 transition p-4 rounded-xl font-bold"
+              className="block rounded-xl bg-zinc-800 p-4 font-bold transition hover:bg-orange-500"
             >
               Projekte verwalten
             </a>
@@ -211,54 +203,127 @@ export default function ChefDashboardPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 mb-8">
-        <h2 className="text-2xl font-bold text-zinc-900 mb-6">
+      <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
+        <h2 className="mb-5 text-xl font-bold text-zinc-900 md:text-2xl">
           Mitarbeiterübersicht
         </h2>
 
-        <div className="grid grid-cols-4 font-bold text-zinc-800 border-b border-zinc-300 pb-4 mb-4">
-          <div>Name</div>
-          <div>Rolle</div>
-          <div>Wochenstunden</div>
-          <div>Urlaubstage</div>
+        <div className="space-y-4 md:hidden">
+          {mitarbeiter.map((person) => (
+            <div
+              key={person.id}
+              className="rounded-xl border border-zinc-200 bg-zinc-50 p-4"
+            >
+              <div className="text-lg font-bold text-zinc-900">
+                {person.name}
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-zinc-500">Rolle</p>
+                  <p className="font-semibold text-zinc-900">
+                    {person.rolle}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-zinc-500">Wochenstunden</p>
+                  <p className="font-semibold text-zinc-900">
+                    {person.wochenstunden}h
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-zinc-500">Urlaubstage</p>
+                  <p className="font-semibold text-zinc-900">
+                    {person.urlaubstage}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {mitarbeiter.map((person) => (
-          <div
-            key={person.id}
-            className="grid grid-cols-4 py-4 border-b border-zinc-200 items-center"
-          >
-            <div className="text-zinc-900 font-medium">{person.name}</div>
-            <div className="text-zinc-800">{person.rolle}</div>
-            <div className="text-zinc-800">{person.wochenstunden}h</div>
-            <div className="text-zinc-800">{person.urlaubstage}</div>
+        <div className="hidden overflow-x-auto md:block">
+          <div className="min-w-[760px]">
+            <div className="grid grid-cols-4 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
+              <div>Name</div>
+              <div>Rolle</div>
+              <div>Wochenstunden</div>
+              <div>Urlaubstage</div>
+            </div>
+
+            {mitarbeiter.map((person) => (
+              <div
+                key={person.id}
+                className="grid grid-cols-4 items-center border-b border-zinc-200 py-4"
+              >
+                <div className="font-medium text-zinc-900">
+                  {person.name}
+                </div>
+                <div className="text-zinc-800">{person.rolle}</div>
+                <div className="text-zinc-800">
+                  {person.wochenstunden}h
+                </div>
+                <div className="text-zinc-800">{person.urlaubstage}</div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6">
-        <h2 className="text-2xl font-bold text-zinc-900 mb-6">
+      <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
+        <h2 className="mb-5 text-xl font-bold text-zinc-900 md:text-2xl">
           Projektstunden diesen Monat
         </h2>
 
-        <div className="grid grid-cols-3 font-bold text-zinc-800 border-b border-zinc-300 pb-4 mb-4">
-          <div>Projekt</div>
-          <div>Kunde</div>
-          <div>Stunden</div>
+        <div className="space-y-4 md:hidden">
+          {projektStunden.map((projekt) => (
+            <div
+              key={projekt.name}
+              className="rounded-xl border border-zinc-200 bg-zinc-50 p-4"
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div className="font-bold text-zinc-900">
+                  {projekt.name}
+                </div>
+
+                <div className="font-extrabold text-zinc-900">
+                  {projekt.stunden.toFixed(2)}h
+                </div>
+              </div>
+
+              <p className="mt-2 text-sm text-zinc-600">
+                Kunde: {projekt.kunde}
+              </p>
+            </div>
+          ))}
         </div>
 
-        {projektStunden.map((projekt) => (
-          <div
-            key={projekt.name}
-            className="grid grid-cols-3 py-4 border-b border-zinc-200 items-center"
-          >
-            <div className="text-zinc-900 font-medium">{projekt.name}</div>
-            <div className="text-zinc-800">{projekt.kunde}</div>
-            <div className="text-zinc-900 font-bold">
-              {projekt.stunden.toFixed(2)}h
+        <div className="hidden overflow-x-auto md:block">
+          <div className="min-w-[700px]">
+            <div className="grid grid-cols-3 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
+              <div>Projekt</div>
+              <div>Kunde</div>
+              <div>Stunden</div>
             </div>
+
+            {projektStunden.map((projekt) => (
+              <div
+                key={projekt.name}
+                className="grid grid-cols-3 items-center border-b border-zinc-200 py-4"
+              >
+                <div className="font-medium text-zinc-900">
+                  {projekt.name}
+                </div>
+                <div className="text-zinc-800">{projekt.kunde}</div>
+                <div className="font-bold text-zinc-900">
+                  {projekt.stunden.toFixed(2)}h
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </main>
   );
