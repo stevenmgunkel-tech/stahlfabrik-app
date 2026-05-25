@@ -12,9 +12,10 @@ export default function AppLayout({
 }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   const [userName, setUserName] = useState("");
   const [userRole, setUserRole] = useState("");
+
+  const isLoginPage = pathname === "/login";
 
   const navItems = [
     { href: "/", label: "Dashboard" },
@@ -52,40 +53,33 @@ export default function AppLayout({
     window.location.href = "/login";
   }
 
+  if (isLoginPage) {
+    return <div className="min-h-screen bg-zinc-100">{children}</div>;
+  }
+
   return (
     <div className="min-h-screen bg-zinc-100">
-      {/* MOBILE HEADER */}
       <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center border-b border-zinc-200 bg-white px-5 md:hidden">
         <Link
           href="/"
           className="text-[30px] font-black tracking-tight text-zinc-900"
         >
-          Stahl
-          <span className="text-orange-500">
-            Fabrik
-          </span>
+          Stahl<span className="text-orange-500">Fabrik</span>
         </Link>
 
         <button
           type="button"
           onClick={() => setSidebarOpen(true)}
-          className="ml-auto flex h-11 w-11 items-center justify-center rounded-xl bg-black text-[22px] font-bold text-white shadow-lg transition active:scale-95"
+          className="ml-auto flex h-11 w-11 items-center justify-center rounded-xl bg-black text-[22px] font-bold text-white shadow-lg"
         >
           ☰
         </button>
       </header>
 
-      {/* DESKTOP SIDEBAR */}
       <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col bg-zinc-950 text-white md:flex">
         <div className="border-b border-zinc-800 p-5">
-          <Link
-            href="/"
-            className="text-3xl font-black tracking-tight"
-          >
-            Stahl
-            <span className="text-orange-500">
-              Fabrik
-            </span>
+          <Link href="/" className="text-3xl font-black tracking-tight">
+            Stahl<span className="text-orange-500">Fabrik</span>
           </Link>
         </div>
 
@@ -122,7 +116,7 @@ export default function AppLayout({
             <button
               type="button"
               onClick={logout}
-              className="mt-4 rounded-xl bg-white px-4 py-2 text-sm font-bold text-zinc-950 transition hover:bg-orange-500 hover:text-white"
+              className="mt-4 w-full rounded-xl bg-orange-500 px-4 py-2 text-sm font-bold text-white"
             >
               Logout
             </button>
@@ -130,7 +124,6 @@ export default function AppLayout({
         </div>
       </aside>
 
-      {/* MOBILE SIDEBAR */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-[999] md:hidden">
           <button
@@ -142,10 +135,7 @@ export default function AppLayout({
           <aside className="absolute left-0 top-0 flex h-full w-[82%] max-w-xs flex-col bg-zinc-950 text-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-zinc-800 p-5">
               <div className="text-2xl font-black">
-                Stahl
-                <span className="text-orange-500">
-                  Fabrik
-                </span>
+                Stahl<span className="text-orange-500">Fabrik</span>
               </div>
 
               <button
@@ -191,7 +181,7 @@ export default function AppLayout({
                 <button
                   type="button"
                   onClick={logout}
-                  className="mt-4 rounded-xl bg-white px-4 py-2 text-sm font-bold text-zinc-950"
+                  className="mt-4 w-full rounded-xl bg-orange-500 px-4 py-2 text-sm font-bold text-white"
                 >
                   Logout
                 </button>
@@ -201,7 +191,6 @@ export default function AppLayout({
         </div>
       )}
 
-      {/* CONTENT */}
       <main className="pt-16 md:ml-64 md:pt-0">
         <div className="w-full overflow-x-hidden p-4 md:p-8">
           {children}
