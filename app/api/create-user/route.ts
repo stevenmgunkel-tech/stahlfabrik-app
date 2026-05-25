@@ -16,6 +16,7 @@ export async function POST(req: Request) {
       password,
       rolle,
       wochenstunden,
+      ferienwochen,
       urlaubstage,
       ueberstunden_start,
       eintrittsdatum,
@@ -46,6 +47,7 @@ export async function POST(req: Request) {
           name,
           rolle,
           wochenstunden,
+          ferienwochen: Number(ferienwochen || 4),
           urlaubstage,
           status: "Aktiv",
           user_id: userId,
@@ -69,12 +71,8 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     return NextResponse.json(
-      {
-        error: "Serverfehler",
-      },
-      {
-        status: 500,
-      }
+      { error: "Serverfehler" },
+      { status: 500 }
     );
   }
 }

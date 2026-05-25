@@ -12,6 +12,7 @@ export default function MitarbeiterPage() {
 
   const [rolle, setRolle] = useState("Mitarbeiter");
   const [wochenstunden, setWochenstunden] = useState("");
+  const [ferienwochen, setFerienwochen] = useState("4");
   const [urlaubstage, setUrlaubstage] = useState("");
   const [ueberstundenStart, setUeberstundenStart] = useState("");
 
@@ -43,6 +44,37 @@ export default function MitarbeiterPage() {
     ladeMitarbeiter();
   }, []);
 
+  function berechneUrlaubstage(eintritt: string, wochen: string) {
+    const ferienTageProJahr = Number(wochen || 0) * 5;
+
+    if (!eintritt) {
+      return ferienTageProJahr.toFixed(2);
+    }
+
+    const start = new Date(eintritt);
+    const aktuellesJahr = new Date().getFullYear();
+    const eintrittsJahr = start.getFullYear();
+
+    if (eintrittsJahr < aktuellesJahr) {
+      return ferienTageProJahr.toFixed(2);
+    }
+
+    if (eintrittsJahr > aktuellesJahr) {
+      return "0.00";
+    }
+
+    const eintrittsMonat = start.getMonth() + 1;
+    const monateImJahr = 13 - eintrittsMonat;
+    const anteil = (ferienTageProJahr / 12) * monateImJahr;
+
+    return anteil.toFixed(2);
+  }
+
+  useEffect(() => {
+    const berechnet = berechneUrlaubstage(eintrittsdatum, ferienwochen);
+    setUrlaubstage(berechnet);
+  }, [eintrittsdatum, ferienwochen]);
+
   function istInProbezeit(probezeit_bis: string | null) {
     if (!probezeit_bis) return false;
     const heute = new Date();
@@ -57,6 +89,7 @@ export default function MitarbeiterPage() {
     setPassword("");
     setRolle("Mitarbeiter");
     setWochenstunden("");
+    setFerienwochen("4");
     setUrlaubstage("");
     setUeberstundenStart("");
     setEintrittsdatum("");
@@ -75,20 +108,23 @@ export default function MitarbeiterPage() {
 
     setLoading(true);
 
+    const daten = {
+      name,
+      rolle,
+      wochenstunden: Number(wochenstunden),
+      ferienwochen: Number(ferienwochen || 0),
+      urlaubstage: Number(urlaubstage || 0),
+      ueberstunden_start: Number(ueberstundenStart || 0),
+      eintrittsdatum: eintrittsdatum || null,
+      probezeit_bis: probezeitBis || null,
+      austrittsdatum: austrittsdatum || null,
+      vertragsart,
+    };
+
     if (bearbeitenId) {
       const { error } = await supabase
         .from("mitarbeiter")
-        .update({
-          name,
-          rolle,
-          wochenstunden: Number(wochenstunden),
-          urlaubstage: Number(urlaubstage),
-          ueberstunden_start: Number(ueberstundenStart || 0),
-          eintrittsdatum: eintrittsdatum || null,
-          probezeit_bis: probezeitBis || null,
-          austrittsdatum: austrittsdatum || null,
-          vertragsart,
-        })
+        .update(daten)
         .eq("id", bearbeitenId);
 
       if (error) {
@@ -112,17 +148,9 @@ export default function MitarbeiterPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name,
+          ...daten,
           email,
           password,
-          rolle,
-          wochenstunden: Number(wochenstunden),
-          urlaubstage: Number(urlaubstage),
-          ueberstunden_start: Number(ueberstundenStart || 0),
-          eintrittsdatum: eintrittsdatum || null,
-          probezeit_bis: probezeitBis || null,
-          austrittsdatum: austrittsdatum || null,
-          vertragsart,
         }),
       });
 
@@ -148,10 +176,7 @@ export default function MitarbeiterPage() {
     const bestaetigen = confirm("Mitarbeiter wirklich löschen?");
     if (!bestaetigen) return;
 
-    const { error } = await supabase
-      .from("mitarbeiter")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("mitarbeiter").delete().eq("id", id);
 
     if (error) {
       setMeldung(error.message);
@@ -168,6 +193,7 @@ export default function MitarbeiterPage() {
     setName(person.name || "");
     setRolle(person.rolle || "Mitarbeiter");
     setWochenstunden(String(person.wochenstunden || ""));
+    setFerienwochen(String(person.ferienwochen || 4));
     setUrlaubstage(String(person.urlaubstage || ""));
     setUeberstundenStart(String(person.ueberstunden_start || 0));
     setEintrittsdatum(person.eintrittsdatum || "");
@@ -259,10 +285,20 @@ export default function MitarbeiterPage() {
 
           <input
             type="number"
-            placeholder="Urlaubstage"
-            value={urlaubstage}
-            onChange={(e) => setUrlaubstage(e.target.value)}
+            step="0.5"
+            placeholder="Ferienwochen"
+            value={ferienwochen}
+            onChange={(e) => setFerienwochen(e.target.value)}
             className="rounded-xl border border-zinc-300 p-3"
+          />
+
+          <input
+            type="number"
+            step="0.01"
+            placeholder="Urlaubstage automatisch"
+            value={urlaubstage}
+            readOnly
+            className="rounded-xl border border-zinc-300 bg-zinc-100 p-3"
           />
 
           <input
@@ -388,13 +424,8 @@ export default function MitarbeiterPage() {
               </div>
 
               <div>
-                <span className="font-semibold">Austritt:</span>{" "}
-                {person.austrittsdatum || "-"}
-              </div>
-
-              <div>
-                <span className="font-semibold">Wochenstunden:</span>{" "}
-                {person.wochenstunden}h
+                <span className="font-semibold">Ferienwochen:</span>{" "}
+                {person.ferienwochen || 4}
               </div>
 
               <div>
@@ -433,14 +464,15 @@ export default function MitarbeiterPage() {
         </h2>
 
         <div className="overflow-x-auto">
-          <div className="min-w-[1450px]">
-            <div className="grid grid-cols-10 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
+          <div className="min-w-[1500px]">
+            <div className="grid grid-cols-11 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
               <div>Name</div>
               <div>Rolle</div>
               <div>Vertrag</div>
               <div>Eintritt</div>
               <div>Probezeit</div>
               <div>Woche</div>
+              <div>Ferien</div>
               <div>Urlaub</div>
               <div>Ü-Start</div>
               <div>Status</div>
@@ -450,7 +482,7 @@ export default function MitarbeiterPage() {
             {mitarbeiter.map((person) => (
               <div
                 key={person.id}
-                className="grid grid-cols-10 items-center border-b border-zinc-200 py-4"
+                className="grid grid-cols-11 items-center border-b border-zinc-200 py-4"
               >
                 <div className="font-medium text-zinc-900">
                   {person.name}
@@ -461,6 +493,7 @@ export default function MitarbeiterPage() {
                 <div>{person.eintrittsdatum || "-"}</div>
                 <div>{person.probezeit_bis || "-"}</div>
                 <div>{person.wochenstunden}h</div>
+                <div>{person.ferienwochen || 4}</div>
                 <div>{person.urlaubstage}</div>
 
                 <div>
