@@ -17,6 +17,11 @@ export async function POST(req: Request) {
       rolle,
       wochenstunden,
       urlaubstage,
+      ueberstunden_start,
+      eintrittsdatum,
+      probezeit_bis,
+      austrittsdatum,
+      vertragsart,
     } = body;
 
     const { data: authData, error: authError } =
@@ -42,9 +47,13 @@ export async function POST(req: Request) {
           rolle,
           wochenstunden,
           urlaubstage,
-          status: "Aktive",
+          status: "Aktiv",
           user_id: userId,
-          ueberstunden_start: 0,
+          ueberstunden_start: Number(ueberstunden_start || 0),
+          eintrittsdatum: eintrittsdatum || null,
+          probezeit_bis: probezeit_bis || null,
+          austrittsdatum: austrittsdatum || null,
+          vertragsart: vertragsart || "Unbefristet",
         },
       ]);
 

@@ -15,6 +15,11 @@ export default function MitarbeiterPage() {
   const [urlaubstage, setUrlaubstage] = useState("");
   const [ueberstundenStart, setUeberstundenStart] = useState("");
 
+  const [eintrittsdatum, setEintrittsdatum] = useState("");
+  const [probezeitBis, setProbezeitBis] = useState("");
+  const [austrittsdatum, setAustrittsdatum] = useState("");
+  const [vertragsart, setVertragsart] = useState("Unbefristet");
+
   const [loading, setLoading] = useState(false);
   const [meldung, setMeldung] = useState("");
 
@@ -39,6 +44,13 @@ export default function MitarbeiterPage() {
     ladeMitarbeiter();
   }, []);
 
+  function istInProbezeit(probezeit_bis: string | null) {
+    if (!probezeit_bis) return false;
+    const heute = new Date();
+    const ende = new Date(probezeit_bis);
+    return ende >= heute;
+  }
+
   function formularLeeren() {
     setBearbeitenId(null);
     setName("");
@@ -48,6 +60,10 @@ export default function MitarbeiterPage() {
     setWochenstunden("");
     setUrlaubstage("");
     setUeberstundenStart("");
+    setEintrittsdatum("");
+    setProbezeitBis("");
+    setAustrittsdatum("");
+    setVertragsart("Unbefristet");
   }
 
   async function mitarbeiterSpeichern() {
@@ -69,6 +85,10 @@ export default function MitarbeiterPage() {
           wochenstunden: Number(wochenstunden),
           urlaubstage: Number(urlaubstage),
           ueberstunden_start: Number(ueberstundenStart || 0),
+          eintrittsdatum: eintrittsdatum || null,
+          probezeit_bis: probezeitBis || null,
+          austrittsdatum: austrittsdatum || null,
+          vertragsart,
         })
         .eq("id", bearbeitenId);
 
@@ -100,6 +120,10 @@ export default function MitarbeiterPage() {
           wochenstunden: Number(wochenstunden),
           urlaubstage: Number(urlaubstage),
           ueberstunden_start: Number(ueberstundenStart || 0),
+          eintrittsdatum: eintrittsdatum || null,
+          probezeit_bis: probezeitBis || null,
+          austrittsdatum: austrittsdatum || null,
+          vertragsart,
         }),
       });
 
@@ -118,13 +142,11 @@ export default function MitarbeiterPage() {
 
     formularLeeren();
     await ladeMitarbeiter();
-
     setLoading(false);
   }
 
   async function mitarbeiterLoeschen(id: number) {
     const bestaetigen = confirm("Mitarbeiter wirklich löschen?");
-
     if (!bestaetigen) return;
 
     const { error } = await supabase
@@ -149,6 +171,10 @@ export default function MitarbeiterPage() {
     setWochenstunden(String(person.wochenstunden || ""));
     setUrlaubstage(String(person.urlaubstage || ""));
     setUeberstundenStart(String(person.ueberstunden_start || 0));
+    setEintrittsdatum(person.eintrittsdatum || "");
+    setProbezeitBis(person.probezeit_bis || "");
+    setAustrittsdatum(person.austrittsdatum || "");
+    setVertragsart(person.vertragsart || "Unbefristet");
   }
 
   return (
@@ -211,6 +237,18 @@ export default function MitarbeiterPage() {
             <option value="Aushilfe">Aushilfe</option>
           </select>
 
+          <select
+            value={vertragsart}
+            onChange={(e) => setVertragsart(e.target.value)}
+            className="rounded-xl border border-zinc-300 p-3"
+          >
+            <option value="Unbefristet">Unbefristet</option>
+            <option value="Befristet">Befristet</option>
+            <option value="Temporär">Temporär</option>
+            <option value="Lehre">Lehre</option>
+            <option value="Aushilfe">Aushilfe</option>
+          </select>
+
           <input
             type="number"
             step="0.5"
@@ -234,6 +272,27 @@ export default function MitarbeiterPage() {
             placeholder="Überstunden Start"
             value={ueberstundenStart}
             onChange={(e) => setUeberstundenStart(e.target.value)}
+            className="rounded-xl border border-zinc-300 p-3"
+          />
+
+          <input
+            type="date"
+            value={eintrittsdatum}
+            onChange={(e) => setEintrittsdatum(e.target.value)}
+            className="rounded-xl border border-zinc-300 p-3"
+          />
+
+          <input
+            type="date"
+            value={probezeitBis}
+            onChange={(e) => setProbezeitBis(e.target.value)}
+            className="rounded-xl border border-zinc-300 p-3"
+          />
+
+          <input
+            type="date"
+            value={austrittsdatum}
+            onChange={(e) => setAustrittsdatum(e.target.value)}
             className="rounded-xl border border-zinc-300 p-3"
           />
         </div>
@@ -281,14 +340,42 @@ export default function MitarbeiterPage() {
                 {person.name}
               </div>
 
-              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
-                {person.status}
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  istInProbezeit(person.probezeit_bis)
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-green-100 text-green-800"
+                }`}
+              >
+                {istInProbezeit(person.probezeit_bis)
+                  ? "Probezeit"
+                  : person.status || "Aktiv"}
               </span>
             </div>
 
             <div className="mt-4 space-y-2 text-sm">
               <div>
                 <span className="font-semibold">Rolle:</span> {person.rolle}
+              </div>
+
+              <div>
+                <span className="font-semibold">Vertrag:</span>{" "}
+                {person.vertragsart || "-"}
+              </div>
+
+              <div>
+                <span className="font-semibold">Eintritt:</span>{" "}
+                {person.eintrittsdatum || "-"}
+              </div>
+
+              <div>
+                <span className="font-semibold">Probezeit bis:</span>{" "}
+                {person.probezeit_bis || "-"}
+              </div>
+
+              <div>
+                <span className="font-semibold">Austritt:</span>{" "}
+                {person.austrittsdatum || "-"}
               </div>
 
               <div>
@@ -332,12 +419,15 @@ export default function MitarbeiterPage() {
         </h2>
 
         <div className="overflow-x-auto">
-          <div className="min-w-[1150px]">
-            <div className="grid grid-cols-7 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
+          <div className="min-w-[1450px]">
+            <div className="grid grid-cols-10 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
               <div>Name</div>
               <div>Rolle</div>
-              <div>Wochenstunden</div>
-              <div>Urlaubstage</div>
+              <div>Vertrag</div>
+              <div>Eintritt</div>
+              <div>Probezeit</div>
+              <div>Woche</div>
+              <div>Urlaub</div>
               <div>Ü-Start</div>
               <div>Status</div>
               <div>Aktion</div>
@@ -346,7 +436,7 @@ export default function MitarbeiterPage() {
             {mitarbeiter.map((person) => (
               <div
                 key={person.id}
-                className="grid grid-cols-7 items-center border-b border-zinc-200 py-4"
+                className="grid grid-cols-10 items-center border-b border-zinc-200 py-4"
               >
                 <div className="font-medium text-zinc-900">
                   {person.name}
@@ -354,15 +444,31 @@ export default function MitarbeiterPage() {
 
                 <div>{person.rolle}</div>
 
+                <div>{person.vertragsart || "-"}</div>
+
+                <div>{person.eintrittsdatum || "-"}</div>
+
+                <div>{person.probezeit_bis || "-"}</div>
+
                 <div>{person.wochenstunden}h</div>
 
                 <div>{person.urlaubstage}</div>
 
-                <div>{Number(person.ueberstunden_start || 0).toFixed(2)}h</div>
+                <div>
+                  {Number(person.ueberstunden_start || 0).toFixed(2)}h
+                </div>
 
                 <div>
-                  <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-800">
-                    {person.status}
+                  <span
+                    className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                      istInProbezeit(person.probezeit_bis)
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-green-100 text-green-800"
+                    }`}
+                  >
+                    {istInProbezeit(person.probezeit_bis)
+                      ? "Probezeit"
+                      : person.status || "Aktiv"}
                   </span>
                 </div>
 
