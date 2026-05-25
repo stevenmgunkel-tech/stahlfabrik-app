@@ -139,29 +139,69 @@ export default function MonatsansichtPage() {
 
   const sollstunden = tagesSoll * arbeitstage;
 
-  const bezahlteAbwesenheitstage = abwesenheiten
+  const urlaubstage = abwesenheiten
     .filter(
       (eintrag) =>
-        eintrag.typ === "Krank" ||
-        (eintrag.typ === "Urlaub" && eintrag.status === "Genehmigt")
+        eintrag.typ === "Urlaub" &&
+        eintrag.status === "Genehmigt"
     )
     .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
-  const abwesenheitsstunden = bezahlteAbwesenheitstage * tagesSoll;
+  const kranktage = abwesenheiten
+    .filter((eintrag) => eintrag.typ === "Krank")
+    .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
-  const angerechneteStunden = gesamtstunden + abwesenheitsstunden;
+  const ueberstundenabbauTage = abwesenheiten
+    .filter(
+      (eintrag) =>
+        eintrag.typ === "Überstundenabbau" &&
+        eintrag.status === "Genehmigt"
+    )
+    .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
-  const differenz = angerechneteStunden - sollstunden;
+  const bezahlteAbwesenheitstage =
+    urlaubstage + kranktage + ueberstundenabbauTage;
 
-  const gesamtUeberstunden = ueberstundenStart + differenz;
+  const abwesenheitsstunden =
+    bezahlteAbwesenheitstage * tagesSoll;
+
+  const angerechneteStunden =
+    gesamtstunden + abwesenheitsstunden;
+
+  const differenz =
+    angerechneteStunden - sollstunden;
+
+  const ueberstundenAbbauStunden =
+    ueberstundenabbauTage * tagesSoll;
+
+  const gesamtUeberstunden =
+    ueberstundenStart +
+    differenz -
+    ueberstundenAbbauStunden;
+
+  function typFarbe(typ: string) {
+    if (typ === "Urlaub") {
+      return "bg-blue-100 text-blue-800";
+    }
+
+    if (typ === "Krank") {
+      return "bg-red-100 text-red-800";
+    }
+
+    if (typ === "Überstundenabbau") {
+      return "bg-orange-100 text-orange-800";
+    }
+
+    return "bg-zinc-100 text-zinc-800";
+  }
 
   return (
     <main>
-      <h1 className="text-5xl font-extrabold text-zinc-900 mb-3">
+      <h1 className="mb-3 text-5xl font-extrabold text-zinc-900">
         Monatsansicht
       </h1>
 
-      <p className="text-zinc-700 text-lg mb-10 font-medium">
+      <p className="mb-10 text-lg font-medium text-zinc-700">
         Eigene Monatsübersicht mit Feiertagen SG, Sollstunden und Überstunden
       </p>
 
@@ -171,36 +211,42 @@ export default function MonatsansichtPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-5 mb-8">
-        <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
-          <p className="text-zinc-600 font-semibold mb-2">Monat</p>
+      <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-5">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <p className="mb-2 font-semibold text-zinc-600">Monat</p>
 
           <input
             type="month"
             value={monat}
             onChange={(e) => setMonat(e.target.value)}
-            className="border border-zinc-300 rounded-xl p-3 text-zinc-900 w-full"
+            className="w-full rounded-xl border border-zinc-300 p-3 text-zinc-900"
           />
         </div>
 
-        <div className="bg-zinc-900 text-white p-6 rounded-2xl shadow-sm">
-          <p className="text-zinc-300 font-semibold mb-2">Iststunden</p>
+        <div className="rounded-2xl bg-zinc-900 p-6 text-white shadow-sm">
+          <p className="mb-2 font-semibold text-zinc-300">
+            Iststunden
+          </p>
 
           <p className="text-5xl font-extrabold text-orange-400">
             {loading ? "..." : `${gesamtstunden.toFixed(2)}h`}
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
-          <p className="text-zinc-600 font-semibold mb-2">Abwesenheit</p>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <p className="mb-2 font-semibold text-zinc-600">
+            Abwesenheit
+          </p>
 
           <p className="text-5xl font-extrabold text-zinc-900">
             {loading ? "..." : `${abwesenheitsstunden.toFixed(2)}h`}
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
-          <p className="text-zinc-600 font-semibold mb-2">Sollstunden</p>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <p className="mb-2 font-semibold text-zinc-600">
+            Sollstunden
+          </p>
 
           <p className="text-5xl font-extrabold text-zinc-900">
             {loading ? "..." : `${sollstunden.toFixed(2)}h`}
@@ -208,185 +254,85 @@ export default function MonatsansichtPage() {
         </div>
 
         <div
-          className={`p-6 rounded-2xl shadow-sm ${
+          className={`rounded-2xl p-6 shadow-sm ${
             differenz >= 0
               ? "bg-green-600 text-white"
               : "bg-red-600 text-white"
           }`}
         >
-          <p className="font-semibold mb-2">Monat</p>
+          <p className="mb-2 font-semibold">Monat</p>
 
           <p className="text-5xl font-extrabold">
-            {loading ? "..." : `${differenz.toFixed(2)}h`}
+            {loading
+              ? "..."
+              : `${differenz >= 0 ? "+" : ""}${differenz.toFixed(
+                  2
+                )}h`}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-5 mb-8">
-        <div className="bg-zinc-900 text-white p-6 rounded-2xl shadow-sm">
-          <p className="text-zinc-300 font-semibold mb-2">
+      <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-6">
+        <div className="rounded-2xl bg-zinc-900 p-6 text-white shadow-sm">
+          <p className="mb-2 font-semibold text-zinc-300">
             Gesamt Überstunden
           </p>
 
           <p className="text-5xl font-extrabold text-orange-400">
-            {loading ? "..." : `${gesamtUeberstunden.toFixed(2)}h`}
+            {loading
+              ? "..."
+              : `${gesamtUeberstunden.toFixed(2)}h`}
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm">
-          <p className="text-zinc-600 font-semibold mb-2">Wochenstunden</p>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <p className="mb-2 font-semibold text-zinc-600">
+            Wochenstunden
+          </p>
 
           <p className="text-4xl font-extrabold text-zinc-900">
             {loading ? "..." : `${wochenstunden}h`}
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm">
-          <p className="text-zinc-600 font-semibold mb-2">Arbeitstage</p>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <p className="mb-2 font-semibold text-zinc-600">
+            Arbeitstage
+          </p>
 
           <p className="text-4xl font-extrabold text-zinc-900">
             {loading ? "..." : arbeitstage}
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm">
-          <p className="text-zinc-600 font-semibold mb-2">Feiertage SG</p>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <p className="mb-2 font-semibold text-zinc-600">
+            Feiertage SG
+          </p>
 
           <p className="text-4xl font-extrabold text-zinc-900">
             {loading ? "..." : feiertage.length}
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm">
-          <p className="text-zinc-600 font-semibold mb-2">
-            Start Überstunden
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <p className="mb-2 font-semibold text-zinc-600">
+            Urlaub
           </p>
 
           <p className="text-4xl font-extrabold text-zinc-900">
-            {loading ? "..." : `${ueberstundenStart.toFixed(2)}h`}
+            {urlaubstage}
           </p>
         </div>
-      </div>
 
-      {feiertage.length > 0 && (
-        <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 mb-8">
-          <h2 className="text-2xl font-bold text-zinc-900 mb-6">
-            Feiertage im Monat
-          </h2>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <p className="mb-2 font-semibold text-zinc-600">
+            Überstundenabbau
+          </p>
 
-          <div className="space-y-3">
-            {feiertage.map((feiertag) => (
-              <div
-                key={feiertag.datum}
-                className="flex justify-between border-b border-zinc-200 pb-3"
-              >
-                <span className="text-zinc-900 font-semibold">
-                  {feiertag.name}
-                </span>
-
-                <span className="text-zinc-700 font-medium">
-                  {feiertag.datum}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {abwesenheiten.length > 0 && (
-        <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 mb-8">
-          <h2 className="text-2xl font-bold text-zinc-900 mb-6">
-            Angerechnete Abwesenheiten
-          </h2>
-
-          <div className="space-y-3">
-            {abwesenheiten.map((eintrag) => (
-              <div
-                key={eintrag.id}
-                className="flex justify-between border-b border-zinc-200 pb-3"
-              >
-                <span className="text-zinc-900 font-semibold">
-                  {eintrag.typ} · {eintrag.status}
-                </span>
-
-                <span className="text-zinc-700 font-medium">
-                  {eintrag.von} - {eintrag.bis} · {eintrag.tage || 0} Tage
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6">
-        <h2 className="text-2xl font-bold text-zinc-900 mb-6">
-          Eigene Arbeitszeiten
-        </h2>
-
-        <div className="hidden md:block overflow-x-auto">
-          <div className="min-w-[850px]">
-            <div className="grid grid-cols-6 font-bold text-zinc-800 border-b border-zinc-300 pb-4 mb-4">
-              <div>Datum</div>
-              <div>Projekt</div>
-              <div>Start</div>
-              <div>Ende</div>
-              <div>Pause</div>
-              <div>Stunden</div>
-            </div>
-
-            {zeiten.map((zeit) => (
-              <div
-                key={zeit.id}
-                className="grid grid-cols-6 py-4 border-b border-zinc-200 items-center"
-              >
-                <div className="text-zinc-900 font-medium">{zeit.datum}</div>
-                <div className="text-zinc-800">{zeit.projekt}</div>
-                <div className="text-zinc-800">{zeit.startzeit || "-"}</div>
-                <div className="text-zinc-800">{zeit.endzeit || "-"}</div>
-                <div className="text-zinc-800">{zeit.pause || 0} Min.</div>
-                <div className="text-zinc-900 font-bold">{zeit.stunden}h</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-4 md:hidden">
-          {zeiten.map((zeit) => (
-            <div
-              key={zeit.id}
-              className="rounded-xl border border-zinc-200 bg-zinc-50 p-4"
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div className="font-bold text-zinc-900">{zeit.datum}</div>
-
-                <div className="font-extrabold text-orange-500">
-                  {zeit.stunden}h
-                </div>
-              </div>
-
-              <div className="mt-3 space-y-2 text-sm">
-                <div>
-                  <span className="font-semibold">Projekt:</span> {zeit.projekt}
-                </div>
-
-                <div>
-                  <span className="font-semibold">Zeit:</span>{" "}
-                  {zeit.startzeit || "-"} - {zeit.endzeit || "-"}
-                </div>
-
-                <div>
-                  <span className="font-semibold">Pause:</span>{" "}
-                  {zeit.pause || 0} Min.
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {!loading && zeiten.length === 0 && (
-            <div className="rounded-xl bg-zinc-100 p-4 text-zinc-600">
-              Keine Arbeitszeiten in diesem Monat vorhanden.
-            </div>
-          )}
+          <p className="text-4xl font-extrabold text-orange-500">
+            -{ueberstundenAbbauStunden.toFixed(2)}h
+          </p>
         </div>
       </div>
     </main>
