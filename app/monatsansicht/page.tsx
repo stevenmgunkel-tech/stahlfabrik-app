@@ -6,9 +6,8 @@ import { istFeiertagSG, getFeiertageSG } from "../../lib/feiertage";
 
 export default function MonatsansichtPage() {
   const [zeiten, setZeiten] = useState<any[]>([]);
-  const [monat, setMonat] = useState(
-    new Date().toISOString().slice(0, 7)
-  );
+  const [abwesenheiten, setAbwesenheiten] = useState<any[]>([]);
+  const [monat, setMonat] = useState(new Date().toISOString().slice(0, 7));
 
   const [wochenstunden, setWochenstunden] = useState(40);
   const [ueberstundenStart, setUeberstundenStart] = useState(0);
@@ -29,12 +28,11 @@ export default function MonatsansichtPage() {
         return;
       }
 
-      const { data: mitarbeiter, error: mitarbeiterError } =
-        await supabase
-          .from("mitarbeiter")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
+      const { data: mitarbeiter, error: mitarbeiterError } = await supabase
+        .from("mitarbeiter")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
 
       if (mitarbeiterError) {
         setMeldung(mitarbeiterError.message);
@@ -42,13 +40,8 @@ export default function MonatsansichtPage() {
       }
 
       if (mitarbeiter) {
-        if (mitarbeiter.wochenstunden) {
-          setWochenstunden(Number(mitarbeiter.wochenstunden));
-        }
-
-        if (mitarbeiter.ueberstunden_start) {
-          setUeberstundenStart(Number(mitarbeiter.ueberstunden_start));
-        }
+        setWochenstunden(Number(mitarbeiter.wochenstunden || 40));
+        setUeberstundenStart(Number(mitarbeiter.ueberstunden_start || 0));
       }
 
       const start = `${monat}-01`;
@@ -61,7 +54,7 @@ export default function MonatsansichtPage() {
         .toISOString()
         .split("T")[0];
 
-      const { data, error } = await supabase
+      const { data: zeitenData, error: zeitenError } = await supabase
         .from("arbeitszeiten")
         .select("*")
         .eq("user_id", user.id)
@@ -69,12 +62,27 @@ export default function MonatsansichtPage() {
         .lte("datum", ende)
         .order("datum", { ascending: true });
 
-      if (error) {
-        setMeldung(error.message);
-        console.log(error);
+      const { data: abwesenheitenData, error: abwesenheitenError } =
+        await supabase
+          .from("urlaub")
+          .select("*")
+          .eq("user_id", user.id)
+          .gte("von", start)
+          .lte("bis", ende)
+          .order("von", { ascending: true });
+
+      if (zeitenError) {
+        setMeldung(zeitenError.message);
+        console.log(zeitenError);
       }
 
-      setZeiten(data || []);
+      if (abwesenheitenError) {
+        setMeldung(abwesenheitenError.message);
+        console.log(abwesenheitenError);
+      }
+
+      setZeiten(zeitenData || []);
+      setAbwesenheiten(abwesenheitenData || []);
       setLoading(false);
     }
 
@@ -127,8 +135,24 @@ export default function MonatsansichtPage() {
   const arbeitstage = berechneArbeitstage();
   const feiertage = feiertageImMonat();
 
-  const sollstunden = (wochenstunden / 5) * arbeitstage;
-  const differenz = gesamtstunden - sollstunden;
+  const tagesSoll = wochenstunden / 5;
+
+  const sollstunden = tagesSoll * arbeitstage;
+
+  const bezahlteAbwesenheitstage = abwesenheiten
+    .filter(
+      (eintrag) =>
+        eintrag.typ === "Krank" ||
+        (eintrag.typ === "Urlaub" && eintrag.status === "Genehmigt")
+    )
+    .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+
+  const abwesenheitsstunden = bezahlteAbwesenheitstage * tagesSoll;
+
+  const angerechneteStunden = gesamtstunden + abwesenheitsstunden;
+
+  const differenz = angerechneteStunden - sollstunden;
+
   const gesamtUeberstunden = ueberstundenStart + differenz;
 
   return (
@@ -168,6 +192,14 @@ export default function MonatsansichtPage() {
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
+          <p className="text-zinc-600 font-semibold mb-2">Abwesenheit</p>
+
+          <p className="text-5xl font-extrabold text-zinc-900">
+            {loading ? "..." : `${abwesenheitsstunden.toFixed(2)}h`}
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
           <p className="text-zinc-600 font-semibold mb-2">Sollstunden</p>
 
           <p className="text-5xl font-extrabold text-zinc-900">
@@ -188,7 +220,9 @@ export default function MonatsansichtPage() {
             {loading ? "..." : `${differenz.toFixed(2)}h`}
           </p>
         </div>
+      </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-5 mb-8">
         <div className="bg-zinc-900 text-white p-6 rounded-2xl shadow-sm">
           <p className="text-zinc-300 font-semibold mb-2">
             Gesamt Überstunden
@@ -198,9 +232,7 @@ export default function MonatsansichtPage() {
             {loading ? "..." : `${gesamtUeberstunden.toFixed(2)}h`}
           </p>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-5 mb-8">
         <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm">
           <p className="text-zinc-600 font-semibold mb-2">Wochenstunden</p>
 
@@ -222,14 +254,6 @@ export default function MonatsansichtPage() {
 
           <p className="text-4xl font-extrabold text-zinc-900">
             {loading ? "..." : feiertage.length}
-          </p>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm">
-          <p className="text-zinc-600 font-semibold mb-2">Einträge</p>
-
-          <p className="text-4xl font-extrabold text-zinc-900">
-            {loading ? "..." : zeiten.length}
           </p>
         </div>
 
@@ -269,6 +293,31 @@ export default function MonatsansichtPage() {
         </div>
       )}
 
+      {abwesenheiten.length > 0 && (
+        <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 mb-8">
+          <h2 className="text-2xl font-bold text-zinc-900 mb-6">
+            Angerechnete Abwesenheiten
+          </h2>
+
+          <div className="space-y-3">
+            {abwesenheiten.map((eintrag) => (
+              <div
+                key={eintrag.id}
+                className="flex justify-between border-b border-zinc-200 pb-3"
+              >
+                <span className="text-zinc-900 font-semibold">
+                  {eintrag.typ} · {eintrag.status}
+                </span>
+
+                <span className="text-zinc-700 font-medium">
+                  {eintrag.von} - {eintrag.bis} · {eintrag.tage || 0} Tage
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6">
         <h2 className="text-2xl font-bold text-zinc-900 mb-6">
           Eigene Arbeitszeiten
@@ -290,23 +339,12 @@ export default function MonatsansichtPage() {
                 key={zeit.id}
                 className="grid grid-cols-6 py-4 border-b border-zinc-200 items-center"
               >
-                <div className="text-zinc-900 font-medium">
-                  {zeit.datum}
-                </div>
-
+                <div className="text-zinc-900 font-medium">{zeit.datum}</div>
                 <div className="text-zinc-800">{zeit.projekt}</div>
-
-                <div className="text-zinc-800">
-                  {zeit.startzeit || "-"}
-                </div>
-
+                <div className="text-zinc-800">{zeit.startzeit || "-"}</div>
                 <div className="text-zinc-800">{zeit.endzeit || "-"}</div>
-
                 <div className="text-zinc-800">{zeit.pause || 0} Min.</div>
-
-                <div className="text-zinc-900 font-bold">
-                  {zeit.stunden}h
-                </div>
+                <div className="text-zinc-900 font-bold">{zeit.stunden}h</div>
               </div>
             ))}
           </div>
@@ -319,9 +357,7 @@ export default function MonatsansichtPage() {
               className="rounded-xl border border-zinc-200 bg-zinc-50 p-4"
             >
               <div className="flex items-center justify-between gap-4">
-                <div className="font-bold text-zinc-900">
-                  {zeit.datum}
-                </div>
+                <div className="font-bold text-zinc-900">{zeit.datum}</div>
 
                 <div className="font-extrabold text-orange-500">
                   {zeit.stunden}h
@@ -330,8 +366,7 @@ export default function MonatsansichtPage() {
 
               <div className="mt-3 space-y-2 text-sm">
                 <div>
-                  <span className="font-semibold">Projekt:</span>{" "}
-                  {zeit.projekt}
+                  <span className="font-semibold">Projekt:</span> {zeit.projekt}
                 </div>
 
                 <div>
