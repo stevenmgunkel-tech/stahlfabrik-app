@@ -95,7 +95,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </button>
       </header>
 
-      <aside className="fixed left-0 top-0 z-40 hidden h-[100dvh] w-[300px] flex-col overflow-hidden border-r border-zinc-900 bg-black md:flex">
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 flex-col overflow-hidden border-r border-zinc-900 bg-black md:flex">
         <div className="shrink-0 border-b border-zinc-900 px-7 py-7">
           <Link href="/" className="flex flex-col">
             <span className="text-[36px] font-black tracking-tight text-white">
@@ -120,15 +120,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   href={item.href}
                   className={`group flex items-center gap-4 rounded-2xl px-5 py-4 text-[15px] font-semibold transition-all duration-200 ${
                     active
-                      ? "bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-lg shadow-orange-500/30"
+                      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
                       : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
                   }`}
                 >
                   <Icon
                     size={20}
-                    className={`transition-all ${
-                      active ? "text-white" : "text-zinc-500 group-hover:text-orange-400"
-                    }`}
+                    className={active ? "text-white" : "text-zinc-500 group-hover:text-orange-400"}
                   />
                   {item.label}
                 </Link>
@@ -138,7 +136,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="shrink-0 border-t border-zinc-900 p-4">
-          <div className="rounded-3xl border border-zinc-900 bg-zinc-950 p-5 shadow-xl">
+          <div className="rounded-3xl border border-zinc-900 bg-zinc-950 p-5">
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500 text-xl font-black text-white shadow-lg shadow-orange-500/30">
                 {userName?.charAt(0) || "S"}
@@ -209,15 +207,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       onClick={() => setSidebarOpen(false)}
                       className={`group flex items-center gap-4 rounded-2xl px-5 py-4 text-[15px] font-semibold transition-all duration-200 ${
                         active
-                          ? "bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-lg shadow-orange-500/30"
+                          ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
                           : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
                       }`}
                     >
                       <Icon
                         size={20}
-                        className={`transition-all ${
-                          active ? "text-white" : "text-zinc-500 group-hover:text-orange-400"
-                        }`}
+                        className={active ? "text-white" : "text-zinc-500 group-hover:text-orange-400"}
                       />
                       {item.label}
                     </Link>
@@ -240,7 +236,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <main className="pt-16 md:ml-[300px] md:pt-0">
+      <main className="pt-16 md:ml-72 md:pt-0">
         <div className="mx-auto w-full max-w-[1250px] overflow-x-hidden p-4 md:p-6">
           {children}
         </div>
