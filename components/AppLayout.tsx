@@ -392,9 +392,9 @@ export default function AppLayout({
       {/* CONTENT */}
 
       <main className="pt-16 md:ml-72 md:pt-0">
-        <div className="w-full overflow-x-hidden p-4 md:p-8">
-          {children}
-        </div>
+        <div className="mx-auto w-full max-w-[1600px] overflow-x-hidden p-4 md:p-6">
+  {children}
+</div>
       </main>
 
     </div>
