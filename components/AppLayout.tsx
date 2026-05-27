@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+
 import {
   LayoutDashboard,
   Clock3,
@@ -16,54 +17,134 @@ import {
   X,
   LogOut,
 } from "lucide-react";
+
 import { supabase } from "../lib/supabase";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userName, setUserName] = useState("");
-  const [userRole, setUserRole] = useState("");
+  const [sidebarOpen, setSidebarOpen] =
+    useState(false);
 
-  const isLoginPage = pathname === "/login";
-  const isAdmin = userRole === "Admin";
+  const [userName, setUserName] =
+    useState("");
+
+  const [userRole, setUserRole] =
+    useState("");
+
+  const isLoginPage =
+    pathname === "/login";
+
+  const isAdmin =
+    userRole === "Admin";
 
   const navItems = isAdmin
     ? [
-        { href: "/", label: "Dashboard", icon: LayoutDashboard },
-        { href: "/arbeitszeiten", label: "Arbeitszeiten", icon: Clock3 },
-        { href: "/urlaub", label: "Urlaub / Krank", icon: Plane },
-        { href: "/monatsansicht", label: "Monatsansicht", icon: CalendarClock },
-        { href: "/resturlaub", label: "Resturlaub", icon: CalendarDays },
-        { href: "/mitarbeiter", label: "Mitarbeiter", icon: Users },
-        { href: "/chef-dashboard", label: "Chef Dashboard", icon: LayoutDashboard },
-        { href: "/projekte", label: "Projekte", icon: FolderKanban },
-        { href: "/admin", label: "Admin", icon: Shield },
+        {
+          href: "/",
+          label: "Dashboard",
+          icon: LayoutDashboard,
+        },
+        {
+          href: "/arbeitszeiten",
+          label: "Arbeitszeiten",
+          icon: Clock3,
+        },
+        {
+          href: "/urlaub",
+          label: "Urlaub / Krank",
+          icon: Plane,
+        },
+        {
+          href: "/monatsansicht",
+          label: "Monatsansicht",
+          icon: CalendarClock,
+        },
+        {
+          href: "/resturlaub",
+          label: "Resturlaub",
+          icon: CalendarDays,
+        },
+        {
+          href: "/mitarbeiter",
+          label: "Mitarbeiter",
+          icon: Users,
+        },
+        {
+          href: "/chef-dashboard",
+          label: "Chef Dashboard",
+          icon: LayoutDashboard,
+        },
+        {
+          href: "/projekte",
+          label: "Projekte",
+          icon: FolderKanban,
+        },
+        {
+          href: "/admin",
+          label: "Admin",
+          icon: Shield,
+        },
       ]
     : [
-        { href: "/", label: "Dashboard", icon: LayoutDashboard },
-        { href: "/arbeitszeiten", label: "Arbeitszeiten", icon: Clock3 },
-        { href: "/urlaub", label: "Urlaub / Krank", icon: Plane },
-        { href: "/monatsansicht", label: "Monatsansicht", icon: CalendarClock },
-        { href: "/resturlaub", label: "Resturlaub", icon: CalendarDays },
+        {
+          href: "/",
+          label: "Dashboard",
+          icon: LayoutDashboard,
+        },
+        {
+          href: "/arbeitszeiten",
+          label: "Arbeitszeiten",
+          icon: Clock3,
+        },
+        {
+          href: "/urlaub",
+          label: "Urlaub / Krank",
+          icon: Plane,
+        },
+        {
+          href: "/monatsansicht",
+          label: "Monatsansicht",
+          icon: CalendarClock,
+        },
+        {
+          href: "/resturlaub",
+          label: "Resturlaub",
+          icon: CalendarDays,
+        },
       ];
 
   useEffect(() => {
     async function ladeUser() {
-      const userData = await supabase.auth.getUser();
-      const user = userData.data.user;
+      const userData =
+        await supabase.auth.getUser();
+
+      const user =
+        userData.data.user;
 
       if (!user) return;
 
-      const { data } = await supabase
-        .from("mitarbeiter")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
+      const { data } =
+        await supabase
+          .from("mitarbeiter")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
 
       if (data) {
-        setUserName(data.name || user.email || "");
-        setUserRole(data.rolle || "");
+        setUserName(
+          data.name ||
+            user.email ||
+            ""
+        );
+
+        setUserRole(
+          data.rolle || ""
+        );
       }
     }
 
@@ -72,175 +153,253 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   async function logout() {
     await supabase.auth.signOut();
-    window.location.href = "/login";
+
+    window.location.href =
+      "/login";
   }
 
   if (isLoginPage) {
-    return <div className="min-h-screen bg-zinc-100">{children}</div>;
+    return (
+      <div className="min-h-screen bg-zinc-100">
+        {children}
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-100">
+    <div className="min-h-screen bg-[#f4f4f5]">
+
+      {/* MOBILE HEADER */}
+
       <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center border-b border-zinc-900 bg-black px-5 md:hidden">
-        <Link href="/" className="text-[28px] font-black tracking-tight text-white">
-          Stahl<span className="text-orange-500">Fabrik</span>
+
+        <Link
+          href="/"
+          className="text-[28px] font-black tracking-tight text-white"
+        >
+          Stahl
+          <span className="text-orange-500">
+            Fabrik
+          </span>
         </Link>
 
         <button
           type="button"
-          onClick={() => setSidebarOpen(true)}
+          onClick={() =>
+            setSidebarOpen(true)
+          }
           className="ml-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900 text-white"
         >
           <Menu size={22} />
         </button>
+
       </header>
 
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 flex-col overflow-hidden border-r border-zinc-900 bg-black md:flex">
-        <div className="shrink-0 border-b border-zinc-900 px-7 py-7">
-          <Link href="/" className="flex flex-col">
-            <span className="text-[36px] font-black tracking-tight text-white">
-              Stahl<span className="text-orange-500">Fabrik</span>
+      {/* DESKTOP SIDEBAR */}
+
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-[340px] flex-col overflow-hidden border-r border-zinc-900 bg-black md:flex">
+
+        {/* LOGO */}
+
+        <div className="border-b border-zinc-900 px-8 py-8">
+
+          <Link
+            href="/"
+            className="flex flex-col"
+          >
+
+            <span className="text-[54px] font-black leading-none tracking-tight text-white">
+              Stahl
+              <span className="text-orange-500">
+                Fabrik
+              </span>
             </span>
 
-            <span className="mt-2 text-[11px] font-semibold uppercase tracking-[0.35em] text-zinc-600">
+            <span className="mt-4 text-[12px] font-semibold uppercase tracking-[0.4em] text-zinc-600">
               Swiss ERP System
             </span>
+
           </Link>
+
         </div>
 
-        <nav className="min-h-0 flex-1 overflow-y-auto border-r-4 border-orange-500 p-4">
-          <div className="flex flex-col gap-3">
+        {/* NAVIGATION */}
+
+        <nav className="flex-1 overflow-y-auto border-r-[5px] border-orange-500 px-4 py-6">
+
+          <div className="flex flex-col gap-4">
+
             {navItems.map((item) => {
-              const active = pathname === item.href;
-              const Icon = item.icon;
+              const active =
+                pathname === item.href;
+
+              const Icon =
+                item.icon;
 
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`group flex items-center gap-4 rounded-2xl px-5 py-4 text-[15px] font-semibold transition-all duration-200 ${
+                  className={`group flex items-center gap-5 rounded-[22px] px-6 py-5 text-[20px] font-semibold transition-all duration-200 ${
                     active
-                      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                      ? "bg-orange-500 text-white shadow-[0_0_35px_rgba(249,115,22,0.45)]"
                       : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
                   }`}
                 >
+
                   <Icon
-                    size={20}
-                    className={active ? "text-white" : "text-zinc-500 group-hover:text-orange-400"}
+                    size={24}
+                    className={
+                      active
+                        ? "text-white"
+                        : "text-zinc-500 group-hover:text-orange-400"
+                    }
                   />
+
                   {item.label}
+
                 </Link>
               );
             })}
+
           </div>
+
         </nav>
 
-        <div className="shrink-0 border-t border-zinc-900 p-4">
-          <div className="rounded-3xl border border-zinc-900 bg-zinc-950 p-5">
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500 text-xl font-black text-white shadow-lg shadow-orange-500/30">
-                {userName?.charAt(0) || "S"}
+        {/* USER CARD */}
+
+        <div className="border-t border-zinc-900 p-6">
+
+          <div className="rounded-[34px] border border-zinc-900 bg-zinc-950 p-6 shadow-2xl">
+
+            <div className="flex items-center gap-5">
+
+              <div className="flex h-20 w-20 items-center justify-center rounded-[26px] bg-orange-500 text-3xl font-black text-white shadow-[0_0_35px_rgba(249,115,22,0.45)]">
+                {userName?.charAt(0) ||
+                  "S"}
               </div>
 
               <div>
-                <p className="text-sm font-semibold text-white">
-                  {userName || "Angemeldet"}
+
+                <p className="text-[20px] font-bold text-white">
+                  {userName ||
+                    "Angemeldet"}
                 </p>
 
-                <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-500">
-                  {userRole || "Benutzer"}
+                <p className="mt-2 text-[12px] font-black uppercase tracking-[0.35em] text-orange-500">
+                  {userRole ||
+                    "Benutzer"}
                 </p>
+
               </div>
+
             </div>
 
             <button
               type="button"
               onClick={logout}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/30 transition hover:bg-orange-400"
+              className="mt-6 flex h-16 w-full items-center justify-center gap-3 rounded-[24px] bg-orange-500 text-[20px] font-bold text-white shadow-[0_0_35px_rgba(249,115,22,0.45)] transition hover:bg-orange-400"
             >
-              <LogOut size={16} />
+
+              <LogOut size={22} />
+
               Logout
+
             </button>
+
           </div>
+
         </div>
+
       </aside>
+
+      {/* MOBILE SIDEBAR */}
 
       {sidebarOpen && (
         <div className="fixed inset-0 z-[999] md:hidden">
+
           <button
             type="button"
-            onClick={() => setSidebarOpen(false)}
+            onClick={() =>
+              setSidebarOpen(false)
+            }
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           />
 
           <aside className="absolute left-0 top-0 flex h-full w-[85%] max-w-xs flex-col overflow-hidden bg-black shadow-2xl">
-            <div className="shrink-0 flex items-center justify-between border-b border-zinc-900 px-5 py-6">
-              <div className="flex flex-col">
-                <span className="text-3xl font-black tracking-tight text-white">
-                  Stahl<span className="text-orange-500">Fabrik</span>
-                </span>
 
-                <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-600">
-                  Swiss ERP
-                </span>
-              </div>
+            <div className="border-b border-zinc-900 px-6 py-6">
 
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900 text-white"
-              >
-                <X size={18} />
-              </button>
+              <span className="text-3xl font-black tracking-tight text-white">
+                Stahl
+                <span className="text-orange-500">
+                  Fabrik
+                </span>
+              </span>
+
             </div>
 
-            <nav className="min-h-0 flex-1 overflow-y-auto border-r-4 border-orange-500 p-4">
+            <nav className="flex-1 overflow-y-auto border-r-4 border-orange-500 p-4">
+
               <div className="flex flex-col gap-3">
+
                 {navItems.map((item) => {
-                  const active = pathname === item.href;
-                  const Icon = item.icon;
+                  const active =
+                    pathname === item.href;
+
+                  const Icon =
+                    item.icon;
 
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
-                      onClick={() => setSidebarOpen(false)}
+                      onClick={() =>
+                        setSidebarOpen(false)
+                      }
                       className={`group flex items-center gap-4 rounded-2xl px-5 py-4 text-[15px] font-semibold transition-all duration-200 ${
                         active
-                          ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                          ? "bg-orange-500 text-white"
                           : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
                       }`}
                     >
+
                       <Icon
                         size={20}
-                        className={active ? "text-white" : "text-zinc-500 group-hover:text-orange-400"}
+                        className={
+                          active
+                            ? "text-white"
+                            : "text-zinc-500 group-hover:text-orange-400"
+                        }
                       />
+
                       {item.label}
+
                     </Link>
                   );
                 })}
+
               </div>
+
             </nav>
 
-            <div className="shrink-0 border-t border-zinc-900 p-4">
-              <button
-                type="button"
-                onClick={logout}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white"
-              >
-                <LogOut size={16} />
-                Logout
-              </button>
-            </div>
           </aside>
+
         </div>
       )}
 
-      <main className="pt-16 md:ml-72 md:pt-0">
-        <div className="mx-auto w-full max-w-[1250px] overflow-x-hidden p-4 md:p-6">
+      {/* CONTENT */}
+
+      <main className="md:ml-[340px]">
+
+        <div className="mx-auto w-full max-w-[1450px] p-6 md:p-10">
+
           {children}
+
         </div>
+
       </main>
+
     </div>
   );
 }
