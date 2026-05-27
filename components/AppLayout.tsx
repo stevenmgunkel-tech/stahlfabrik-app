@@ -197,25 +197,25 @@ export default function AppLayout({
 
       {/* DESKTOP SIDEBAR */}
 
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-[340px] flex-col overflow-hidden border-r border-zinc-900 bg-black md:flex">
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 flex-col border-r border-zinc-900 bg-black md:flex">
 
         {/* LOGO */}
 
-        <div className="border-b border-zinc-900 px-8 py-8">
+        <div className="border-b border-zinc-900 px-6 py-7">
 
           <Link
             href="/"
             className="flex flex-col"
           >
 
-            <span className="text-[54px] font-black leading-none tracking-tight text-white">
+            <span className="text-[36px] font-black leading-none tracking-tight text-white">
               Stahl
               <span className="text-orange-500">
                 Fabrik
               </span>
             </span>
 
-            <span className="mt-4 text-[12px] font-semibold uppercase tracking-[0.4em] text-zinc-600">
+            <span className="mt-3 text-[11px] font-semibold uppercase tracking-[0.35em] text-zinc-600">
               Swiss ERP System
             </span>
 
@@ -225,9 +225,9 @@ export default function AppLayout({
 
         {/* NAVIGATION */}
 
-        <nav className="flex-1 overflow-y-auto border-r-[5px] border-orange-500 px-4 py-6">
+        <nav className="flex-1 overflow-y-auto px-3 py-5">
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
 
             {navItems.map((item) => {
               const active =
@@ -240,15 +240,15 @@ export default function AppLayout({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`group flex items-center gap-5 rounded-[22px] px-6 py-5 text-[20px] font-semibold transition-all duration-200 ${
+                  className={`group flex items-center gap-4 rounded-2xl px-5 py-4 text-[15px] font-semibold transition-all duration-200 ${
                     active
-                      ? "bg-orange-500 text-white shadow-[0_0_35px_rgba(249,115,22,0.45)]"
+                      ? "bg-orange-500 text-white shadow-[0_0_30px_rgba(249,115,22,0.35)]"
                       : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
                   }`}
                 >
 
                   <Icon
-                    size={24}
+                    size={20}
                     className={
                       active
                         ? "text-white"
@@ -266,27 +266,27 @@ export default function AppLayout({
 
         </nav>
 
-        {/* USER CARD */}
+        {/* USER BOX */}
 
-        <div className="border-t border-zinc-900 p-6">
+        <div className="border-t border-zinc-900 p-4">
 
-          <div className="rounded-[34px] border border-zinc-900 bg-zinc-950 p-6 shadow-2xl">
+          <div className="rounded-[28px] border border-zinc-900 bg-zinc-950 p-5">
 
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-4">
 
-              <div className="flex h-20 w-20 items-center justify-center rounded-[26px] bg-orange-500 text-3xl font-black text-white shadow-[0_0_35px_rgba(249,115,22,0.45)]">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500 text-xl font-black text-white shadow-[0_0_30px_rgba(249,115,22,0.35)]">
                 {userName?.charAt(0) ||
                   "S"}
               </div>
 
               <div>
 
-                <p className="text-[20px] font-bold text-white">
+                <p className="text-sm font-bold text-white">
                   {userName ||
                     "Angemeldet"}
                 </p>
 
-                <p className="mt-2 text-[12px] font-black uppercase tracking-[0.35em] text-orange-500">
+                <p className="mt-1 text-[11px] font-black uppercase tracking-[0.25em] text-orange-500">
                   {userRole ||
                     "Benutzer"}
                 </p>
@@ -298,10 +298,10 @@ export default function AppLayout({
             <button
               type="button"
               onClick={logout}
-              className="mt-6 flex h-16 w-full items-center justify-center gap-3 rounded-[24px] bg-orange-500 text-[20px] font-bold text-white shadow-[0_0_35px_rgba(249,115,22,0.45)] transition hover:bg-orange-400"
+              className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 text-sm font-bold text-white shadow-[0_0_30px_rgba(249,115,22,0.35)] transition hover:bg-orange-400"
             >
 
-              <LogOut size={22} />
+              <LogOut size={18} />
 
               Logout
 
@@ -339,9 +339,9 @@ export default function AppLayout({
 
             </div>
 
-            <nav className="flex-1 overflow-y-auto border-r-4 border-orange-500 p-4">
+            <nav className="flex-1 overflow-y-auto p-4">
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
 
                 {navItems.map((item) => {
                   const active =
@@ -390,9 +390,9 @@ export default function AppLayout({
 
       {/* CONTENT */}
 
-      <main className="md:ml-[340px]">
+      <main className="md:ml-72">
 
-        <div className="mx-auto w-full max-w-[1450px] p-6 md:p-10">
+        <div className="mx-auto w-full max-w-[1350px] p-6 md:p-8">
 
           {children}
 
