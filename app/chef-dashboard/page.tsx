@@ -53,7 +53,10 @@ export default function ChefDashboardPage() {
         .split("T")[0];
 
       const { data: mitarbeiterData, error: mitarbeiterError } =
-        await supabase.from("mitarbeiter").select("*");
+        await supabase
+          .from("mitarbeiter")
+          .select("*")
+          .order("id", { ascending: false });
 
       const { data: arbeitszeitenData, error: arbeitszeitenError } =
         await supabase
@@ -274,7 +277,9 @@ export default function ChefDashboardPage() {
 
         <KpiCard
           label="Überstundenabbau"
-          value={loading ? "..." : `-${teamUeberstundenAbbauStunden.toFixed(2)}h`}
+          value={
+            loading ? "..." : `-${teamUeberstundenAbbauStunden.toFixed(2)}h`
+          }
           orange
         />
 
@@ -283,7 +288,9 @@ export default function ChefDashboardPage() {
           value={
             loading
               ? "..."
-              : `${teamDifferenz >= 0 ? "+" : ""}${teamDifferenz.toFixed(2)}h`
+              : `${teamDifferenz >= 0 ? "+" : ""}${teamDifferenz.toFixed(
+                  2
+                )}h`
           }
           green={teamDifferenz >= 0}
           red={teamDifferenz < 0}
@@ -392,7 +399,10 @@ export default function ChefDashboardPage() {
 
               <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
                 <Info label="Arbeitstage" value={person.personArbeitstage} />
-                <Info label="Soll" value={`${person.sollstunden.toFixed(2)}h`} />
+                <Info
+                  label="Soll"
+                  value={`${person.sollstunden.toFixed(2)}h`}
+                />
                 <Info label="Ist" value={`${person.iststunden.toFixed(2)}h`} />
                 <Info
                   label="Angerechnet"
@@ -615,7 +625,11 @@ function Info({
   return (
     <div className="rounded-xl border border-white/10 bg-black/25 p-3">
       <div className="text-xs text-white/45">{label}</div>
-      <div className={`mt-1 font-bold ${orange ? "text-orange-500" : "text-white"}`}>
+      <div
+        className={`mt-1 font-bold ${
+          orange ? "text-orange-500" : "text-white"
+        }`}
+      >
         {value}
       </div>
     </div>
