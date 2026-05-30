@@ -54,7 +54,6 @@ export default function MitarbeiterPage() {
 
   async function ladeMitarbeiter() {
     const erlaubt = await pruefeAdmin();
-
     if (!erlaubt) return;
 
     const { data, error } = await supabase
@@ -78,21 +77,14 @@ export default function MitarbeiterPage() {
   function berechneUrlaubstage(eintritt: string, wochen: string) {
     const ferienTageProJahr = Number(wochen || 0) * 5;
 
-    if (!eintritt) {
-      return ferienTageProJahr.toFixed(2);
-    }
+    if (!eintritt) return ferienTageProJahr.toFixed(2);
 
     const start = new Date(eintritt);
     const aktuellesJahr = new Date().getFullYear();
     const eintrittsJahr = start.getFullYear();
 
-    if (eintrittsJahr < aktuellesJahr) {
-      return ferienTageProJahr.toFixed(2);
-    }
-
-    if (eintrittsJahr > aktuellesJahr) {
-      return "0.00";
-    }
+    if (eintrittsJahr < aktuellesJahr) return ferienTageProJahr.toFixed(2);
+    if (eintrittsJahr > aktuellesJahr) return "0.00";
 
     const eintrittsMonat = start.getMonth() + 1;
     const monateImJahr = 13 - eintrittsMonat;
@@ -102,8 +94,7 @@ export default function MitarbeiterPage() {
   }
 
   useEffect(() => {
-    const berechnet = berechneUrlaubstage(eintrittsdatum, ferienwochen);
-    setUrlaubstage(berechnet);
+    setUrlaubstage(berechneUrlaubstage(eintrittsdatum, ferienwochen));
   }, [eintrittsdatum, ferienwochen]);
 
   function istInProbezeit(probezeit_bis: string | null) {
@@ -180,23 +171,15 @@ export default function MitarbeiterPage() {
 
       const response = await fetch("/api/create-user", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...daten,
-          email,
-          password,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...daten, email, password }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
         setLoading(false);
-        setMeldung(
-          result.error || "Mitarbeiter konnte nicht erstellt werden."
-        );
+        setMeldung(result.error || "Mitarbeiter konnte nicht erstellt werden.");
         return;
       }
 
@@ -230,11 +213,6 @@ export default function MitarbeiterPage() {
   }
 
   function mitarbeiterBearbeiten(person: any) {
-    if (!isAdmin) {
-      setMeldung("Keine Berechtigung.");
-      return;
-    }
-
     setBearbeitenId(person.id);
     setName(person.name || "");
     setRolle(person.rolle || "Mitarbeiter");
@@ -248,10 +226,22 @@ export default function MitarbeiterPage() {
     setVertragsart(person.vertragsart || "Unbefristet");
   }
 
+  function rollenFarbe(rolle: string) {
+    if (rolle === "Admin") return "border-orange-400/40 bg-orange-500/10 text-orange-400";
+    if (rolle === "Lehrling") return "border-blue-400/30 bg-blue-500/10 text-blue-300";
+    if (rolle === "Temporär") return "border-yellow-400/30 bg-yellow-500/10 text-yellow-300";
+    if (rolle === "Aushilfe") return "border-purple-400/30 bg-purple-500/10 text-purple-300";
+    return "border-green-400/30 bg-green-500/10 text-green-300";
+  }
+
+  const admins = mitarbeiter.filter((p) => p.rolle === "Admin").length;
+  const aktive = mitarbeiter.filter((p) => !p.austrittsdatum).length;
+  const probezeit = mitarbeiter.filter((p) => istInProbezeit(p.probezeit_bis)).length;
+
   if (!seiteGeprueft) {
     return (
-      <main className="space-y-6">
-        <div className="rounded-2xl bg-white p-6 font-bold text-zinc-900 shadow-sm">
+      <main>
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 font-bold text-white shadow-2xl shadow-black/30">
           Berechtigung wird geprüft...
         </div>
       </main>
@@ -259,148 +249,109 @@ export default function MitarbeiterPage() {
   }
 
   return (
-    <main className="space-y-6">
+    <main className="space-y-8">
       <div>
-        <h1 className="text-3xl md:text-5xl font-extrabold text-zinc-900">
+        <div className="mb-3 text-sm font-medium uppercase tracking-widest text-white/60">
+          Personalverwaltung
+        </div>
+
+        <h1 className="text-5xl font-black tracking-tight text-white lg:text-6xl">
           Mitarbeiter
         </h1>
 
-        <p className="mt-2 text-sm md:text-lg text-zinc-600">
-          Mitarbeiter & Login-Zugänge verwalten
+        <p className="mt-3 text-white/60">
+          Mitarbeiter, Login-Zugänge, Verträge und Ferien verwalten
         </p>
       </div>
 
-      <div className="rounded-2xl border border-zinc-200 bg-white p-4 md:p-6 shadow-sm">
-        <h2 className="mb-6 text-xl md:text-2xl font-bold text-zinc-900">
-          {bearbeitenId
-            ? "Mitarbeiter bearbeiten"
-            : "Mitarbeiter mit Login erstellen"}
-        </h2>
+      <section className="grid grid-cols-1 gap-5 md:grid-cols-3">
+        <KpiCard label="Teammitglieder" value={mitarbeiter.length} />
+        <KpiCard label="Aktiv" value={aktive} green />
+        <KpiCard label="Probezeit" value={probezeit} orange />
+      </section>
 
-        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-3">
-          <input
-            type="text"
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="rounded-xl border border-zinc-300 p-3"
-          />
+      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+        <div className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <h2 className="text-2xl font-black text-white">
+              {bearbeitenId ? "Mitarbeiter bearbeiten" : "Mitarbeiter mit Login erstellen"}
+            </h2>
+            <p className="mt-1 text-white/55">
+              Stammdaten, Rolle, Vertrag und Ferienanspruch erfassen
+            </p>
+          </div>
+
+          {bearbeitenId && (
+            <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-sm font-black text-orange-400">
+              Bearbeitungsmodus aktiv
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <Field label="Name">
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="dark-input" />
+          </Field>
 
           {!bearbeitenId && (
             <>
-              <input
-                type="email"
-                placeholder="E-Mail"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="rounded-xl border border-zinc-300 p-3"
-              />
+              <Field label="E-Mail">
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="E-Mail" className="dark-input" />
+              </Field>
 
-              <input
-                type="password"
-                placeholder="Start-Passwort"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="rounded-xl border border-zinc-300 p-3"
-              />
+              <Field label="Start-Passwort">
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Start-Passwort" className="dark-input" />
+              </Field>
             </>
           )}
 
-          <select
-            value={rolle}
-            onChange={(e) => setRolle(e.target.value)}
-            className="rounded-xl border border-zinc-300 p-3"
-          >
-            <option value="Mitarbeiter">Mitarbeiter</option>
-            <option value="Admin">Admin</option>
-            <option value="Lehrling">Lehrling</option>
-            <option value="Temporär">Temporär</option>
-            <option value="Aushilfe">Aushilfe</option>
-          </select>
+          <Field label="Rolle">
+            <select value={rolle} onChange={(e) => setRolle(e.target.value)} className="dark-input">
+              <option value="Mitarbeiter">Mitarbeiter</option>
+              <option value="Admin">Admin</option>
+              <option value="Lehrling">Lehrling</option>
+              <option value="Temporär">Temporär</option>
+              <option value="Aushilfe">Aushilfe</option>
+            </select>
+          </Field>
 
-          <select
-            value={vertragsart}
-            onChange={(e) => setVertragsart(e.target.value)}
-            className="rounded-xl border border-zinc-300 p-3"
-          >
-            <option value="Unbefristet">Unbefristet</option>
-            <option value="Befristet">Befristet</option>
-            <option value="Temporär">Temporär</option>
-            <option value="Lehre">Lehre</option>
-            <option value="Aushilfe">Aushilfe</option>
-          </select>
+          <Field label="Vertragsart">
+            <select value={vertragsart} onChange={(e) => setVertragsart(e.target.value)} className="dark-input">
+              <option value="Unbefristet">Unbefristet</option>
+              <option value="Befristet">Befristet</option>
+              <option value="Temporär">Temporär</option>
+              <option value="Lehre">Lehre</option>
+              <option value="Aushilfe">Aushilfe</option>
+            </select>
+          </Field>
 
-          <input
-            type="number"
-            step="0.5"
-            placeholder="Wochenstunden"
-            value={wochenstunden}
-            onChange={(e) => setWochenstunden(e.target.value)}
-            className="rounded-xl border border-zinc-300 p-3"
-          />
+          <Field label="Wochenstunden">
+            <input type="number" step="0.5" value={wochenstunden} onChange={(e) => setWochenstunden(e.target.value)} placeholder="42.5" className="dark-input" />
+          </Field>
 
-          <input
-            type="number"
-            step="0.5"
-            placeholder="Ferienwochen"
-            value={ferienwochen}
-            onChange={(e) => setFerienwochen(e.target.value)}
-            className="rounded-xl border border-zinc-300 p-3"
-          />
+          <Field label="Ferienwochen">
+            <input type="number" step="0.5" value={ferienwochen} onChange={(e) => setFerienwochen(e.target.value)} placeholder="4" className="dark-input" />
+          </Field>
 
-          <input
-            type="number"
-            step="0.01"
-            placeholder="Urlaubstage automatisch"
-            value={urlaubstage}
-            readOnly
-            className="rounded-xl border border-zinc-300 bg-zinc-100 p-3"
-          />
+          <Field label="Urlaubstage automatisch">
+            <input type="number" step="0.01" value={urlaubstage} readOnly className="dark-input opacity-70" />
+          </Field>
 
-          <input
-            type="number"
-            step="0.5"
-            placeholder="Überstunden Start"
-            value={ueberstundenStart}
-            onChange={(e) => setUeberstundenStart(e.target.value)}
-            className="rounded-xl border border-zinc-300 p-3"
-          />
+          <Field label="Überstunden Start">
+            <input type="number" step="0.5" value={ueberstundenStart} onChange={(e) => setUeberstundenStart(e.target.value)} placeholder="0" className="dark-input" />
+          </Field>
 
-          <div>
-            <p className="mb-2 text-sm font-semibold text-zinc-700">
-              Eintrittsdatum
-            </p>
-            <input
-              type="date"
-              value={eintrittsdatum}
-              onChange={(e) => setEintrittsdatum(e.target.value)}
-              className="w-full rounded-xl border border-zinc-300 p-3"
-            />
-          </div>
+          <Field label="Eintrittsdatum">
+            <input type="date" value={eintrittsdatum} onChange={(e) => setEintrittsdatum(e.target.value)} className="dark-input" />
+          </Field>
 
-          <div>
-            <p className="mb-2 text-sm font-semibold text-zinc-700">
-              Probezeit bis
-            </p>
-            <input
-              type="date"
-              value={probezeitBis}
-              onChange={(e) => setProbezeitBis(e.target.value)}
-              className="w-full rounded-xl border border-zinc-300 p-3"
-            />
-          </div>
+          <Field label="Probezeit bis">
+            <input type="date" value={probezeitBis} onChange={(e) => setProbezeitBis(e.target.value)} className="dark-input" />
+          </Field>
 
-          <div>
-            <p className="mb-2 text-sm font-semibold text-zinc-700">
-              Austrittsdatum
-            </p>
-            <input
-              type="date"
-              value={austrittsdatum}
-              onChange={(e) => setAustrittsdatum(e.target.value)}
-              className="w-full rounded-xl border border-zinc-300 p-3"
-            />
-          </div>
+          <Field label="Austrittsdatum">
+            <input type="date" value={austrittsdatum} onChange={(e) => setAustrittsdatum(e.target.value)} className="dark-input" />
+          </Field>
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -408,20 +359,16 @@ export default function MitarbeiterPage() {
             type="button"
             onClick={mitarbeiterSpeichern}
             disabled={loading}
-            className="rounded-xl bg-zinc-900 px-5 py-3 font-bold text-white transition hover:bg-orange-500 disabled:opacity-50"
+            className="rounded-xl bg-orange-600 px-5 py-3 font-black text-white shadow-lg shadow-orange-600/25 transition hover:bg-orange-500 disabled:opacity-50"
           >
-            {loading
-              ? "Speichern..."
-              : bearbeitenId
-              ? "Änderung speichern"
-              : "Mitarbeiter erstellen"}
+            {loading ? "Speichern..." : bearbeitenId ? "Änderung speichern" : "Mitarbeiter erstellen"}
           </button>
 
           {bearbeitenId && (
             <button
               type="button"
               onClick={formularLeeren}
-              className="rounded-xl bg-zinc-200 px-5 py-3 font-bold text-zinc-900"
+              className="rounded-xl border border-white/10 bg-white/[0.04] px-5 py-3 font-bold text-white transition hover:border-orange-500/40 hover:text-orange-500"
             >
               Abbrechen
             </button>
@@ -429,169 +376,202 @@ export default function MitarbeiterPage() {
         </div>
 
         {meldung && (
-          <div className="mt-4 rounded-xl bg-zinc-900 p-3 text-sm font-semibold text-white">
+          <div className="mt-5 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-sm font-bold text-orange-400">
             {meldung}
           </div>
         )}
-      </div>
+      </section>
 
-      <div className="space-y-4 md:hidden">
-        {mitarbeiter.map((person) => (
-          <div
-            key={person.id}
-            className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-lg font-bold text-zinc-900">
-                {person.name}
-              </div>
-
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  istInProbezeit(person.probezeit_bis)
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-green-100 text-green-800"
-                }`}
-              >
-                {istInProbezeit(person.probezeit_bis)
-                  ? "Probezeit"
-                  : person.status || "Aktiv"}
-              </span>
-            </div>
-
-            <div className="mt-4 space-y-2 text-sm">
-              <div>
-                <span className="font-semibold">Rolle:</span> {person.rolle}
-              </div>
-
-              <div>
-                <span className="font-semibold">Vertrag:</span>{" "}
-                {person.vertragsart || "-"}
-              </div>
-
-              <div>
-                <span className="font-semibold">Eintritt:</span>{" "}
-                {person.eintrittsdatum || "-"}
-              </div>
-
-              <div>
-                <span className="font-semibold">Probezeit bis:</span>{" "}
-                {person.probezeit_bis || "-"}
-              </div>
-
-              <div>
-                <span className="font-semibold">Ferienwochen:</span>{" "}
-                {person.ferienwochen || 4}
-              </div>
-
-              <div>
-                <span className="font-semibold">Urlaubstage:</span>{" "}
-                {person.urlaubstage}
-              </div>
-
-              <div>
-                <span className="font-semibold">Überstunden Start:</span>{" "}
-                {Number(person.ueberstunden_start || 0).toFixed(2)}h
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => mitarbeiterBearbeiten(person)}
-              className="mt-4 w-full rounded-xl bg-zinc-900 p-3 font-bold text-white"
-            >
-              Bearbeiten
-            </button>
-
-            <button
-              type="button"
-              onClick={() => mitarbeiterLoeschen(person.id)}
-              className="mt-3 w-full rounded-xl bg-red-600 p-3 font-bold text-white"
-            >
-              Löschen
-            </button>
+      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+        <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+          <div>
+            <h2 className="text-2xl font-black text-white">Teamübersicht</h2>
+            <p className="mt-1 text-white/55">Alle Mitarbeiter mit Vertrags- und Ferieninformationen</p>
           </div>
-        ))}
-      </div>
 
-      <div className="hidden rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm md:block">
-        <h2 className="mb-6 text-2xl font-bold text-zinc-900">
-          Teamübersicht
-        </h2>
-
-        <div className="overflow-x-auto">
-          <div className="min-w-[1500px]">
-            <div className="grid grid-cols-11 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
-              <div>Name</div>
-              <div>Rolle</div>
-              <div>Vertrag</div>
-              <div>Eintritt</div>
-              <div>Probezeit</div>
-              <div>Woche</div>
-              <div>Ferien</div>
-              <div>Urlaub</div>
-              <div>Ü-Start</div>
-              <div>Status</div>
-              <div>Aktion</div>
-            </div>
-
-            {mitarbeiter.map((person) => (
-              <div
-                key={person.id}
-                className="grid grid-cols-11 items-center border-b border-zinc-200 py-4"
-              >
-                <div className="font-medium text-zinc-900">
-                  {person.name}
-                </div>
-
-                <div>{person.rolle}</div>
-                <div>{person.vertragsart || "-"}</div>
-                <div>{person.eintrittsdatum || "-"}</div>
-                <div>{person.probezeit_bis || "-"}</div>
-                <div>{person.wochenstunden}h</div>
-                <div>{person.ferienwochen || 4}</div>
-                <div>{person.urlaubstage}</div>
-
-                <div>
-                  {Number(person.ueberstunden_start || 0).toFixed(2)}h
-                </div>
-
-                <div>
-                  <span
-                    className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                      istInProbezeit(person.probezeit_bis)
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-green-100 text-green-800"
-                    }`}
-                  >
-                    {istInProbezeit(person.probezeit_bis)
-                      ? "Probezeit"
-                      : person.status || "Aktiv"}
-                  </span>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => mitarbeiterBearbeiten(person)}
-                    className="rounded-lg bg-zinc-900 px-4 py-2 font-semibold text-white"
-                  >
-                    Bearbeiten
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => mitarbeiterLoeschen(person.id)}
-                    className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white"
-                  >
-                    Löschen
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="text-sm text-white/50">
+            {admins} Admin · {mitarbeiter.length} Gesamt
           </div>
         </div>
-      </div>
+
+        <div className="space-y-4 md:hidden">
+          {mitarbeiter.map((person) => (
+            <div key={person.id} className="rounded-2xl border border-white/10 bg-black/25 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-xl font-black text-white">{person.name}</div>
+                  <div className="mt-2 text-sm text-white/60">{person.vertragsart || "-"}</div>
+                </div>
+
+                <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${rollenFarbe(person.rolle)}`}>
+                  {person.rolle}
+                </span>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-3 text-sm text-white/70">
+                <Info label="Eintritt" value={person.eintrittsdatum || "-"} />
+                <Info label="Probezeit" value={person.probezeit_bis || "-"} />
+                <Info label="Woche" value={`${person.wochenstunden || 0}h`} />
+                <Info label="Ferien" value={`${person.ferienwochen || 4} Wochen`} />
+                <Info label="Urlaub" value={person.urlaubstage || 0} />
+                <Info label="Ü-Start" value={`${Number(person.ueberstunden_start || 0).toFixed(2)}h`} />
+              </div>
+
+              <div className="mt-5">
+                <span
+                  className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${
+                    istInProbezeit(person.probezeit_bis)
+                      ? "border-yellow-400/30 bg-yellow-500/10 text-yellow-300"
+                      : "border-green-400/30 bg-green-500/10 text-green-300"
+                  }`}
+                >
+                  {istInProbezeit(person.probezeit_bis) ? "Probezeit" : person.status || "Aktiv"}
+                </span>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <button onClick={() => mitarbeiterBearbeiten(person)} className="rounded-xl bg-white/[0.06] p-3 font-bold text-white transition hover:bg-white/[0.10]">
+                  Bearbeiten
+                </button>
+
+                <button onClick={() => mitarbeiterLoeschen(person.id)} className="rounded-xl bg-red-600 p-3 font-bold text-white transition hover:bg-red-500">
+                  Löschen
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden overflow-hidden rounded-xl border border-white/10 md:block">
+          <div className="overflow-x-auto">
+            <div className="min-w-[1500px]">
+              <div className="grid grid-cols-11 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+                <div>Name</div>
+                <div>Rolle</div>
+                <div>Vertrag</div>
+                <div>Eintritt</div>
+                <div>Probezeit</div>
+                <div>Woche</div>
+                <div>Ferien</div>
+                <div>Urlaub</div>
+                <div>Ü-Start</div>
+                <div>Status</div>
+                <div>Aktion</div>
+              </div>
+
+              {mitarbeiter.map((person) => (
+                <div key={person.id} className="grid grid-cols-11 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]">
+                  <div className="font-black text-white">{person.name}</div>
+
+                  <div>
+                    <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${rollenFarbe(person.rolle)}`}>
+                      {person.rolle}
+                    </span>
+                  </div>
+
+                  <div>{person.vertragsart || "-"}</div>
+                  <div>{person.eintrittsdatum || "-"}</div>
+                  <div>{person.probezeit_bis || "-"}</div>
+                  <div>{person.wochenstunden}h</div>
+                  <div>{person.ferienwochen || 4}</div>
+                  <div className="font-black text-orange-500">{person.urlaubstage}</div>
+                  <div>{Number(person.ueberstunden_start || 0).toFixed(2)}h</div>
+
+                  <div>
+                    <span
+                      className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${
+                        istInProbezeit(person.probezeit_bis)
+                          ? "border-yellow-400/30 bg-yellow-500/10 text-yellow-300"
+                          : "border-green-400/30 bg-green-500/10 text-green-300"
+                      }`}
+                    >
+                      {istInProbezeit(person.probezeit_bis) ? "Probezeit" : person.status || "Aktiv"}
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button onClick={() => mitarbeiterBearbeiten(person)} className="rounded-lg bg-white/[0.06] px-4 py-2 font-bold text-white transition hover:bg-white/[0.10]">
+                      Bearbeiten
+                    </button>
+
+                    <button onClick={() => mitarbeiterLoeschen(person.id)} className="rounded-lg bg-red-600 px-4 py-2 font-bold text-white transition hover:bg-red-500">
+                      Löschen
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <style jsx global>{`
+        .dark-input {
+          width: 100%;
+          border-radius: 0.75rem;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(0, 0, 0, 0.25);
+          padding: 0.85rem 1rem;
+          color: white;
+          outline: none;
+          transition: 0.2s ease;
+        }
+
+        .dark-input:focus {
+          border-color: rgba(249, 115, 22, 0.6);
+          box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+        }
+
+        .dark-input::placeholder {
+          color: rgba(255, 255, 255, 0.35);
+        }
+
+        .dark-input option {
+          background: #111315;
+          color: white;
+        }
+      `}</style>
     </main>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-bold text-white/70">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function KpiCard({
+  label,
+  value,
+  green,
+  orange,
+}: {
+  label: string;
+  value: string | number;
+  green?: boolean;
+  orange?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.025] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/40">
+      <div className="text-sm font-bold uppercase tracking-widest text-white/45">
+        {label}
+      </div>
+      <div className={`mt-5 text-5xl font-black ${green ? "text-green-400" : orange ? "text-orange-500" : "text-white"}`}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function Info({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+      <div className="text-xs text-white/45">{label}</div>
+      <div className="mt-1 font-bold text-white">{value}</div>
+    </div>
   );
 }
