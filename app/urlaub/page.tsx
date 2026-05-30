@@ -134,7 +134,6 @@ export default function UrlaubPage() {
 
   async function urlaubLoeschen(id: number) {
     const bestaetigen = confirm("Abwesenheit wirklich löschen?");
-
     if (!bestaetigen) return;
 
     const userData = await supabase.auth.getUser();
@@ -163,120 +162,145 @@ export default function UrlaubPage() {
   }
 
   function typFarbe(typ: string) {
-    if (typ === "Urlaub") return "bg-blue-100 text-blue-800";
-    if (typ === "Krank") return "bg-red-100 text-red-800";
-    if (typ === "Überstundenabbau") return "bg-orange-100 text-orange-800";
-    return "bg-zinc-100 text-zinc-800";
+    if (typ === "Urlaub") {
+      return "border-blue-400/30 bg-blue-500/10 text-blue-300";
+    }
+
+    if (typ === "Krank") {
+      return "border-red-400/30 bg-red-500/10 text-red-300";
+    }
+
+    if (typ === "Überstundenabbau") {
+      return "border-orange-400/40 bg-orange-500/10 text-orange-400";
+    }
+
+    return "border-white/10 bg-white/[0.06] text-white/70";
   }
 
   function statusFarbe(status: string) {
-    if (status === "Genehmigt") return "bg-green-100 text-green-800";
-    if (status === "Abgelehnt") return "bg-red-100 text-red-800";
-    return "bg-yellow-100 text-yellow-800";
+    if (status === "Genehmigt") {
+      return "border-green-400/30 bg-green-500/10 text-green-300";
+    }
+
+    if (status === "Abgelehnt") {
+      return "border-red-400/30 bg-red-500/10 text-red-300";
+    }
+
+    return "border-yellow-400/30 bg-yellow-500/10 text-yellow-300";
   }
 
   const berechneteTage = berechneTage();
 
   return (
-    <main>
-      <h1 className="mb-3 text-4xl font-extrabold text-zinc-900 md:text-5xl">
-        Urlaub & Abwesenheit
-      </h1>
+    <main className="space-y-8">
+      <div>
+        <div className="mb-3 text-sm font-medium uppercase tracking-widest text-white/60">
+          Abwesenheiten
+        </div>
 
-      <p className="mb-10 text-base font-medium text-zinc-700 md:text-lg">
-        Urlaub, Krankheit und Überstundenabbau beantragen
-      </p>
+        <h1 className="text-5xl font-black tracking-tight text-white lg:text-6xl">
+          Urlaub & Krank
+        </h1>
 
-      <div className="mb-8 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-        <h2 className="mb-6 text-2xl font-bold text-zinc-900">
-          Abwesenheit erfassen
-        </h2>
+        <p className="mt-3 text-white/60">
+          Urlaub, Krankheit und Überstundenabbau beantragen
+        </p>
+      </div>
+
+      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+        <div className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <h2 className="text-2xl font-black text-white">
+              Abwesenheit erfassen
+            </h2>
+            <p className="mt-1 text-white/55">
+              Zeitraum auswählen und Antrag speichern
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-3">
+            <span className="text-sm text-white/60">Berechnet</span>{" "}
+            <span className="font-black text-orange-500">
+              {berechneteTage} Tage
+            </span>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <div>
-            <label className="mb-2 block text-sm font-bold text-zinc-700">
-              Typ
-            </label>
-
+          <Field label="Typ">
             <select
               value={typ}
               onChange={(e) => setTyp(e.target.value)}
-              className="w-full rounded-xl border border-zinc-300 p-3 text-zinc-900"
+              className="dark-input"
             >
               <option value="Urlaub">Urlaub</option>
               <option value="Krank">Krank</option>
               <option value="Überstundenabbau">Überstundenabbau</option>
             </select>
-          </div>
+          </Field>
 
-          <div>
-            <label className="mb-2 block text-sm font-bold text-zinc-700">
-              Von
-            </label>
-
+          <Field label="Von">
             <input
               type="date"
               value={von}
               onChange={(e) => setVon(e.target.value)}
-              className="w-full rounded-xl border border-zinc-300 p-3 text-zinc-900"
+              className="dark-input"
             />
-          </div>
+          </Field>
 
-          <div>
-            <label className="mb-2 block text-sm font-bold text-zinc-700">
-              Bis
-            </label>
-
+          <Field label="Bis">
             <input
               type="date"
               value={bis}
               onChange={(e) => setBis(e.target.value)}
-              className="w-full rounded-xl border border-zinc-300 p-3 text-zinc-900"
+              className="dark-input"
             />
-          </div>
+          </Field>
 
           <div className="flex flex-col justify-end">
             <button
               type="button"
               onClick={abwesenheitHinzufuegen}
               disabled={loading}
-              className="rounded-xl bg-zinc-900 p-3 font-bold text-white transition hover:bg-orange-500 disabled:opacity-50"
+              className="rounded-xl bg-orange-600 p-3 font-black text-white shadow-lg shadow-orange-600/25 transition hover:bg-orange-500 disabled:opacity-50"
             >
               {loading ? "Speichern..." : "Speichern"}
             </button>
           </div>
         </div>
 
-        <div className="mt-5 rounded-xl border border-zinc-200 bg-zinc-100 p-4">
-          <span className="font-bold text-zinc-900">
-            Berechnete Arbeitstage:
-          </span>{" "}
-          <span className="font-extrabold text-orange-600">
-            {berechneteTage} Tage
-          </span>
-
-          {typ === "Überstundenabbau" && (
-            <p className="mt-2 text-sm font-medium text-zinc-600">
-              Diese Tage werden später vom Überstundenkonto abgezogen und nicht
-              vom Urlaub.
-            </p>
-          )}
-        </div>
+        {typ === "Überstundenabbau" && (
+          <div className="mt-5 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-sm font-medium text-orange-300">
+            Diese Tage werden später vom Überstundenkonto abgezogen und nicht
+            vom Urlaub.
+          </div>
+        )}
 
         {meldung && (
-          <div className="mt-4 rounded-xl bg-zinc-900 p-3 text-sm font-semibold text-white">
+          <div className="mt-5 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-sm font-bold text-orange-400">
             {meldung}
           </div>
         )}
-      </div>
+      </section>
 
-      <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-        <h2 className="mb-6 text-2xl font-bold text-zinc-900">
-          Meine Abwesenheiten
-        </h2>
+      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+        <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+          <div>
+            <h2 className="text-2xl font-black text-white">
+              Meine Abwesenheiten
+            </h2>
+            <p className="mt-1 text-white/55">
+              Übersicht deiner Anträge und Status
+            </p>
+          </div>
+
+          <div className="text-sm text-white/50">
+            {urlaub.length} Einträge
+          </div>
+        </div>
 
         {urlaub.length === 0 && (
-          <div className="rounded-xl bg-zinc-100 p-4 text-zinc-600">
+          <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
             Noch keine Abwesenheiten vorhanden.
           </div>
         )}
@@ -285,29 +309,29 @@ export default function UrlaubPage() {
           {urlaub.map((eintrag) => (
             <div
               key={eintrag.id}
-              className="rounded-xl border border-zinc-200 bg-zinc-50 p-4"
+              className="rounded-2xl border border-white/10 bg-black/25 p-5"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <span
-                    className={`rounded-full px-3 py-1 text-sm font-semibold ${typFarbe(
+                    className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${typFarbe(
                       eintrag.typ
                     )}`}
                   >
                     {eintrag.typ || "Urlaub"}
                   </span>
 
-                  <p className="mt-3 font-semibold text-zinc-900">
+                  <p className="mt-4 text-lg font-black text-white">
                     {eintrag.von} bis {eintrag.bis}
                   </p>
 
-                  <p className="mt-1 text-sm text-zinc-600">
+                  <p className="mt-1 text-sm text-white/60">
                     {eintrag.tage || 0} Arbeitstage
                   </p>
                 </div>
 
                 <span
-                  className={`rounded-full px-3 py-1 text-sm font-semibold ${statusFarbe(
+                  className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(
                     eintrag.status
                   )}`}
                 >
@@ -318,7 +342,7 @@ export default function UrlaubPage() {
               <button
                 type="button"
                 onClick={() => urlaubLoeschen(eintrag.id)}
-                className="mt-4 w-full rounded-lg bg-red-600 px-4 py-2 font-semibold text-white transition hover:bg-red-700"
+                className="mt-5 w-full rounded-xl bg-red-600 px-4 py-3 font-bold text-white transition hover:bg-red-500"
               >
                 Löschen
               </button>
@@ -326,25 +350,25 @@ export default function UrlaubPage() {
           ))}
         </div>
 
-        <div className="hidden overflow-x-auto md:block">
-          <div className="min-w-[850px]">
-            <div className="mb-4 grid grid-cols-6 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
-              <div>Typ</div>
-              <div>Von</div>
-              <div>Bis</div>
-              <div>Tage</div>
-              <div>Status</div>
-              <div>Aktion</div>
-            </div>
+        <div className="hidden overflow-hidden rounded-xl border border-white/10 md:block">
+          <div className="grid min-w-[850px] grid-cols-6 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+            <div>Typ</div>
+            <div>Von</div>
+            <div>Bis</div>
+            <div>Tage</div>
+            <div>Status</div>
+            <div>Aktion</div>
+          </div>
 
+          <div className="overflow-x-auto">
             {urlaub.map((eintrag) => (
               <div
                 key={eintrag.id}
-                className="grid grid-cols-6 items-center border-b border-zinc-200 py-4"
+                className="grid min-w-[850px] grid-cols-6 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
               >
                 <div>
                   <span
-                    className={`rounded-full px-3 py-1 text-sm font-semibold ${typFarbe(
+                    className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${typFarbe(
                       eintrag.typ
                     )}`}
                   >
@@ -352,16 +376,16 @@ export default function UrlaubPage() {
                   </span>
                 </div>
 
-                <div className="text-zinc-800">{eintrag.von}</div>
-                <div className="text-zinc-800">{eintrag.bis}</div>
+                <div>{eintrag.von}</div>
+                <div>{eintrag.bis}</div>
 
-                <div className="font-bold text-zinc-900">
+                <div className="font-black text-orange-500">
                   {eintrag.tage || 0}
                 </div>
 
                 <div>
                   <span
-                    className={`rounded-full px-3 py-1 text-sm font-semibold ${statusFarbe(
+                    className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(
                       eintrag.status
                     )}`}
                   >
@@ -373,7 +397,7 @@ export default function UrlaubPage() {
                   <button
                     type="button"
                     onClick={() => urlaubLoeschen(eintrag.id)}
-                    className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white transition hover:bg-red-700"
+                    className="rounded-lg bg-red-600 px-4 py-2 font-bold text-white transition hover:bg-red-500"
                   >
                     Löschen
                   </button>
@@ -382,7 +406,47 @@ export default function UrlaubPage() {
             ))}
           </div>
         </div>
-      </div>
+      </section>
+
+      <style jsx global>{`
+        .dark-input {
+          width: 100%;
+          border-radius: 0.75rem;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(0, 0, 0, 0.25);
+          padding: 0.85rem 1rem;
+          color: white;
+          outline: none;
+          transition: 0.2s ease;
+        }
+
+        .dark-input:focus {
+          border-color: rgba(249, 115, 22, 0.6);
+          box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+        }
+
+        .dark-input option {
+          background: #111315;
+          color: white;
+        }
+      `}</style>
     </main>
+  );
+}
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-bold text-white/70">
+        {label}
+      </label>
+      {children}
+    </div>
   );
 }
