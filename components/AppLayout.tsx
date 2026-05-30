@@ -61,7 +61,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,106,0,0.10),_transparent_32%),linear-gradient(135deg,_#07090b,_#101214_45%,_#050607)]" />
 
       <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-[#080a0c]/95 px-5 backdrop-blur lg:hidden">
-        <div className="text-xl font-black text-orange-500">Stahlfabrik</div>
+        <BrandLogo small />
 
         <button
           onClick={() => setOpen(true)}
@@ -73,15 +73,30 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/70" onClick={() => setOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-[280px] border-r border-white/10 bg-[#090b0d]">
-            <Sidebar pathname={pathname} logout={logout} userName={userName} role={role} close={() => setOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black/70"
+            onClick={() => setOpen(false)}
+          />
+
+          <aside className="absolute left-0 top-0 h-full w-[300px] border-r border-white/10 bg-[#090b0d]">
+            <Sidebar
+              pathname={pathname}
+              logout={logout}
+              userName={userName}
+              role={role}
+              close={() => setOpen(false)}
+            />
           </aside>
         </div>
       )}
 
       <aside className="fixed left-0 top-0 z-30 hidden h-screen w-[300px] border-r border-white/10 bg-[#090b0d]/95 backdrop-blur-xl lg:block">
-        <Sidebar pathname={pathname} logout={logout} userName={userName} role={role} />
+        <Sidebar
+          pathname={pathname}
+          logout={logout}
+          userName={userName}
+          role={role}
+        />
       </aside>
 
       <main className="relative z-10 pt-16 lg:ml-[300px] lg:pt-0">
@@ -107,11 +122,9 @@ function Sidebar({
   close?: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col px-6 py-8">
-      <div className="mb-12">
-        <div className="text-3xl font-black tracking-tight text-orange-500">
-          Stahlfabrik
-        </div>
+    <div className="flex h-full flex-col px-4 py-8">
+      <div className="mb-10">
+        <BrandLogo />
       </div>
 
       <nav className="flex-1 space-y-3">
@@ -125,7 +138,7 @@ function Sidebar({
               onClick={close}
               className={`block rounded-xl px-6 py-4 text-lg font-medium transition-all ${
                 active
-                  ? "border-l-4 border-orange-500 bg-gradient-to-r from-orange-500/35 to-white/[0.03] text-orange-400"
+                  ? "border border-orange-500/50 bg-gradient-to-r from-orange-500/35 to-white/[0.03] text-orange-400 shadow-lg shadow-orange-500/10"
                   : "text-white/85 hover:bg-white/[0.06] hover:text-orange-400"
               }`}
             >
@@ -147,6 +160,36 @@ function Sidebar({
         >
           Logout
         </button>
+      </div>
+    </div>
+  );
+}
+
+function BrandLogo({ small = false }: { small?: boolean }) {
+  return (
+    <div className={small ? "flex flex-col items-start" : "flex flex-col items-center"}>
+      <div
+        className={`leading-none font-black tracking-tight ${
+          small ? "text-2xl" : "text-[48px]"
+        }`}
+      >
+        <span className="text-white">Stahl</span>
+        <span className="text-orange-500">Fabrik</span>
+      </div>
+
+      <div className="mt-2 flex items-center justify-center gap-3">
+        {!small && <div className="h-[2px] w-8 rounded-full bg-orange-500/70" />}
+
+        <div
+          className={`whitespace-nowrap font-bold uppercase ${
+            small ? "text-[8px] tracking-[0.2em]" : "text-[11px] tracking-[0.24em]"
+          }`}
+        >
+          <span className="text-orange-500">Swiss</span>{" "}
+          <span className="text-white/90">ERP System</span>
+        </div>
+
+        {!small && <div className="h-[2px] w-8 rounded-full bg-orange-500/70" />}
       </div>
     </div>
   );
