@@ -9,7 +9,6 @@ export default function ChefDashboardPage() {
   const [arbeitszeiten, setArbeitszeiten] = useState<any[]>([]);
   const [urlaub, setUrlaub] = useState<any[]>([]);
   const [projekte, setProjekte] = useState<any[]>([]);
-
   const [loading, setLoading] = useState(true);
   const [meldung, setMeldung] = useState("");
 
@@ -45,7 +44,6 @@ export default function ChefDashboardPage() {
       }
 
       const start = `${monat}-01`;
-
       const ende = new Date(
         Number(monat.slice(0, 4)),
         Number(monat.slice(5, 7)),
@@ -106,17 +104,13 @@ export default function ChefDashboardPage() {
     for (let tag = 1; tag <= tageImMonat; tag++) {
       const datum = new Date(jahr, monatNummer - 1, tag);
 
-      if (start && datum < start) {
-        continue;
-      }
+      if (start && datum < start) continue;
 
       const wochentag = datum.getDay();
       const istWochenende = wochentag === 0 || wochentag === 6;
       const istFeiertag = istFeiertagSG(datum);
 
-      if (!istWochenende && !istFeiertag) {
-        arbeitstage++;
-      }
+      if (!istWochenende && !istFeiertag) arbeitstage++;
     }
 
     return arbeitstage;
@@ -173,8 +167,7 @@ export default function ChefDashboardPage() {
     const urlaubstagePerson = personUrlaub
       .filter(
         (eintrag) =>
-          eintrag.typ === "Urlaub" &&
-          eintrag.status === "Genehmigt"
+          eintrag.typ === "Urlaub" && eintrag.status === "Genehmigt"
       )
       .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
@@ -191,13 +184,11 @@ export default function ChefDashboardPage() {
       .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
     const tagesSoll = Number(person.wochenstunden || 0) / 5;
-
     const personArbeitstage = berechneArbeitstageAbDatum(
       person.eintrittsdatum || undefined
     );
 
     const sollstunden = tagesSoll * personArbeitstage;
-
     const urlaubStunden = urlaubstagePerson * tagesSoll;
     const krankStunden = kranktagePerson * tagesSoll;
     const ueberstundenAbbauStunden = ueberstundenabbauPerson * tagesSoll;
@@ -248,354 +239,385 @@ export default function ChefDashboardPage() {
   );
 
   return (
-    <main className="space-y-6">
+    <main className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-zinc-900 md:text-5xl">
+        <div className="mb-3 text-sm font-medium uppercase tracking-widest text-white/60">
+          Executive Overview
+        </div>
+
+        <h1 className="text-5xl font-black tracking-tight text-white lg:text-6xl">
           Chef Dashboard
         </h1>
 
-        <p className="mt-2 text-sm font-medium text-zinc-600 md:text-lg">
-          Firmenübersicht für StahlFabrik
+        <p className="mt-3 text-white/60">
+          Firmenübersicht, Soll/Ist, Überstunden, Abwesenheiten und Projekte
         </p>
       </div>
 
       {meldung && (
-        <div className="rounded-xl bg-zinc-900 p-3 text-sm font-semibold text-white">
+        <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-sm font-bold text-orange-400">
           {meldung}
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl bg-zinc-900 p-5 text-white shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-300">Team Iststunden</p>
-          <p className="text-4xl font-extrabold text-orange-400 md:text-5xl">
-            {loading ? "..." : `${teamIststunden.toFixed(2)}h`}
-          </p>
-        </div>
+      <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <KpiCard
+          label="Team Iststunden"
+          value={loading ? "..." : `${teamIststunden.toFixed(2)}h`}
+          orange
+        />
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-600">
-            Angerechnete Stunden
-          </p>
-          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
-            {loading ? "..." : `${teamAngerechnet.toFixed(2)}h`}
-          </p>
-        </div>
+        <KpiCard
+          label="Angerechnet"
+          value={loading ? "..." : `${teamAngerechnet.toFixed(2)}h`}
+        />
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-600">
-            Überstundenabbau
-          </p>
-          <p className="text-4xl font-extrabold text-orange-500 md:text-5xl">
-            {loading
+        <KpiCard
+          label="Überstundenabbau"
+          value={loading ? "..." : `-${teamUeberstundenAbbauStunden.toFixed(2)}h`}
+          orange
+        />
+
+        <KpiCard
+          label="Team Überstunden"
+          value={
+            loading
               ? "..."
-              : `-${teamUeberstundenAbbauStunden.toFixed(2)}h`}
-          </p>
-        </div>
+              : `${teamDifferenz >= 0 ? "+" : ""}${teamDifferenz.toFixed(2)}h`
+          }
+          green={teamDifferenz >= 0}
+          red={teamDifferenz < 0}
+        />
+      </section>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-600">Team Überstunden</p>
-          <p
-            className={`text-4xl font-extrabold md:text-5xl ${
-              teamDifferenz >= 0 ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {loading
-              ? "..."
-              : `${teamDifferenz >= 0 ? "+" : ""}${teamDifferenz.toFixed(
-                  2
-                )}h`}
-          </p>
-        </div>
-      </div>
+      <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <KpiCard
+          label="Team Sollstunden"
+          value={loading ? "..." : `${teamSollstunden.toFixed(2)}h`}
+        />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-600">Team Sollstunden</p>
-          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
-            {loading ? "..." : `${teamSollstunden.toFixed(2)}h`}
-          </p>
-        </div>
+        <KpiCard label="Arbeitstage" value={loading ? "..." : arbeitstage} />
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-600">Arbeitstage</p>
-          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
-            {loading ? "..." : arbeitstage}
-          </p>
-        </div>
+        <KpiCard
+          label="Mitarbeiter"
+          value={loading ? "..." : mitarbeiter.length}
+        />
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-600">Mitarbeiter</p>
-          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
-            {loading ? "..." : mitarbeiter.length}
-          </p>
-        </div>
+        <KpiCard
+          label="Offene Anträge"
+          value={loading ? "..." : offeneAntraege}
+          orange={offeneAntraege > 0}
+        />
+      </section>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-          <p className="mb-2 font-semibold text-zinc-600">Offene Anträge</p>
-          <p className="text-4xl font-extrabold text-zinc-900 md:text-5xl">
-            {loading ? "..." : offeneAntraege}
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-          <h2 className="mb-5 text-xl font-bold text-zinc-900 md:text-2xl">
-            Abwesenheiten diesen Monat
-          </h2>
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+          <div className="mb-7">
+            <h2 className="text-2xl font-black text-white">
+              Abwesenheiten diesen Monat
+            </h2>
+            <p className="mt-1 text-white/55">
+              Urlaub, Krankheit und Überstundenabbau im aktuellen Monat
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border border-zinc-200 bg-zinc-100 p-5">
-              <p className="mb-2 font-semibold text-zinc-600">Urlaubstage</p>
-              <p className="text-4xl font-extrabold text-zinc-900">
-                {loading ? "..." : urlaubstage}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-zinc-200 bg-zinc-100 p-5">
-              <p className="mb-2 font-semibold text-zinc-600">Kranktage</p>
-              <p className="text-4xl font-extrabold text-zinc-900">
-                {loading ? "..." : kranktage}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-orange-200 bg-orange-50 p-5">
-              <p className="mb-2 font-semibold text-orange-700">
-                Überstundenabbau
-              </p>
-              <p className="text-4xl font-extrabold text-orange-600">
-                {loading ? "..." : ueberstundenabbauTage}
-              </p>
-            </div>
+            <MiniCard label="Urlaubstage" value={urlaubstage} />
+            <MiniCard label="Kranktage" value={kranktage} />
+            <MiniCard
+              label="Überstundenabbau"
+              value={ueberstundenabbauTage}
+              orange
+            />
           </div>
         </div>
 
-        <div className="rounded-2xl bg-zinc-900 p-5 text-white shadow-sm md:p-6">
-          <h2 className="mb-5 text-xl font-bold md:text-2xl">
-            Schnellzugriff
-          </h2>
+        <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/12 to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+          <div className="mb-7">
+            <h2 className="text-2xl font-black text-white">Schnellzugriff</h2>
+            <p className="mt-1 text-white/55">Wichtige Adminbereiche</p>
+          </div>
 
           <div className="space-y-3">
-            <a
-              href="/admin"
-              className="block rounded-xl bg-zinc-800 p-4 font-bold transition hover:bg-orange-500"
-            >
-              Urlaubsanträge prüfen
-            </a>
-
-            <a
-              href="/monatsansicht"
-              className="block rounded-xl bg-zinc-800 p-4 font-bold transition hover:bg-orange-500"
-            >
-              Monatsansicht öffnen
-            </a>
-
-            <a
-              href="/projekte"
-              className="block rounded-xl bg-zinc-800 p-4 font-bold transition hover:bg-orange-500"
-            >
-              Projekte verwalten
-            </a>
+            <QuickLink href="/admin" label="Urlaubsanträge prüfen" />
+            <QuickLink href="/monatsansicht" label="Monatsansicht öffnen" />
+            <QuickLink href="/projekte" label="Projekte verwalten" />
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-        <h2 className="mb-5 text-xl font-bold text-zinc-900 md:text-2xl">
-          Team Monatsübersicht
-        </h2>
+      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+        <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+          <div>
+            <h2 className="text-2xl font-black text-white">
+              Team Monatsübersicht
+            </h2>
+            <p className="mt-1 text-white/55">
+              Soll/Ist Vergleich und Überstunden pro Mitarbeiter
+            </p>
+          </div>
+
+          <div className="text-sm text-white/50">
+            Monat {monat} · {mitarbeiterStats.length} Mitarbeiter
+          </div>
+        </div>
 
         <div className="space-y-4 md:hidden">
           {mitarbeiterStats.map((person) => (
             <div
               key={person.id}
-              className="rounded-xl border border-zinc-200 bg-zinc-50 p-4"
+              className="rounded-2xl border border-white/10 bg-black/25 p-5"
             >
-              <div className="text-lg font-bold text-zinc-900">
-                {person.name}
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-xl font-black text-white">
+                    {person.name}
+                  </div>
+                  <div className="mt-1 text-sm text-white/55">
+                    {person.rolle}
+                  </div>
+                </div>
+
+                <span
+                  className={`rounded-full border px-3 py-1 text-sm font-black ${
+                    person.differenz >= 0
+                      ? "border-green-400/30 bg-green-500/10 text-green-300"
+                      : "border-red-400/30 bg-red-500/10 text-red-300"
+                  }`}
+                >
+                  {person.differenz >= 0 ? "+" : ""}
+                  {person.differenz.toFixed(2)}h
+                </span>
               </div>
 
-              <div className="mt-1 text-sm font-medium text-zinc-500">
-                {person.rolle}
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-zinc-500">Arbeitstage</p>
-                  <p className="font-semibold text-zinc-900">
-                    {person.personArbeitstage}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-zinc-500">Soll</p>
-                  <p className="font-semibold text-zinc-900">
-                    {person.sollstunden.toFixed(2)}h
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-zinc-500">Ist</p>
-                  <p className="font-semibold text-zinc-900">
-                    {person.iststunden.toFixed(2)}h
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-zinc-500">Angerechnet</p>
-                  <p className="font-semibold text-zinc-900">
-                    {person.angerechneteStunden.toFixed(2)}h
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-zinc-500">Überstunden</p>
-                  <p
-                    className={`font-bold ${
-                      person.differenz >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {person.differenz >= 0 ? "+" : ""}
-                    {person.differenz.toFixed(2)}h
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-zinc-500">Urlaub</p>
-                  <p className="font-semibold text-zinc-900">
-                    {person.urlaubstagePerson}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-zinc-500">Krank</p>
-                  <p className="font-semibold text-zinc-900">
-                    {person.kranktagePerson}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-zinc-500">ÜA Stunden</p>
-                  <p className="font-bold text-orange-600">
-                    -{person.ueberstundenAbbauStunden.toFixed(2)}h
-                  </p>
-                </div>
+              <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                <Info label="Arbeitstage" value={person.personArbeitstage} />
+                <Info label="Soll" value={`${person.sollstunden.toFixed(2)}h`} />
+                <Info label="Ist" value={`${person.iststunden.toFixed(2)}h`} />
+                <Info
+                  label="Angerechnet"
+                  value={`${person.angerechneteStunden.toFixed(2)}h`}
+                />
+                <Info label="Urlaub" value={person.urlaubstagePerson} />
+                <Info label="Krank" value={person.kranktagePerson} />
+                <Info
+                  label="ÜA Stunden"
+                  value={`-${person.ueberstundenAbbauStunden.toFixed(2)}h`}
+                  orange
+                />
               </div>
             </div>
           ))}
         </div>
 
-        <div className="hidden overflow-x-auto md:block">
-          <div className="min-w-[1250px]">
-            <div className="grid grid-cols-9 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
-              <div>Name</div>
-              <div>Rolle</div>
-              <div>Arbeitstage</div>
-              <div>Soll</div>
-              <div>Ist</div>
-              <div>Angerechnet</div>
-              <div>Überstunden</div>
-              <div>Abwesenheit</div>
-              <div>ÜA Abbau</div>
-            </div>
-
-            {mitarbeiterStats.map((person) => (
-              <div
-                key={person.id}
-                className="grid grid-cols-9 items-center border-b border-zinc-200 py-4"
-              >
-                <div className="font-medium text-zinc-900">{person.name}</div>
-                <div className="text-zinc-800">{person.rolle}</div>
-                <div className="text-zinc-800">{person.personArbeitstage}</div>
-
-                <div className="text-zinc-800">
-                  {person.sollstunden.toFixed(2)}h
-                </div>
-
-                <div className="text-zinc-800">
-                  {person.iststunden.toFixed(2)}h
-                </div>
-
-                <div className="font-semibold text-zinc-900">
-                  {person.angerechneteStunden.toFixed(2)}h
-                </div>
-
-                <div
-                  className={`font-bold ${
-                    person.differenz >= 0
-                      ? "text-green-600"
-                      : "text-red-600"
-                  }`}
-                >
-                  {person.differenz >= 0 ? "+" : ""}
-                  {person.differenz.toFixed(2)}h
-                </div>
-
-                <div className="text-zinc-800">
-                  U: {person.urlaubstagePerson} / K: {person.kranktagePerson}
-                </div>
-
-                <div className="font-bold text-orange-600">
-                  -{person.ueberstundenAbbauStunden.toFixed(2)}h
-                </div>
+        <div className="hidden overflow-hidden rounded-xl border border-white/10 md:block">
+          <div className="overflow-x-auto">
+            <div className="min-w-[1250px]">
+              <div className="grid grid-cols-9 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+                <div>Name</div>
+                <div>Rolle</div>
+                <div>Arbeitstage</div>
+                <div>Soll</div>
+                <div>Ist</div>
+                <div>Angerechnet</div>
+                <div>Überstunden</div>
+                <div>Abwesenheit</div>
+                <div>ÜA Abbau</div>
               </div>
-            ))}
+
+              {mitarbeiterStats.map((person) => (
+                <div
+                  key={person.id}
+                  className="grid grid-cols-9 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
+                >
+                  <div className="font-black text-white">{person.name}</div>
+                  <div>{person.rolle}</div>
+                  <div>{person.personArbeitstage}</div>
+                  <div>{person.sollstunden.toFixed(2)}h</div>
+                  <div>{person.iststunden.toFixed(2)}h</div>
+
+                  <div className="font-black text-white">
+                    {person.angerechneteStunden.toFixed(2)}h
+                  </div>
+
+                  <div
+                    className={`font-black ${
+                      person.differenz >= 0
+                        ? "text-green-400"
+                        : "text-red-400"
+                    }`}
+                  >
+                    {person.differenz >= 0 ? "+" : ""}
+                    {person.differenz.toFixed(2)}h
+                  </div>
+
+                  <div>
+                    U: {person.urlaubstagePerson} / K:{" "}
+                    {person.kranktagePerson}
+                  </div>
+
+                  <div className="font-black text-orange-500">
+                    -{person.ueberstundenAbbauStunden.toFixed(2)}h
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm md:p-6">
-        <h2 className="mb-5 text-xl font-bold text-zinc-900 md:text-2xl">
-          Projektstunden diesen Monat
-        </h2>
+      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+        <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+          <div>
+            <h2 className="text-2xl font-black text-white">
+              Projektstunden diesen Monat
+            </h2>
+            <p className="mt-1 text-white/55">
+              Aufteilung der Arbeitszeit nach Projekt und Kunde
+            </p>
+          </div>
+
+          <div className="text-sm text-white/50">
+            {projektStunden.length} Projekte
+          </div>
+        </div>
 
         <div className="space-y-4 md:hidden">
           {projektStunden.map((projekt) => (
             <div
               key={projekt.name}
-              className="rounded-xl border border-zinc-200 bg-zinc-50 p-4"
+              className="rounded-2xl border border-white/10 bg-black/25 p-5"
             >
               <div className="flex items-center justify-between gap-4">
-                <div className="font-bold text-zinc-900">{projekt.name}</div>
+                <div>
+                  <div className="text-lg font-black text-white">
+                    {projekt.name}
+                  </div>
+                  <p className="mt-1 text-sm text-white/55">
+                    Kunde: {projekt.kunde || "-"}
+                  </p>
+                </div>
 
-                <div className="font-extrabold text-zinc-900">
+                <div className="font-black text-orange-500">
                   {projekt.stunden.toFixed(2)}h
                 </div>
               </div>
-
-              <p className="mt-2 text-sm text-zinc-600">
-                Kunde: {projekt.kunde}
-              </p>
             </div>
           ))}
         </div>
 
-        <div className="hidden overflow-x-auto md:block">
-          <div className="min-w-[700px]">
-            <div className="grid grid-cols-3 border-b border-zinc-300 pb-4 font-bold text-zinc-800">
-              <div>Projekt</div>
-              <div>Kunde</div>
-              <div>Stunden</div>
-            </div>
-
-            {projektStunden.map((projekt) => (
-              <div
-                key={projekt.name}
-                className="grid grid-cols-3 items-center border-b border-zinc-200 py-4"
-              >
-                <div className="font-medium text-zinc-900">{projekt.name}</div>
-                <div className="text-zinc-800">{projekt.kunde}</div>
-                <div className="font-bold text-zinc-900">
-                  {projekt.stunden.toFixed(2)}h
-                </div>
+        <div className="hidden overflow-hidden rounded-xl border border-white/10 md:block">
+          <div className="overflow-x-auto">
+            <div className="min-w-[700px]">
+              <div className="grid grid-cols-3 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+                <div>Projekt</div>
+                <div>Kunde</div>
+                <div>Stunden</div>
               </div>
-            ))}
+
+              {projektStunden.map((projekt) => (
+                <div
+                  key={projekt.name}
+                  className="grid grid-cols-3 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
+                >
+                  <div className="font-black text-white">{projekt.name}</div>
+                  <div>{projekt.kunde || "-"}</div>
+                  <div className="font-black text-orange-500">
+                    {projekt.stunden.toFixed(2)}h
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </section>
     </main>
+  );
+}
+
+function KpiCard({
+  label,
+  value,
+  orange,
+  green,
+  red,
+}: {
+  label: string;
+  value: string | number;
+  orange?: boolean;
+  green?: boolean;
+  red?: boolean;
+}) {
+  const color = orange
+    ? "text-orange-500"
+    : green
+    ? "text-green-400"
+    : red
+    ? "text-red-400"
+    : "text-white";
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.025] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/40">
+      <div className="text-sm font-bold uppercase tracking-widest text-white/45">
+        {label}
+      </div>
+
+      <div className={`mt-5 text-4xl font-black md:text-5xl ${color}`}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function MiniCard({
+  label,
+  value,
+  orange,
+}: {
+  label: string;
+  value: string | number;
+  orange?: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/25 p-5 transition hover:border-orange-500/30 hover:bg-black/35">
+      <div className="text-sm font-bold text-white/50">{label}</div>
+      <div
+        className={`mt-3 text-4xl font-black ${
+          orange ? "text-orange-500" : "text-white"
+        }`}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function QuickLink({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      className="block rounded-xl border border-white/10 bg-black/25 p-4 font-black text-white transition hover:border-orange-500/40 hover:bg-orange-600"
+    >
+      {label}
+    </a>
+  );
+}
+
+function Info({
+  label,
+  value,
+  orange,
+}: {
+  label: string;
+  value: string | number;
+  orange?: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+      <div className="text-xs text-white/45">{label}</div>
+      <div className={`mt-1 font-bold ${orange ? "text-orange-500" : "text-white"}`}>
+        {value}
+      </div>
+    </div>
   );
 }
