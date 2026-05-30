@@ -6,13 +6,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: "🏠" },
-  { href: "/arbeitszeiten", label: "Arbeitszeiten", icon: "⏱️" },
-  { href: "/urlaub", label: "Urlaub / Krank", icon: "🌴" },
-  { href: "/resturlaub", label: "Resturlaub", icon: "📊" },
-  { href: "/projekte", label: "Projekte", icon: "🏗️" },
-  { href: "/mitarbeiter", label: "Mitarbeiter", icon: "👥" },
-  { href: "/chef-dashboard", label: "Chef Dashboard", icon: "👑" },
+  { href: "/", label: "Dashboard" },
+  { href: "/arbeitszeiten", label: "Arbeitszeiten" },
+  { href: "/urlaub", label: "Urlaub / Krank" },
+  { href: "/resturlaub", label: "Resturlaub" },
+  { href: "/projekte", label: "Projekte" },
+  { href: "/mitarbeiter", label: "Mitarbeiter" },
+  { href: "/chef-dashboard", label: "Chef Dashboard" },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -20,8 +20,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const [open, setOpen] = useState(false);
-  const [userName, setUserName] = useState("StahlFabrik");
-  const [role, setRole] = useState("ERP");
+  const [userName, setUserName] = useState("Steven Gunkel");
+  const [role, setRole] = useState("Admin");
 
   const isLogin = pathname === "/login";
 
@@ -54,67 +54,39 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     router.push("/login");
   }
 
-  if (isLogin) {
-    return <>{children}</>;
-  }
+  if (isLogin) return <>{children}</>;
 
   return (
-    <div className="min-h-screen bg-[#f4f5f7] text-slate-900">
-      {/* Mobile Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
-        <div>
-          <div className="text-lg font-black tracking-tight text-slate-950">
-            Stahl<span className="text-orange-500">Fabrik</span>
-          </div>
-          <div className="text-xs font-medium text-slate-500">
-            Swiss ERP System
-          </div>
-        </div>
+    <div className="min-h-screen bg-[#07090b] text-white">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,106,0,0.10),_transparent_32%),linear-gradient(135deg,_#07090b,_#101214_45%,_#050607)]" />
+
+      <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-[#080a0c]/95 px-5 backdrop-blur lg:hidden">
+        <div className="text-xl font-black text-orange-500">Stahlfabrik</div>
 
         <button
           onClick={() => setOpen(true)}
-          className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-bold text-white shadow-sm"
+          className="rounded-xl border border-white/10 px-4 py-2 text-sm font-bold"
         >
           Menü
         </button>
       </header>
 
-      {/* Mobile Overlay */}
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setOpen(false)}
-          />
-
-          <aside className="absolute left-0 top-0 h-full w-[285px] bg-slate-950 text-white shadow-2xl">
-            <Sidebar
-              pathname={pathname}
-              logout={logout}
-              userName={userName}
-              role={role}
-              close={() => setOpen(false)}
-            />
+          <div className="absolute inset-0 bg-black/70" onClick={() => setOpen(false)} />
+          <aside className="absolute left-0 top-0 h-full w-[280px] border-r border-white/10 bg-[#090b0d]">
+            <Sidebar pathname={pathname} logout={logout} userName={userName} role={role} close={() => setOpen(false)} />
           </aside>
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      <aside className="fixed left-0 top-0 hidden h-screen w-[292px] bg-slate-950 text-white lg:block">
-        <Sidebar
-          pathname={pathname}
-          logout={logout}
-          userName={userName}
-          role={role}
-        />
+      <aside className="fixed left-0 top-0 z-30 hidden h-screen w-[300px] border-r border-white/10 bg-[#090b0d]/95 backdrop-blur-xl lg:block">
+        <Sidebar pathname={pathname} logout={logout} userName={userName} role={role} />
       </aside>
 
-      {/* Main Content */}
-      <main className="pt-20 lg:ml-[292px] lg:pt-0">
-        <div className="mx-auto min-h-screen w-full max-w-[1450px] px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
-          <div className="rounded-[28px] border border-slate-200 bg-white/80 p-4 shadow-sm sm:p-6 lg:p-8">
-            {children}
-          </div>
+      <main className="relative z-10 pt-16 lg:ml-[300px] lg:pt-0">
+        <div className="mx-auto min-h-screen w-full max-w-[1500px] px-5 py-8 lg:px-10">
+          {children}
         </div>
       </main>
     </div>
@@ -135,25 +107,14 @@ function Sidebar({
   close?: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col px-5 py-6">
-      {/* Logo */}
-      <div className="mb-8 flex items-center gap-3 px-2">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500 text-xl font-black text-white shadow-lg shadow-orange-500/25">
-          SF
-        </div>
-
-        <div>
-          <div className="text-xl font-black leading-tight tracking-tight">
-            Stahl<span className="text-orange-400">Fabrik</span>
-          </div>
-          <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-            Swiss ERP
-          </div>
+    <div className="flex h-full flex-col px-6 py-8">
+      <div className="mb-12">
+        <div className="text-3xl font-black tracking-tight text-orange-500">
+          Stahlfabrik
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-2 overflow-y-auto pr-1">
+      <nav className="flex-1 space-y-3">
         {navItems.map((item) => {
           const active = pathname === item.href;
 
@@ -162,39 +123,27 @@ function Sidebar({
               key={item.href}
               href={item.href}
               onClick={close}
-              className={`group flex items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-bold transition-all ${
+              className={`block rounded-xl px-6 py-4 text-lg font-medium transition-all ${
                 active
-                  ? "bg-orange-500 text-white shadow-lg shadow-orange-500/25"
-                  : "text-slate-300 hover:bg-white/10 hover:text-white"
+                  ? "border-l-4 border-orange-500 bg-gradient-to-r from-orange-500/35 to-white/[0.03] text-orange-400"
+                  : "text-white/85 hover:bg-white/[0.06] hover:text-orange-400"
               }`}
             >
-              <span className="text-lg">{item.icon}</span>
-              <span>{item.label}</span>
+              {item.label}
             </Link>
           );
         })}
       </nav>
 
-      {/* Userbox */}
-      <div className="mt-6 rounded-3xl border border-white/10 bg-white/[0.06] p-4">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-sm font-black text-slate-950">
-            {userName?.slice(0, 2).toUpperCase()}
-          </div>
+      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-2xl">
+        <div className="text-base font-bold">{userName}</div>
+        <div className="mt-1 text-sm font-bold text-orange-500">{role}</div>
 
-          <div className="min-w-0">
-            <div className="truncate text-sm font-black text-white">
-              {userName}
-            </div>
-            <div className="text-xs font-semibold text-orange-300">
-              {role}
-            </div>
-          </div>
-        </div>
+        <div className="my-4 h-px bg-white/10" />
 
         <button
           onClick={logout}
-          className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-orange-500 hover:text-white"
+          className="w-full rounded-xl py-3 text-left text-base font-medium text-white transition hover:text-orange-400"
         >
           Logout
         </button>
