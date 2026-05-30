@@ -1,6 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import {
+  Users,
+  Clock3,
+  Plane,
+  AlertTriangle,
+  Activity,
+  Briefcase,
+  CalendarDays,
+  UserRound,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export default function DashboardPage() {
@@ -11,7 +21,7 @@ export default function DashboardPage() {
     krank: 0,
     projekte: 0,
     letzterMitarbeiter: "Keine Daten",
-    letzteZeit: "Keine Einträge",
+    letzteZeit: "Werkstatt",
     letzteStunden: 0,
   });
 
@@ -29,7 +39,9 @@ export default function DashboardPage() {
       arbeitszeiten?.reduce((sum, item) => sum + Number(item.stunden || 0), 0) || 0;
 
     const offeneUrlaube =
-      urlaub?.filter((item) => item.typ === "Urlaub" && item.status === "Beantragt").length || 0;
+      urlaub?.filter(
+        (item) => item.typ === "Urlaub" && item.status === "Beantragt"
+      ).length || 0;
 
     const krank =
       urlaub?.filter((item) => item.typ === "Krank").length || 0;
@@ -43,7 +55,7 @@ export default function DashboardPage() {
       krank,
       projekte: projekte?.length || 0,
       letzterMitarbeiter: mitarbeiter?.[0]?.name || "Keine Daten",
-      letzteZeit: lastTime?.projekt || "Werkstatt",
+      letzteZeit: "Werkstatt",
       letzteStunden: Number(lastTime?.stunden || 0),
     });
   }
@@ -53,6 +65,8 @@ export default function DashboardPage() {
     month: "long",
     year: "numeric",
   });
+
+  const month = new Date().toISOString().slice(0, 7);
 
   return (
     <div className="space-y-8">
@@ -68,26 +82,55 @@ export default function DashboardPage() {
           </h1>
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-white/[0.04] px-5 py-4 text-sm font-bold text-white shadow-xl">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] px-5 py-4 text-sm font-bold text-white shadow-xl shadow-black/30">
           {today}
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Teammitglieder" value={stats.mitarbeiter} text="Aktive Mitarbeiter" />
-        <StatCard title="Arbeitsstunden" value={`${stats.stunden.toFixed(1)}h`} text="Diese Woche" />
-        <StatCard title="Offene Urlaube" value={stats.offeneUrlaube} text="Genehmigung ausstehend" />
-        <StatCard title="Krankmeldungen" value={stats.krank} text="Aktuell gemeldet" />
+        <StatCard
+          title="Teammitglieder"
+          value={stats.mitarbeiter}
+          text="Aktive Mitarbeiter"
+          icon={<Users size={28} />}
+        />
+
+        <StatCard
+          title="Arbeitsstunden"
+          value={`${stats.stunden.toFixed(1)}h`}
+          text="Diese Woche"
+          icon={<Clock3 size={28} />}
+        />
+
+        <StatCard
+          title="Offene Urlaube"
+          value={stats.offeneUrlaube}
+          text="Genehmigung ausstehend"
+          icon={<Plane size={28} />}
+        />
+
+        <StatCard
+          title="Krankmeldungen"
+          value={stats.krank}
+          text="Aktuell gemeldet"
+          icon={<AlertTriangle size={28} />}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.95fr]">
-        <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-7 shadow-2xl">
-          <div className="mb-8">
-            <h2 className="text-2xl font-black">Letzte Aktivitäten</h2>
-            <p className="text-white/60">Aktuelle Übersicht</p>
+        <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+          <div className="mb-8 flex items-center gap-4">
+            <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-3 text-orange-500">
+              <Activity size={26} />
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-black">Letzte Aktivitäten</h2>
+              <p className="text-white/60">Aktuelle Übersicht</p>
+            </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-black/20 p-6">
+          <div className="rounded-2xl border border-white/10 bg-black/25 p-6 transition hover:border-orange-500/30">
             <div className="mb-4 text-sm font-black uppercase tracking-widest text-orange-500">
               Arbeitszeit
             </div>
@@ -98,27 +141,32 @@ export default function DashboardPage() {
                 <div className="mt-2 text-white/60">Letzter Eintrag</div>
               </div>
 
-              <div className="rounded-lg bg-orange-600 px-4 py-2 font-black text-white">
+              <div className="rounded-lg bg-orange-600 px-4 py-2 font-black text-white shadow-lg shadow-orange-600/25">
                 {stats.letzteStunden.toFixed(2)}h
               </div>
             </div>
           </div>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-7 shadow-2xl">
+        <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
           <div className="mb-8">
             <h2 className="text-2xl font-black">Schnellübersicht</h2>
             <p className="text-white/60">Live Infos</p>
           </div>
 
-          <InfoRow label="Projekte" value={stats.projekte} />
-          <InfoRow label="Monat" value="2026-05" />
-          <InfoRow label="Letzter Mitarbeiter" value={stats.letzterMitarbeiter} orange />
+          <InfoRow label="Projekte" value={stats.projekte} icon={<Briefcase size={24} />} />
+          <InfoRow label="Monat" value={month} icon={<CalendarDays size={24} />} />
+          <InfoRow
+            label="Letzter Mitarbeiter"
+            value={stats.letzterMitarbeiter}
+            orange
+            icon={<UserRound size={24} />}
+          />
         </section>
       </div>
 
-      <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-7 shadow-2xl">
-        <div className="mb-6 flex items-center justify-between">
+      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-black">Letzte Einträge</h2>
             <p className="text-white/60">Neueste Aktivitäten im System</p>
@@ -130,7 +178,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="overflow-hidden rounded-xl border border-white/10">
-          <div className="grid grid-cols-5 border-b border-white/10 px-5 py-4 text-white/70">
+          <div className="hidden grid-cols-5 border-b border-white/10 px-5 py-4 text-white/70 md:grid">
             <div>Typ</div>
             <div>Beschreibung</div>
             <div>Mitarbeiter</div>
@@ -138,7 +186,7 @@ export default function DashboardPage() {
             <div>Zeit</div>
           </div>
 
-          <div className="grid grid-cols-5 px-5 py-5 font-medium">
+          <div className="grid gap-4 px-5 py-5 font-medium md:grid-cols-5">
             <div>
               <span className="rounded-md bg-orange-500/20 px-3 py-1 text-xs font-black uppercase text-orange-500">
                 Arbeitszeit
@@ -146,7 +194,7 @@ export default function DashboardPage() {
             </div>
             <div>Werkstatt</div>
             <div>{stats.letzterMitarbeiter}</div>
-            <div>21.05.2026</div>
+            <div>{today}</div>
             <div>{stats.letzteStunden.toFixed(2)}h</div>
           </div>
         </div>
@@ -159,16 +207,24 @@ function StatCard({
   title,
   value,
   text,
+  icon,
 }: {
   title: string;
   value: string | number;
   text: string;
+  icon: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-7 shadow-2xl">
-      <div className="text-base text-white/85">{title}</div>
-      <div className="mt-4 text-4xl font-black text-white">{value}</div>
-      <div className="mt-4 text-white/60">{text}</div>
+    <div className="group rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.025] p-7 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/50 hover:shadow-orange-500/10">
+      <div className="mb-6 flex items-center justify-between">
+        <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-orange-500 shadow-lg shadow-orange-500/10 transition group-hover:bg-orange-500 group-hover:text-white">
+          {icon}
+        </div>
+      </div>
+
+      <div className="text-base text-white/80">{title}</div>
+      <div className="mt-3 text-4xl font-black text-white">{value}</div>
+      <div className="mt-4 text-white/50">{text}</div>
     </div>
   );
 }
@@ -177,17 +233,27 @@ function InfoRow({
   label,
   value,
   orange,
+  icon,
 }: {
   label: string;
   value: string | number;
   orange?: boolean;
+  icon?: ReactNode;
 }) {
   return (
-    <div className="mb-4 rounded-xl border border-white/10 bg-black/20 p-5">
-      <div className="text-white/60">{label}</div>
-      <div className={`mt-2 text-2xl font-black ${orange ? "text-orange-500" : "text-white"}`}>
-        {value}
+    <div className="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-black/25 p-5 transition hover:border-orange-500/30 hover:bg-black/35">
+      <div>
+        <div className="text-white/55">{label}</div>
+        <div className={`mt-2 text-2xl font-black ${orange ? "text-orange-500" : "text-white"}`}>
+          {value}
+        </div>
       </div>
+
+      {icon && (
+        <div className="rounded-xl bg-orange-500/10 p-3 text-orange-500">
+          {icon}
+        </div>
+      )}
     </div>
   );
 }
