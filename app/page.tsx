@@ -32,6 +32,11 @@ export default function DashboardPage() {
     wocheIst: 0,
     wocheDifferenz: 0,
     wocheTage: 0,
+
+    monatSoll: 0,
+    monatIst: 0,
+    monatDifferenz: 0,
+    monatTage: 0,
   });
 
   useEffect(() => {
@@ -57,15 +62,20 @@ export default function DashboardPage() {
     return montag;
   }
 
-  function zaehleArbeitstageVonMontagBisHeute() {
-    const montag = getMontagDieserWoche();
+  function getErsterTagDieserMonat() {
     const heute = new Date();
-    heute.setHours(0, 0, 0, 0);
+    return new Date(heute.getFullYear(), heute.getMonth(), 1);
+  }
 
+  function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
     let tage = 0;
-    const aktuell = new Date(montag);
+    const aktuell = new Date(startDatum);
+    aktuell.setHours(0, 0, 0, 0);
 
-    while (aktuell <= heute) {
+    const ende = new Date(endDatum);
+    ende.setHours(0, 0, 0, 0);
+
+    while (aktuell <= ende) {
       const wochentag = aktuell.getDay();
 
       if (wochentag !== 0 && wochentag !== 6) {
@@ -92,8 +102,12 @@ export default function DashboardPage() {
     const { data: urlaub } = await supabase.from("urlaub").select("*");
     const { data: projekte } = await supabase.from("projekte").select("*");
 
-    const heute = formatDateLocal(new Date());
-    const montag = formatDateLocal(getMontagDieserWoche());
+    const heuteDate = new Date();
+    const heute = formatDateLocal(heuteDate);
+    const montagDate = getMontagDieserWoche();
+    const montag = formatDateLocal(montagDate);
+    const monatsStartDate = getErsterTagDieserMonat();
+    const monatsStart = formatDateLocal(monatsStartDate);
 
     const { data: eigenerMitarbeiter } = await supabase
       .from("mitarbeiter")
@@ -129,9 +143,26 @@ export default function DashboardPage() {
       0
     );
 
-    const wocheTage = zaehleArbeitstageVonMontagBisHeute();
+    const wocheTage = zaehleArbeitstage(montagDate, heuteDate);
     const wocheSoll = tagesSoll * wocheTage;
     const wocheDifferenz = wocheIst - wocheSoll;
+
+    const eigeneZeitenMonat =
+      arbeitszeiten?.filter(
+        (item) =>
+          item.user_id === user.id &&
+          item.datum >= monatsStart &&
+          item.datum <= heute
+      ) || [];
+
+    const monatIst = eigeneZeitenMonat.reduce(
+      (sum, item) => sum + Number(item.stunden || 0),
+      0
+    );
+
+    const monatTage = zaehleArbeitstage(monatsStartDate, heuteDate);
+    const monatSoll = tagesSoll * monatTage;
+    const monatDifferenz = monatIst - monatSoll;
 
     const totalStunden =
       arbeitszeiten?.reduce((sum, item) => sum + Number(item.stunden || 0), 0) || 0;
@@ -163,6 +194,11 @@ export default function DashboardPage() {
       wocheIst,
       wocheDifferenz,
       wocheTage,
+
+      monatSoll,
+      monatIst,
+      monatDifferenz,
+      monatTage,
     });
   }
 
@@ -197,40 +233,17 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Teammitglieder"
-          value={stats.mitarbeiter}
-          text="Aktive Mitarbeiter"
-          icon={<Users size={28} />}
-        />
-
-        <StatCard
-          title="Arbeitsstunden"
-          value={`${stats.stunden.toFixed(1)}h`}
-          text="Gesamt erfasst"
-          icon={<Clock3 size={28} />}
-        />
-
-        <StatCard
-          title="Offene Urlaube"
-          value={stats.offeneUrlaube}
-          text="Genehmigung ausstehend"
-          icon={<Plane size={28} />}
-        />
-
-        <StatCard
-          title="Krankmeldungen"
-          value={stats.krank}
-          text="Aktuell erfasst"
-          icon={<AlertTriangle size={28} />}
-        />
+        <StatCard title="Teammitglieder" value={stats.mitarbeiter} text="Aktive Mitarbeiter" icon={<Users size={28} />} />
+        <StatCard title="Arbeitsstunden" value={`${stats.stunden.toFixed(1)}h`} text="Gesamt erfasst" icon={<Clock3 size={28} />} />
+        <StatCard title="Offene Urlaube" value={stats.offeneUrlaube} text="Genehmigung ausstehend" icon={<Plane size={28} />} />
+        <StatCard title="Krankmeldungen" value={stats.krank} text="Aktuell erfasst" icon={<AlertTriangle size={28} />} />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <WorkTimeCard
           eyebrow="Heute"
           title="Tagesarbeitszeit"
-          description="Persönliche Sollzeit, gebuchte Stunden und Tagesdifferenz"
+          description="Persönliche Tagesübersicht"
           soll={stats.heuteSoll}
           ist={stats.heuteIst}
           differenz={stats.heuteDifferenz}
@@ -243,6 +256,15 @@ export default function DashboardPage() {
           soll={stats.wocheSoll}
           ist={stats.wocheIst}
           differenz={stats.wocheDifferenz}
+        />
+
+        <WorkTimeCard
+          eyebrow="Dieser Monat"
+          title="Monatsarbeitszeit"
+          description={`1. bis heute · ${stats.monatTage} Arbeitstage`}
+          soll={stats.monatSoll}
+          ist={stats.monatIst}
+          differenz={stats.monatDifferenz}
         />
       </div>
 
@@ -285,12 +307,7 @@ export default function DashboardPage() {
 
           <InfoRow label="Projekte" value={stats.projekte} icon={<Briefcase size={24} />} />
           <InfoRow label="Monat" value={month} icon={<CalendarDays size={24} />} />
-          <InfoRow
-            label="Mitarbeiter"
-            value={stats.letzterMitarbeiter}
-            orange
-            icon={<UserRound size={24} />}
-          />
+          <InfoRow label="Mitarbeiter" value={stats.letzterMitarbeiter} orange icon={<UserRound size={24} />} />
         </section>
       </div>
     </div>
@@ -313,24 +330,24 @@ function WorkTimeCard({
   differenz: number;
 }) {
   return (
-    <section className="rounded-2xl border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-white/[0.025] p-7 shadow-2xl shadow-orange-500/10">
+    <section className="rounded-2xl border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-white/[0.025] p-6 shadow-2xl shadow-orange-500/10">
       <div className="mb-6 flex flex-col justify-between gap-5 md:flex-row md:items-center">
         <div>
           <div className="text-sm font-black uppercase tracking-widest text-orange-500">
             {eyebrow}
           </div>
 
-          <h2 className="mt-2 text-3xl font-black text-white">{title}</h2>
+          <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
 
-          <p className="mt-1 text-white/55">{description}</p>
+          <p className="mt-1 text-sm text-white/55">{description}</p>
         </div>
 
         <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-orange-500">
-          <Clock3 size={34} />
+          <Clock3 size={30} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4">
         <DailyValue label="Sollzeit" value={`${soll.toFixed(1)}h`} />
         <DailyValue label="Gebucht" value={`${ist.toFixed(1)}h`} orange />
         <DailyValue
@@ -366,9 +383,9 @@ function DailyValue({
     : "text-white";
 
   return (
-    <div className="rounded-xl border border-white/10 bg-black/25 p-5">
+    <div className="rounded-xl border border-white/10 bg-black/25 p-4">
       <div className="text-sm font-bold text-white/50">{label}</div>
-      <div className={`mt-3 text-4xl font-black ${color}`}>{value}</div>
+      <div className={`mt-2 text-3xl font-black ${color}`}>{value}</div>
     </div>
   );
 }
@@ -414,11 +431,7 @@ function InfoRow({
     <div className="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-black/25 p-5 transition hover:border-orange-500/30 hover:bg-black/35">
       <div>
         <div className="text-white/55">{label}</div>
-        <div
-          className={`mt-2 text-2xl font-black ${
-            orange ? "text-orange-500" : "text-white"
-          }`}
-        >
+        <div className={`mt-2 text-2xl font-black ${orange ? "text-orange-500" : "text-white"}`}>
           {value}
         </div>
       </div>
