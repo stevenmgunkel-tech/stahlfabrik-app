@@ -75,6 +75,11 @@ export default function ArbeitszeitenPage() {
     return Number((arbeitsMinuten / 60).toFixed(2));
   }
 
+  function kundeFuerProjekt(projektName: string) {
+    const gefunden = projekte.find((p) => p.name === projektName);
+    return gefunden?.kunde || "Kein Kunde hinterlegt";
+  }
+
   async function zeitSpeichern() {
     setMeldung("");
 
@@ -389,9 +394,7 @@ export default function ArbeitszeitenPage() {
       <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div>
-            <h2 className="text-2xl font-black text-white">
-              Zusammenfassung
-            </h2>
+            <h2 className="text-2xl font-black text-white">Zusammenfassung</h2>
             <p className="mt-1 text-white/55">
               Nach Datum und Projekt gruppiert. Details nur bei Bedarf öffnen.
             </p>
@@ -434,6 +437,7 @@ export default function ArbeitszeitenPage() {
                 {tag.projekte.map((projektGruppe: any) => {
                   const detailKey = `${tag.datum}-${projektGruppe.name}`;
                   const detailsOffen = offeneDetails.includes(detailKey);
+                  const kunde = kundeFuerProjekt(projektGruppe.name);
 
                   return (
                     <div key={detailKey} className="px-5 py-4">
@@ -465,47 +469,59 @@ export default function ArbeitszeitenPage() {
                       </div>
 
                       {detailsOffen && (
-                        <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                          {projektGruppe.eintraege.map((zeit: any) => (
-                            <div
-                              key={zeit.id}
-                              className="rounded-xl border border-white/10 bg-white/[0.03] p-4"
-                            >
-                              <div className="flex items-center justify-between gap-3">
-                                <div>
-                                  <div className="text-sm text-white/50">
-                                    {zeit.startzeit || "-"} bis {zeit.endzeit || "-"}
-                                  </div>
-
-                                  <div className="mt-1 text-sm text-white/50">
-                                    Pause {zeit.pause || 0} Min.
-                                  </div>
-                                </div>
-
-                                <div className="font-black text-white">
-                                  {Number(zeit.stunden || 0).toFixed(2)}h
-                                </div>
-                              </div>
-
-                              <div className="mt-4 grid grid-cols-2 gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => bearbeitungStarten(zeit)}
-                                  className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm font-bold text-white transition hover:bg-white/[0.10]"
-                                >
-                                  Bearbeiten
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() => zeitLoeschen(zeit.id)}
-                                  className="rounded-lg bg-red-600 px-3 py-2 text-sm font-bold text-white transition hover:bg-red-500"
-                                >
-                                  Löschen
-                                </button>
-                              </div>
+                        <div className="mt-5 space-y-4">
+                          <div className="rounded-xl border border-orange-500/20 bg-orange-500/10 p-4">
+                            <div className="text-xs font-black uppercase tracking-widest text-orange-500">
+                              Kunde
                             </div>
-                          ))}
+
+                            <div className="mt-2 text-lg font-black text-white">
+                              {kunde}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                            {projektGruppe.eintraege.map((zeit: any) => (
+                              <div
+                                key={zeit.id}
+                                className="rounded-xl border border-white/10 bg-white/[0.03] p-4"
+                              >
+                                <div className="flex items-center justify-between gap-3">
+                                  <div>
+                                    <div className="text-sm text-white/50">
+                                      {zeit.startzeit || "-"} bis {zeit.endzeit || "-"}
+                                    </div>
+
+                                    <div className="mt-1 text-sm text-white/50">
+                                      Pause {zeit.pause || 0} Min.
+                                    </div>
+                                  </div>
+
+                                  <div className="font-black text-white">
+                                    {Number(zeit.stunden || 0).toFixed(2)}h
+                                  </div>
+                                </div>
+
+                                <div className="mt-4 grid grid-cols-2 gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => bearbeitungStarten(zeit)}
+                                    className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm font-bold text-white transition hover:bg-white/[0.10]"
+                                  >
+                                    Bearbeiten
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => zeitLoeschen(zeit.id)}
+                                    className="rounded-lg bg-red-600 px-3 py-2 text-sm font-bold text-white transition hover:bg-red-500"
+                                  >
+                                    Löschen
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
