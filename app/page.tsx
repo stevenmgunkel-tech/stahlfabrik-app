@@ -102,11 +102,6 @@ export default function DashboardPage() {
 
   const month = new Date().toISOString().slice(0, 7);
 
-  const progress =
-    stats.heuteSoll > 0
-      ? Math.min((stats.heuteIst / stats.heuteSoll) * 100, 100)
-      : 0;
-
   return (
     <div className="space-y-8">
       <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
@@ -190,13 +185,7 @@ export default function DashboardPage() {
             red={stats.heuteDifferenz < 0}
           />
         </div>
-
-        <div className="mt-7 overflow-hidden rounded-full border border-white/10 bg-black/40 p-1">
-          <div
-            className="h-4 rounded-full bg-orange-500 shadow-lg shadow-orange-500/30 transition-all"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+  
       </section>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.95fr]">
