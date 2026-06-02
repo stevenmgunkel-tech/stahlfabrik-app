@@ -76,7 +76,6 @@ export default function DashboardPage() {
       ).length || 0;
 
     const krank = urlaub?.filter((item) => item.typ === "Krank").length || 0;
-
     const lastTime = arbeitszeiten?.[arbeitszeiten.length - 1];
 
     setStats({
@@ -85,7 +84,8 @@ export default function DashboardPage() {
       offeneUrlaube,
       krank,
       projekte: projekte?.length || 0,
-      letzterMitarbeiter: eigenerMitarbeiter?.name || mitarbeiter?.[0]?.name || "Keine Daten",
+      letzterMitarbeiter:
+        eigenerMitarbeiter?.name || mitarbeiter?.[0]?.name || "Keine Daten",
       letzteZeit: lastTime?.projekt || "Werkstatt",
       letzteStunden: Number(lastTime?.stunden || 0),
       heuteSoll,
@@ -182,11 +182,7 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
           <DailyValue label="Sollzeit" value={`${stats.heuteSoll.toFixed(1)}h`} />
-          <DailyValue
-            label="Gebucht"
-            value={`${stats.heuteIst.toFixed(1)}h`}
-            orange
-          />
+          <DailyValue label="Gebucht" value={`${stats.heuteIst.toFixed(1)}h`} orange />
           <DailyValue
             label="Differenz"
             value={`${stats.heuteDifferenz >= 0 ? "+" : ""}${stats.heuteDifferenz.toFixed(1)}h`}
@@ -195,18 +191,11 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="mt-7">
-          <div className="mb-2 flex justify-between text-sm font-bold text-white/50">
-            <span>Fortschritt</span>
-            <span>{progress.toFixed(0)}%</span>
-          </div>
-
-          <div className="overflow-hidden rounded-full border border-white/10 bg-black/40 p-1">
-            <div
-              className="h-4 rounded-full bg-orange-500 shadow-lg shadow-orange-500/30 transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+        <div className="mt-7 overflow-hidden rounded-full border border-white/10 bg-black/40 p-1">
+          <div
+            className="h-4 rounded-full bg-orange-500 shadow-lg shadow-orange-500/30 transition-all"
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </section>
 
