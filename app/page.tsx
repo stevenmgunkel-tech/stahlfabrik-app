@@ -2,23 +2,17 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import {
-  Users,
   Clock3,
-  Plane,
-  AlertTriangle,
   Activity,
   Briefcase,
   CalendarDays,
   UserRound,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { istFeiertagSG } from "@/lib/feiertage";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
-    mitarbeiter: 0,
-    stunden: 0,
-    offeneUrlaube: 0,
-    krank: 0,
     projekte: 0,
     letzterMitarbeiter: "Keine Daten",
     letzteZeit: "Werkstatt",
@@ -37,6 +31,8 @@ export default function DashboardPage() {
     monatIst: 0,
     monatDifferenz: 0,
     monatTage: 0,
+
+    gesamtUeberstunden: 0,
   });
 
   useEffect(() => {
@@ -77,8 +73,10 @@ export default function DashboardPage() {
 
     while (aktuell <= ende) {
       const wochentag = aktuell.getDay();
+      const istWochenende = wochentag === 0 || wochentag === 6;
+      const istFeiertag = istFeiertagSG(aktuell);
 
-      if (wochentag !== 0 && wochentag !== 6) {
+      if (!istWochenende && !istFeiertag) {
         tage++;
       }
 
@@ -97,30 +95,43 @@ export default function DashboardPage() {
       return;
     }
 
-    const { data: mitarbeiter } = await supabase.from("mitarbeiter").select("*");
-    const { data: arbeitszeiten } = await supabase.from("arbeitszeiten").select("*");
+    const { data: arbeitszeiten } = await supabase
+      .from("arbeitszeiten")
+      .select("*");
+
     const { data: urlaub } = await supabase.from("urlaub").select("*");
     const { data: projekte } = await supabase.from("projekte").select("*");
 
     const heuteDate = new Date();
     const heute = formatDateLocal(heuteDate);
+
     const montagDate = getMontagDieserWoche();
     const montag = formatDateLocal(montagDate);
+
     const monatsStartDate = getErsterTagDieserMonat();
     const monatsStart = formatDateLocal(monatsStartDate);
 
     const { data: eigenerMitarbeiter } = await supabase
       .from("mitarbeiter")
-      .select("wochenstunden, name")
+      .select("wochenstunden, name, ueberstunden_start, eintrittsdatum")
       .eq("user_id", user.id)
       .single();
 
-    const tagesSoll = Number(eigenerMitarbeiter?.wochenstunden || 42.5) / 5;
+    const wochenstunden = Number(eigenerMitarbeiter?.wochenstunden || 42.5);
+    const ueberstundenStart = Number(
+      eigenerMitarbeiter?.ueberstunden_start || 0
+    );
+    const tagesSoll = wochenstunden / 5;
 
-    const eigeneZeitenHeute =
-      arbeitszeiten?.filter(
-        (item) => item.user_id === user.id && item.datum === heute
-      ) || [];
+    const eigeneArbeitszeiten =
+      arbeitszeiten?.filter((item) => item.user_id === user.id) || [];
+
+    const eigeneAbwesenheiten =
+      urlaub?.filter((item) => item.user_id === user.id) || [];
+
+    const eigeneZeitenHeute = eigeneArbeitszeiten.filter(
+      (item) => item.datum === heute
+    );
 
     const heuteIst = eigeneZeitenHeute.reduce(
       (sum, item) => sum + Number(item.stunden || 0),
@@ -130,13 +141,9 @@ export default function DashboardPage() {
     const heuteSoll = tagesSoll;
     const heuteDifferenz = heuteIst - heuteSoll;
 
-    const eigeneZeitenWoche =
-      arbeitszeiten?.filter(
-        (item) =>
-          item.user_id === user.id &&
-          item.datum >= montag &&
-          item.datum <= heute
-      ) || [];
+    const eigeneZeitenWoche = eigeneArbeitszeiten.filter(
+      (item) => item.datum >= montag && item.datum <= heute
+    );
 
     const wocheIst = eigeneZeitenWoche.reduce(
       (sum, item) => sum + Number(item.stunden || 0),
@@ -147,13 +154,9 @@ export default function DashboardPage() {
     const wocheSoll = tagesSoll * wocheTage;
     const wocheDifferenz = wocheIst - wocheSoll;
 
-    const eigeneZeitenMonat =
-      arbeitszeiten?.filter(
-        (item) =>
-          item.user_id === user.id &&
-          item.datum >= monatsStart &&
-          item.datum <= heute
-      ) || [];
+    const eigeneZeitenMonat = eigeneArbeitszeiten.filter(
+      (item) => item.datum >= monatsStart && item.datum <= heute
+    );
 
     const monatIst = eigeneZeitenMonat.reduce(
       (sum, item) => sum + Number(item.stunden || 0),
@@ -162,27 +165,54 @@ export default function DashboardPage() {
 
     const monatTage = zaehleArbeitstage(monatsStartDate, heuteDate);
     const monatSoll = tagesSoll * monatTage;
-    const monatDifferenz = monatIst - monatSoll;
 
-    const totalStunden =
-      arbeitszeiten?.reduce((sum, item) => sum + Number(item.stunden || 0), 0) || 0;
+    const urlaubstageMonat = eigeneAbwesenheiten
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Urlaub" &&
+          eintrag.status === "Genehmigt" &&
+          eintrag.von >= monatsStart &&
+          eintrag.bis <= heute
+      )
+      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
-    const offeneUrlaube =
-      urlaub?.filter(
-        (item) => item.typ === "Urlaub" && item.status === "Beantragt"
-      ).length || 0;
+    const kranktageMonat = eigeneAbwesenheiten
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Krank" &&
+          eintrag.von >= monatsStart &&
+          eintrag.bis <= heute
+      )
+      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
-    const krank = urlaub?.filter((item) => item.typ === "Krank").length || 0;
-    const lastTime = arbeitszeiten?.[arbeitszeiten.length - 1];
+    const ueberstundenabbauTageMonat = eigeneAbwesenheiten
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Überstundenabbau" &&
+          eintrag.status === "Genehmigt" &&
+          eintrag.von >= monatsStart &&
+          eintrag.bis <= heute
+      )
+      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+
+    const abwesenheitsstundenMonat =
+      (urlaubstageMonat + kranktageMonat + ueberstundenabbauTageMonat) *
+      tagesSoll;
+
+    const angerechneteStundenMonat = monatIst + abwesenheitsstundenMonat;
+    const monatDifferenz = angerechneteStundenMonat - monatSoll;
+
+    const ueberstundenAbbauStundenMonat =
+      ueberstundenabbauTageMonat * tagesSoll;
+
+    const gesamtUeberstunden =
+      ueberstundenStart + monatDifferenz - ueberstundenAbbauStundenMonat;
+
+    const lastTime = eigeneArbeitszeiten[eigeneArbeitszeiten.length - 1];
 
     setStats({
-      mitarbeiter: mitarbeiter?.length || 0,
-      stunden: totalStunden,
-      offeneUrlaube,
-      krank,
       projekte: projekte?.length || 0,
-      letzterMitarbeiter:
-        eigenerMitarbeiter?.name || mitarbeiter?.[0]?.name || "Keine Daten",
+      letzterMitarbeiter: eigenerMitarbeiter?.name || "Keine Daten",
       letzteZeit: lastTime?.projekt || "Werkstatt",
       letzteStunden: Number(lastTime?.stunden || 0),
 
@@ -196,9 +226,11 @@ export default function DashboardPage() {
       wocheTage,
 
       monatSoll,
-      monatIst,
+      monatIst: angerechneteStundenMonat,
       monatDifferenz,
       monatTage,
+
+      gesamtUeberstunden,
     });
   }
 
@@ -232,14 +264,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Teammitglieder" value={stats.mitarbeiter} text="Aktive Mitarbeiter" icon={<Users size={28} />} />
-        <StatCard title="Arbeitsstunden" value={`${stats.stunden.toFixed(1)}h`} text="Gesamt erfasst" icon={<Clock3 size={28} />} />
-        <StatCard title="Offene Urlaube" value={stats.offeneUrlaube} text="Genehmigung ausstehend" icon={<Plane size={28} />} />
-        <StatCard title="Krankmeldungen" value={stats.krank} text="Aktuell erfasst" icon={<AlertTriangle size={28} />} />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
         <WorkTimeCard
           eyebrow="Heute"
           title="Tagesarbeitszeit"
@@ -266,6 +291,8 @@ export default function DashboardPage() {
           ist={stats.monatIst}
           differenz={stats.monatDifferenz}
         />
+
+        <OvertimeCard value={stats.gesamtUeberstunden} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.95fr]">
@@ -305,9 +332,20 @@ export default function DashboardPage() {
             <p className="text-white/60">Live Infos</p>
           </div>
 
-          <InfoRow label="Projekte" value={stats.projekte} icon={<Briefcase size={24} />} />
+          <InfoRow
+            label="Projekte"
+            value={stats.projekte}
+            icon={<Briefcase size={24} />}
+          />
+
           <InfoRow label="Monat" value={month} icon={<CalendarDays size={24} />} />
-          <InfoRow label="Mitarbeiter" value={stats.letzterMitarbeiter} orange icon={<UserRound size={24} />} />
+
+          <InfoRow
+            label="Mitarbeiter"
+            value={stats.letzterMitarbeiter}
+            orange
+            icon={<UserRound size={24} />}
+          />
         </section>
       </div>
     </div>
@@ -331,7 +369,7 @@ function WorkTimeCard({
 }) {
   return (
     <section className="rounded-2xl border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-white/[0.025] p-6 shadow-2xl shadow-orange-500/10">
-      <div className="mb-6 flex flex-col justify-between gap-5 md:flex-row md:items-center">
+      <div className="mb-6 flex flex-col justify-between gap-5">
         <div>
           <div className="text-sm font-black uppercase tracking-widest text-orange-500">
             {eyebrow}
@@ -342,15 +380,15 @@ function WorkTimeCard({
           <p className="mt-1 text-sm text-white/55">{description}</p>
         </div>
 
-        <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-orange-500">
+        <div className="w-fit rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-orange-500">
           <Clock3 size={30} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        <DailyValue label="Sollzeit" value={`${soll.toFixed(1)}h`} />
-        <DailyValue label="Gebucht" value={`${ist.toFixed(1)}h`} orange />
-        <DailyValue
+        <ValueBox label="Sollzeit" value={`${soll.toFixed(1)}h`} />
+        <ValueBox label="Gebucht" value={`${ist.toFixed(1)}h`} orange />
+        <ValueBox
           label="Differenz"
           value={`${differenz >= 0 ? "+" : ""}${differenz.toFixed(1)}h`}
           green={differenz >= 0}
@@ -361,7 +399,42 @@ function WorkTimeCard({
   );
 }
 
-function DailyValue({
+function OvertimeCard({ value }: { value: number }) {
+  return (
+    <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.025] p-6 shadow-2xl shadow-black/30">
+      <div className="mb-6">
+        <div className="text-sm font-black uppercase tracking-widest text-orange-500">
+          Gesamt
+        </div>
+
+        <h2 className="mt-2 text-2xl font-black text-white">
+          Überstunden
+        </h2>
+
+        <p className="mt-1 text-sm text-white/55">
+          Startwert + aktueller Monatsstand
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-black/25 p-5">
+        <div className="text-sm font-bold text-white/50">
+          Gesamtüberstunden
+        </div>
+
+        <div
+          className={`mt-3 text-4xl font-black ${
+            value >= 0 ? "text-green-400" : "text-red-400"
+          }`}
+        >
+          {value >= 0 ? "+" : ""}
+          {value.toFixed(2)}h
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ValueBox({
   label,
   value,
   orange,
@@ -390,32 +463,6 @@ function DailyValue({
   );
 }
 
-function StatCard({
-  title,
-  value,
-  text,
-  icon,
-}: {
-  title: string;
-  value: string | number;
-  text: string;
-  icon: ReactNode;
-}) {
-  return (
-    <div className="group rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.025] p-7 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/50 hover:shadow-orange-500/10">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-orange-500 shadow-lg shadow-orange-500/10 transition group-hover:bg-orange-500 group-hover:text-white">
-          {icon}
-        </div>
-      </div>
-
-      <div className="text-base text-white/80">{title}</div>
-      <div className="mt-3 text-4xl font-black text-white">{value}</div>
-      <div className="mt-4 text-white/50">{text}</div>
-    </div>
-  );
-}
-
 function InfoRow({
   label,
   value,
@@ -431,7 +478,11 @@ function InfoRow({
     <div className="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-black/25 p-5 transition hover:border-orange-500/30 hover:bg-black/35">
       <div>
         <div className="text-white/55">{label}</div>
-        <div className={`mt-2 text-2xl font-black ${orange ? "text-orange-500" : "text-white"}`}>
+        <div
+          className={`mt-2 text-2xl font-black ${
+            orange ? "text-orange-500" : "text-white"
+          }`}
+        >
           {value}
         </div>
       </div>
