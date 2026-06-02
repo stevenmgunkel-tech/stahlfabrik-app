@@ -23,14 +23,60 @@ export default function DashboardPage() {
     letzterMitarbeiter: "Keine Daten",
     letzteZeit: "Werkstatt",
     letzteStunden: 0,
+
     heuteSoll: 0,
     heuteIst: 0,
     heuteDifferenz: 0,
+
+    wocheSoll: 0,
+    wocheIst: 0,
+    wocheDifferenz: 0,
+    wocheTage: 0,
   });
 
   useEffect(() => {
     loadDashboard();
   }, []);
+
+  function formatDateLocal(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function getMontagDieserWoche() {
+    const heute = new Date();
+    const tag = heute.getDay();
+    const diff = tag === 0 ? -6 : 1 - tag;
+
+    const montag = new Date(heute);
+    montag.setDate(heute.getDate() + diff);
+    montag.setHours(0, 0, 0, 0);
+
+    return montag;
+  }
+
+  function zaehleArbeitstageVonMontagBisHeute() {
+    const montag = getMontagDieserWoche();
+    const heute = new Date();
+    heute.setHours(0, 0, 0, 0);
+
+    let tage = 0;
+    const aktuell = new Date(montag);
+
+    while (aktuell <= heute) {
+      const wochentag = aktuell.getDay();
+
+      if (wochentag !== 0 && wochentag !== 6) {
+        tage++;
+      }
+
+      aktuell.setDate(aktuell.getDate() + 1);
+    }
+
+    return tage;
+  }
 
   async function loadDashboard() {
     const userData = await supabase.auth.getUser();
@@ -46,17 +92,8 @@ export default function DashboardPage() {
     const { data: urlaub } = await supabase.from("urlaub").select("*");
     const { data: projekte } = await supabase.from("projekte").select("*");
 
-    const heute = new Date().toISOString().split("T")[0];
-
-    const eigeneZeiten =
-      arbeitszeiten?.filter(
-        (item) => item.user_id === user.id && item.datum === heute
-      ) || [];
-
-    const heuteIst = eigeneZeiten.reduce(
-      (sum, item) => sum + Number(item.stunden || 0),
-      0
-    );
+    const heute = formatDateLocal(new Date());
+    const montag = formatDateLocal(getMontagDieserWoche());
 
     const { data: eigenerMitarbeiter } = await supabase
       .from("mitarbeiter")
@@ -64,8 +101,37 @@ export default function DashboardPage() {
       .eq("user_id", user.id)
       .single();
 
-    const heuteSoll = Number(eigenerMitarbeiter?.wochenstunden || 42.5) / 5;
+    const tagesSoll = Number(eigenerMitarbeiter?.wochenstunden || 42.5) / 5;
+
+    const eigeneZeitenHeute =
+      arbeitszeiten?.filter(
+        (item) => item.user_id === user.id && item.datum === heute
+      ) || [];
+
+    const heuteIst = eigeneZeitenHeute.reduce(
+      (sum, item) => sum + Number(item.stunden || 0),
+      0
+    );
+
+    const heuteSoll = tagesSoll;
     const heuteDifferenz = heuteIst - heuteSoll;
+
+    const eigeneZeitenWoche =
+      arbeitszeiten?.filter(
+        (item) =>
+          item.user_id === user.id &&
+          item.datum >= montag &&
+          item.datum <= heute
+      ) || [];
+
+    const wocheIst = eigeneZeitenWoche.reduce(
+      (sum, item) => sum + Number(item.stunden || 0),
+      0
+    );
+
+    const wocheTage = zaehleArbeitstageVonMontagBisHeute();
+    const wocheSoll = tagesSoll * wocheTage;
+    const wocheDifferenz = wocheIst - wocheSoll;
 
     const totalStunden =
       arbeitszeiten?.reduce((sum, item) => sum + Number(item.stunden || 0), 0) || 0;
@@ -88,9 +154,15 @@ export default function DashboardPage() {
         eigenerMitarbeiter?.name || mitarbeiter?.[0]?.name || "Keine Daten",
       letzteZeit: lastTime?.projekt || "Werkstatt",
       letzteStunden: Number(lastTime?.stunden || 0),
+
       heuteSoll,
       heuteIst,
       heuteDifferenz,
+
+      wocheSoll,
+      wocheIst,
+      wocheDifferenz,
+      wocheTage,
     });
   }
 
@@ -154,39 +226,25 @@ export default function DashboardPage() {
         />
       </div>
 
-      <section className="rounded-2xl border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-white/[0.025] p-7 shadow-2xl shadow-orange-500/10">
-        <div className="mb-6 flex flex-col justify-between gap-5 md:flex-row md:items-center">
-          <div>
-            <div className="text-sm font-black uppercase tracking-widest text-orange-500">
-              Heute
-            </div>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <WorkTimeCard
+          eyebrow="Heute"
+          title="Tagesarbeitszeit"
+          description="Persönliche Sollzeit, gebuchte Stunden und Tagesdifferenz"
+          soll={stats.heuteSoll}
+          ist={stats.heuteIst}
+          differenz={stats.heuteDifferenz}
+        />
 
-            <h2 className="mt-2 text-3xl font-black text-white">
-              Tagesarbeitszeit
-            </h2>
-
-            <p className="mt-1 text-white/55">
-              Persönliche Sollzeit, gebuchte Stunden und Tagesdifferenz
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-orange-500">
-            <Clock3 size={34} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-          <DailyValue label="Sollzeit" value={`${stats.heuteSoll.toFixed(1)}h`} />
-          <DailyValue label="Gebucht" value={`${stats.heuteIst.toFixed(1)}h`} orange />
-          <DailyValue
-            label="Differenz"
-            value={`${stats.heuteDifferenz >= 0 ? "+" : ""}${stats.heuteDifferenz.toFixed(1)}h`}
-            green={stats.heuteDifferenz >= 0}
-            red={stats.heuteDifferenz < 0}
-          />
-        </div>
-  
-      </section>
+        <WorkTimeCard
+          eyebrow="Diese Woche"
+          title="Wochenarbeitszeit"
+          description={`Montag bis heute · ${stats.wocheTage} Arbeitstage`}
+          soll={stats.wocheSoll}
+          ist={stats.wocheIst}
+          differenz={stats.wocheDifferenz}
+        />
+      </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.95fr]">
         <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
@@ -236,6 +294,53 @@ export default function DashboardPage() {
         </section>
       </div>
     </div>
+  );
+}
+
+function WorkTimeCard({
+  eyebrow,
+  title,
+  description,
+  soll,
+  ist,
+  differenz,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  soll: number;
+  ist: number;
+  differenz: number;
+}) {
+  return (
+    <section className="rounded-2xl border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-white/[0.025] p-7 shadow-2xl shadow-orange-500/10">
+      <div className="mb-6 flex flex-col justify-between gap-5 md:flex-row md:items-center">
+        <div>
+          <div className="text-sm font-black uppercase tracking-widest text-orange-500">
+            {eyebrow}
+          </div>
+
+          <h2 className="mt-2 text-3xl font-black text-white">{title}</h2>
+
+          <p className="mt-1 text-white/55">{description}</p>
+        </div>
+
+        <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-orange-500">
+          <Clock3 size={34} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+        <DailyValue label="Sollzeit" value={`${soll.toFixed(1)}h`} />
+        <DailyValue label="Gebucht" value={`${ist.toFixed(1)}h`} orange />
+        <DailyValue
+          label="Differenz"
+          value={`${differenz >= 0 ? "+" : ""}${differenz.toFixed(1)}h`}
+          green={differenz >= 0}
+          red={differenz < 0}
+        />
+      </div>
+    </section>
   );
 }
 
