@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabase";
 export default function ArbeitszeitenPage() {
   const [zeiten, setZeiten] = useState<any[]>([]);
   const [projekte, setProjekte] = useState<any[]>([]);
+  const [offeneDetails, setOffeneDetails] = useState<string[]>([]);
 
   const [datum, setDatum] = useState("");
   const [projekt, setProjekt] = useState("");
@@ -193,6 +194,7 @@ export default function ArbeitszeitenPage() {
     setStartzeit(zeit.startzeit || "");
     setEndzeit(zeit.endzeit || "");
     setPause(String(zeit.pause || ""));
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function bearbeitungAbbrechen() {
@@ -202,6 +204,14 @@ export default function ArbeitszeitenPage() {
     setStartzeit("");
     setEndzeit("");
     setPause("");
+  }
+
+  function toggleDetails(key: string) {
+    setOffeneDetails((aktuell) =>
+      aktuell.includes(key)
+        ? aktuell.filter((item) => item !== key)
+        : [...aktuell, key]
+    );
   }
 
   function gruppierteArbeitszeiten() {
@@ -267,7 +277,7 @@ export default function ArbeitszeitenPage() {
         </h1>
 
         <p className="mt-3 text-white/60">
-          Eigene Arbeitszeiten erfassen und nach Tag/Projekt zusammenfassen
+          Eigene Arbeitszeiten erfassen und übersichtlich zusammenfassen
         </p>
       </div>
 
@@ -383,12 +393,12 @@ export default function ArbeitszeitenPage() {
               Zusammenfassung
             </h2>
             <p className="mt-1 text-white/55">
-              Arbeitszeiten automatisch nach Datum und Projekt gruppiert
+              Nach Datum und Projekt gruppiert. Details nur bei Bedarf öffnen.
             </p>
           </div>
 
           <div className="text-sm text-white/50">
-            {zeiten.length} Einträge · {gruppierteTage.length} Tage
+            {zeiten.length} Buchungen · {gruppierteTage.length} Tage
           </div>
         </div>
 
@@ -409,6 +419,7 @@ export default function ArbeitszeitenPage() {
                   <div className="text-sm font-bold uppercase tracking-widest text-orange-500">
                     {datumFormatieren(tag.datum)}
                   </div>
+
                   <div className="mt-1 text-white/50">
                     {tag.projekte.length} Bereiche
                   </div>
@@ -420,70 +431,86 @@ export default function ArbeitszeitenPage() {
               </div>
 
               <div className="divide-y divide-white/10">
-                {tag.projekte.map((projektGruppe: any) => (
-                  <div
-                    key={`${tag.datum}-${projektGruppe.name}`}
-                    className="px-5 py-4"
-                  >
-                    <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                      <div>
-                        <div className="text-xl font-black text-white">
-                          {projektGruppe.name}
+                {tag.projekte.map((projektGruppe: any) => {
+                  const detailKey = `${tag.datum}-${projektGruppe.name}`;
+                  const detailsOffen = offeneDetails.includes(detailKey);
+
+                  return (
+                    <div key={detailKey} className="px-5 py-4">
+                      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                        <div>
+                          <div className="text-xl font-black text-white">
+                            {projektGruppe.name}
+                          </div>
+
+                          <div className="mt-1 text-sm text-white/50">
+                            {projektGruppe.eintraege.length} Buchung
+                            {projektGruppe.eintraege.length === 1 ? "" : "en"}
+                          </div>
                         </div>
-                        <div className="mt-1 text-sm text-white/50">
-                          {projektGruppe.eintraege.length} Buchung
-                          {projektGruppe.eintraege.length === 1 ? "" : "en"}
+
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                          <div className="text-3xl font-black text-orange-500">
+                            {Number(projektGruppe.stunden || 0).toFixed(2)}h
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => toggleDetails(detailKey)}
+                            className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-bold text-white transition hover:border-orange-500/40 hover:text-orange-500"
+                          >
+                            {detailsOffen ? "Details ausblenden" : "Details anzeigen"}
+                          </button>
                         </div>
                       </div>
 
-                      <div className="text-3xl font-black text-orange-500">
-                        {Number(projektGruppe.stunden || 0).toFixed(2)}h
-                      </div>
-                    </div>
+                      {detailsOffen && (
+                        <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                          {projektGruppe.eintraege.map((zeit: any) => (
+                            <div
+                              key={zeit.id}
+                              className="rounded-xl border border-white/10 bg-white/[0.03] p-4"
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div>
+                                  <div className="text-sm text-white/50">
+                                    {zeit.startzeit || "-"} bis {zeit.endzeit || "-"}
+                                  </div>
 
-                    <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                      {projektGruppe.eintraege.map((zeit: any) => (
-                        <div
-                          key={zeit.id}
-                          className="rounded-xl border border-white/10 bg-white/[0.03] p-4"
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <div className="text-sm text-white/50">
-                                {zeit.startzeit || "-"} bis {zeit.endzeit || "-"}
+                                  <div className="mt-1 text-sm text-white/50">
+                                    Pause {zeit.pause || 0} Min.
+                                  </div>
+                                </div>
+
+                                <div className="font-black text-white">
+                                  {Number(zeit.stunden || 0).toFixed(2)}h
+                                </div>
                               </div>
-                              <div className="mt-1 text-sm text-white/50">
-                                Pause {zeit.pause || 0} Min.
+
+                              <div className="mt-4 grid grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => bearbeitungStarten(zeit)}
+                                  className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm font-bold text-white transition hover:bg-white/[0.10]"
+                                >
+                                  Bearbeiten
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => zeitLoeschen(zeit.id)}
+                                  className="rounded-lg bg-red-600 px-3 py-2 text-sm font-bold text-white transition hover:bg-red-500"
+                                >
+                                  Löschen
+                                </button>
                               </div>
                             </div>
-
-                            <div className="font-black text-white">
-                              {Number(zeit.stunden || 0).toFixed(2)}h
-                            </div>
-                          </div>
-
-                          <div className="mt-4 grid grid-cols-2 gap-2">
-                            <button
-                              type="button"
-                              onClick={() => bearbeitungStarten(zeit)}
-                              className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm font-bold text-white transition hover:bg-white/[0.10]"
-                            >
-                              Bearbeiten
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => zeitLoeschen(zeit.id)}
-                              className="rounded-lg bg-red-600 px-3 py-2 text-sm font-bold text-white transition hover:bg-red-500"
-                            >
-                              Löschen
-                            </button>
-                          </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
