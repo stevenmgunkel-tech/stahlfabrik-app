@@ -23,6 +23,9 @@ export default function DashboardPage() {
     letzterMitarbeiter: "Keine Daten",
     letzteZeit: "Werkstatt",
     letzteStunden: 0,
+    heuteSoll: 0,
+    heuteIst: 0,
+    heuteDifferenz: 0,
   });
 
   useEffect(() => {
@@ -30,10 +33,39 @@ export default function DashboardPage() {
   }, []);
 
   async function loadDashboard() {
+    const userData = await supabase.auth.getUser();
+    const user = userData.data.user;
+
+    if (!user) {
+      window.location.href = "/login";
+      return;
+    }
+
     const { data: mitarbeiter } = await supabase.from("mitarbeiter").select("*");
     const { data: arbeitszeiten } = await supabase.from("arbeitszeiten").select("*");
     const { data: urlaub } = await supabase.from("urlaub").select("*");
     const { data: projekte } = await supabase.from("projekte").select("*");
+
+    const heute = new Date().toISOString().split("T")[0];
+
+    const eigeneZeiten =
+      arbeitszeiten?.filter(
+        (item) => item.user_id === user.id && item.datum === heute
+      ) || [];
+
+    const heuteIst = eigeneZeiten.reduce(
+      (sum, item) => sum + Number(item.stunden || 0),
+      0
+    );
+
+    const { data: eigenerMitarbeiter } = await supabase
+      .from("mitarbeiter")
+      .select("wochenstunden, name")
+      .eq("user_id", user.id)
+      .single();
+
+    const heuteSoll = Number(eigenerMitarbeiter?.wochenstunden || 42.5) / 5;
+    const heuteDifferenz = heuteIst - heuteSoll;
 
     const totalStunden =
       arbeitszeiten?.reduce((sum, item) => sum + Number(item.stunden || 0), 0) || 0;
@@ -43,8 +75,7 @@ export default function DashboardPage() {
         (item) => item.typ === "Urlaub" && item.status === "Beantragt"
       ).length || 0;
 
-    const krank =
-      urlaub?.filter((item) => item.typ === "Krank").length || 0;
+    const krank = urlaub?.filter((item) => item.typ === "Krank").length || 0;
 
     const lastTime = arbeitszeiten?.[arbeitszeiten.length - 1];
 
@@ -54,9 +85,12 @@ export default function DashboardPage() {
       offeneUrlaube,
       krank,
       projekte: projekte?.length || 0,
-      letzterMitarbeiter: mitarbeiter?.[0]?.name || "Keine Daten",
-      letzteZeit: "Werkstatt",
+      letzterMitarbeiter: eigenerMitarbeiter?.name || mitarbeiter?.[0]?.name || "Keine Daten",
+      letzteZeit: lastTime?.projekt || "Werkstatt",
       letzteStunden: Number(lastTime?.stunden || 0),
+      heuteSoll,
+      heuteIst,
+      heuteDifferenz,
     });
   }
 
@@ -68,13 +102,21 @@ export default function DashboardPage() {
 
   const month = new Date().toISOString().slice(0, 7);
 
+  const progress =
+    stats.heuteSoll > 0
+      ? Math.min((stats.heuteIst / stats.heuteSoll) * 100, 100)
+      : 0;
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
         <div>
           <div className="mb-4 text-sm font-medium uppercase tracking-widest text-white/70">
             Willkommen zurück,{" "}
-            <span className="font-black text-orange-500">Steven Gunkel</span> 👋
+            <span className="font-black text-orange-500">
+              {stats.letzterMitarbeiter}
+            </span>{" "}
+            👋
           </div>
 
           <h1 className="text-5xl font-black tracking-tight text-white lg:text-6xl">
@@ -98,7 +140,7 @@ export default function DashboardPage() {
         <StatCard
           title="Arbeitsstunden"
           value={`${stats.stunden.toFixed(1)}h`}
-          text="Diese Woche"
+          text="Gesamt erfasst"
           icon={<Clock3 size={28} />}
         />
 
@@ -112,10 +154,61 @@ export default function DashboardPage() {
         <StatCard
           title="Krankmeldungen"
           value={stats.krank}
-          text="Aktuell gemeldet"
+          text="Aktuell erfasst"
           icon={<AlertTriangle size={28} />}
         />
       </div>
+
+      <section className="rounded-2xl border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-white/[0.025] p-7 shadow-2xl shadow-orange-500/10">
+        <div className="mb-6 flex flex-col justify-between gap-5 md:flex-row md:items-center">
+          <div>
+            <div className="text-sm font-black uppercase tracking-widest text-orange-500">
+              Heute
+            </div>
+
+            <h2 className="mt-2 text-3xl font-black text-white">
+              Tagesarbeitszeit
+            </h2>
+
+            <p className="mt-1 text-white/55">
+              Persönliche Sollzeit, gebuchte Stunden und Tagesdifferenz
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-orange-500">
+            <Clock3 size={34} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+          <DailyValue label="Sollzeit" value={`${stats.heuteSoll.toFixed(1)}h`} />
+          <DailyValue
+            label="Gebucht"
+            value={`${stats.heuteIst.toFixed(1)}h`}
+            orange
+          />
+          <DailyValue
+            label="Differenz"
+            value={`${stats.heuteDifferenz >= 0 ? "+" : ""}${stats.heuteDifferenz.toFixed(1)}h`}
+            green={stats.heuteDifferenz >= 0}
+            red={stats.heuteDifferenz < 0}
+          />
+        </div>
+
+        <div className="mt-7">
+          <div className="mb-2 flex justify-between text-sm font-bold text-white/50">
+            <span>Fortschritt</span>
+            <span>{progress.toFixed(0)}%</span>
+          </div>
+
+          <div className="overflow-hidden rounded-full border border-white/10 bg-black/40 p-1">
+            <div
+              className="h-4 rounded-full bg-orange-500 shadow-lg shadow-orange-500/30 transition-all"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.95fr]">
         <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
@@ -157,48 +250,42 @@ export default function DashboardPage() {
           <InfoRow label="Projekte" value={stats.projekte} icon={<Briefcase size={24} />} />
           <InfoRow label="Monat" value={month} icon={<CalendarDays size={24} />} />
           <InfoRow
-            label="Letzter Mitarbeiter"
+            label="Mitarbeiter"
             value={stats.letzterMitarbeiter}
             orange
             icon={<UserRound size={24} />}
           />
         </section>
       </div>
+    </div>
+  );
+}
 
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-black">Letzte Einträge</h2>
-            <p className="text-white/60">Neueste Aktivitäten im System</p>
-          </div>
+function DailyValue({
+  label,
+  value,
+  orange,
+  green,
+  red,
+}: {
+  label: string;
+  value: string | number;
+  orange?: boolean;
+  green?: boolean;
+  red?: boolean;
+}) {
+  const color = orange
+    ? "text-orange-500"
+    : green
+    ? "text-green-400"
+    : red
+    ? "text-red-400"
+    : "text-white";
 
-          <button className="rounded-xl border border-orange-500/50 px-5 py-3 font-bold text-orange-500 transition hover:bg-orange-500 hover:text-white">
-            Alle anzeigen
-          </button>
-        </div>
-
-        <div className="overflow-hidden rounded-xl border border-white/10">
-          <div className="hidden grid-cols-5 border-b border-white/10 px-5 py-4 text-white/70 md:grid">
-            <div>Typ</div>
-            <div>Beschreibung</div>
-            <div>Mitarbeiter</div>
-            <div>Datum</div>
-            <div>Zeit</div>
-          </div>
-
-          <div className="grid gap-4 px-5 py-5 font-medium md:grid-cols-5">
-            <div>
-              <span className="rounded-md bg-orange-500/20 px-3 py-1 text-xs font-black uppercase text-orange-500">
-                Arbeitszeit
-              </span>
-            </div>
-            <div>Werkstatt</div>
-            <div>{stats.letzterMitarbeiter}</div>
-            <div>{today}</div>
-            <div>{stats.letzteStunden.toFixed(2)}h</div>
-          </div>
-        </div>
-      </section>
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/25 p-5">
+      <div className="text-sm font-bold text-white/50">{label}</div>
+      <div className={`mt-3 text-4xl font-black ${color}`}>{value}</div>
     </div>
   );
 }
@@ -244,7 +331,11 @@ function InfoRow({
     <div className="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-black/25 p-5 transition hover:border-orange-500/30 hover:bg-black/35">
       <div>
         <div className="text-white/55">{label}</div>
-        <div className={`mt-2 text-2xl font-black ${orange ? "text-orange-500" : "text-white"}`}>
+        <div
+          className={`mt-2 text-2xl font-black ${
+            orange ? "text-orange-500" : "text-white"
+          }`}
+        >
           {value}
         </div>
       </div>
