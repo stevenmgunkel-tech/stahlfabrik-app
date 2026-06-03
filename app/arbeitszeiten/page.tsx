@@ -6,15 +6,19 @@ import { supabase } from "../../lib/supabase";
 export default function ArbeitszeitenPage() {
   const [zeiten, setZeiten] = useState<any[]>([]);
   const [projekte, setProjekte] = useState<any[]>([]);
+  const [tagespausen, setTagespausen] = useState<any[]>([]);
   const [offeneTage, setOffeneTage] = useState<string[]>([]);
   const [offeneDetails, setOffeneDetails] = useState<string[]>([]);
 
   const [datum, setDatum] = useState("");
   const [projekt, setProjekt] = useState("");
   const [stunden, setStunden] = useState("");
-  const [pause, setPause] = useState("");
+
+  const [pausenDatum, setPausenDatum] = useState("");
+  const [tagespause, setTagespause] = useState("");
 
   const [saving, setSaving] = useState(false);
+  const [savingPause, setSavingPause] = useState(false);
   const [meldung, setMeldung] = useState("");
   const [bearbeitenId, setBearbeitenId] = useState<number | null>(null);
 
@@ -40,6 +44,18 @@ export default function ArbeitszeitenPage() {
     }
 
     if (zeitData) setZeiten(zeitData);
+
+    const { data: pausenData, error: pausenError } = await supabase
+      .from("tagespausen")
+      .select("*")
+      .eq("user_id", user.id);
+
+    if (pausenError) {
+      setMeldung(pausenError.message);
+      console.log(pausenError);
+    }
+
+    if (pausenData) setTagespausen(pausenData);
 
     const { data: projektData, error: projektError } = await supabase
       .from("projekte")
@@ -68,6 +84,17 @@ export default function ArbeitszeitenPage() {
     const kommission = projektItem.kommission || "";
     const kunde = projektItem.kunde || "";
 
+    if (!name && kunde && kommission) return `${kunde} - ${kommission}`;
+    if (!name) return kommission || kunde || "Ohne Projekt";
+
+    if (
+      kommission &&
+      kommission !== "NULL" &&
+      name.toLowerCase().includes(kommission.toLowerCase())
+    ) {
+      return name;
+    }
+
     if (kunde === "Intern") return name;
 
     if (kommission && kommission !== "NULL") {
@@ -83,6 +110,91 @@ export default function ArbeitszeitenPage() {
     );
 
     return gefunden?.kunde || "Kein Kunde hinterlegt";
+  }
+
+  function tagespauseFuerDatum(datumWert: string) {
+    const gefunden = tagespausen.find((p) => p.datum === datumWert);
+    return Number(gefunden?.pause || 0);
+  }
+
+  async function tagespauseSpeichern() {
+    setMeldung("");
+
+    if (!pausenDatum) {
+      setMeldung("Bitte Datum für Tagespause auswählen.");
+      return;
+    }
+
+    const pauseMinuten = Number(tagespause || 0);
+
+    if (!Number.isFinite(pauseMinuten) || pauseMinuten < 0) {
+      setMeldung("Bitte gültige Pause eingeben.");
+      return;
+    }
+
+    const userData = await supabase.auth.getUser();
+    const user = userData.data.user;
+
+    if (!user) {
+      setMeldung("Bitte zuerst einloggen.");
+      window.location.href = "/login";
+      return;
+    }
+
+    setSavingPause(true);
+
+    const { data: vorhandenePause, error: sucheError } = await supabase
+      .from("tagespausen")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("datum", pausenDatum)
+      .maybeSingle();
+
+    if (sucheError) {
+      setSavingPause(false);
+      setMeldung(sucheError.message);
+      console.log(sucheError);
+      return;
+    }
+
+    if (vorhandenePause) {
+      const { error } = await supabase
+        .from("tagespausen")
+        .update({
+          pause: pauseMinuten,
+        })
+        .eq("id", vorhandenePause.id)
+        .eq("user_id", user.id);
+
+      if (error) {
+        setSavingPause(false);
+        setMeldung(error.message);
+        console.log(error);
+        return;
+      }
+    } else {
+      const { error } = await supabase.from("tagespausen").insert([
+        {
+          datum: pausenDatum,
+          user_id: user.id,
+          pause: pauseMinuten,
+        },
+      ]);
+
+      if (error) {
+        setSavingPause(false);
+        setMeldung(error.message);
+        console.log(error);
+        return;
+      }
+    }
+
+    setMeldung("Tagespause gespeichert.");
+    setPausenDatum("");
+    setTagespause("");
+
+    await ladeDaten();
+    setSavingPause(false);
   }
 
   async function zeitSpeichern() {
@@ -120,7 +232,7 @@ export default function ArbeitszeitenPage() {
           projekt,
           startzeit: null,
           endzeit: null,
-          pause: Number(pause || 0),
+          pause: 0,
           stunden: berechneteStunden,
         })
         .eq("id", bearbeitenId)
@@ -141,7 +253,7 @@ export default function ArbeitszeitenPage() {
           projekt,
           startzeit: null,
           endzeit: null,
-          pause: Number(pause || 0),
+          pause: 0,
           stunden: berechneteStunden,
           user_id: user.id,
         },
@@ -160,7 +272,6 @@ export default function ArbeitszeitenPage() {
     setDatum("");
     setProjekt("");
     setStunden("");
-    setPause("");
     setBearbeitenId(null);
 
     await ladeDaten();
@@ -201,7 +312,6 @@ export default function ArbeitszeitenPage() {
     setDatum(zeit.datum || "");
     setProjekt(zeit.projekt || "");
     setStunden(String(zeit.stunden || ""));
-    setPause(String(zeit.pause || ""));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -210,7 +320,6 @@ export default function ArbeitszeitenPage() {
     setDatum("");
     setProjekt("");
     setStunden("");
-    setPause("");
   }
 
   function toggleTag(key: string) {
@@ -240,32 +349,31 @@ export default function ArbeitszeitenPage() {
         tageMap.set(datumKey, {
           datum: datumKey,
           gesamt: 0,
-          pauseGesamt: 0,
+          tagespause: tagespauseFuerDatum(datumKey),
           projekte: new Map<string, any>(),
         });
       }
 
       const tag = tageMap.get(datumKey);
       tag.gesamt += Number(zeit.stunden || 0);
-      tag.pauseGesamt += Number(zeit.pause || 0);
+      tag.tagespause = tagespauseFuerDatum(datumKey);
 
       if (!tag.projekte.has(projektKey)) {
         tag.projekte.set(projektKey, {
           name: projektKey,
           stunden: 0,
-          pauseGesamt: 0,
           eintraege: [],
         });
       }
 
       const projektGruppe = tag.projekte.get(projektKey);
       projektGruppe.stunden += Number(zeit.stunden || 0);
-      projektGruppe.pauseGesamt += Number(zeit.pause || 0);
       projektGruppe.eintraege.push(zeit);
     });
 
     return Array.from(tageMap.values()).map((tag) => ({
       ...tag,
+      netto: Number(tag.gesamt || 0) - Number(tag.tagespause || 0) / 60,
       projekte: Array.from(tag.projekte.values()),
     }));
   }
@@ -307,7 +415,7 @@ export default function ArbeitszeitenPage() {
               {bearbeitenId ? "Arbeitszeit bearbeiten" : "Arbeitszeit erfassen"}
             </h2>
             <p className="mt-1 text-white/55">
-              Datum, Projekt, Stunden und Pause eintragen
+              Datum, Projekt und Stunden eintragen
             </p>
           </div>
 
@@ -319,7 +427,7 @@ export default function ArbeitszeitenPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
           <Field label="Datum">
             <input
               type="date"
@@ -360,17 +468,6 @@ export default function ArbeitszeitenPage() {
             />
           </Field>
 
-          <Field label="Pause Min.">
-            <input
-              type="number"
-              min="0"
-              placeholder="0"
-              value={pause}
-              onChange={(e) => setPause(e.target.value)}
-              className="dark-input"
-            />
-          </Field>
-
           <div className="flex flex-col justify-end">
             <button
               type="button"
@@ -405,11 +502,53 @@ export default function ArbeitszeitenPage() {
       </section>
 
       <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+        <div className="mb-7">
+          <h2 className="text-2xl font-black text-white">Tagespause</h2>
+          <p className="mt-1 text-white/55">
+            Pause einmal pro Tag erfassen. Sie wird vom Tagesgesamt abgezogen.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Field label="Datum">
+            <input
+              type="date"
+              value={pausenDatum}
+              onChange={(e) => setPausenDatum(e.target.value)}
+              className="dark-input"
+            />
+          </Field>
+
+          <Field label="Pause Min.">
+            <input
+              type="number"
+              min="0"
+              placeholder="z.B. 30"
+              value={tagespause}
+              onChange={(e) => setTagespause(e.target.value)}
+              className="dark-input"
+            />
+          </Field>
+
+          <div className="flex flex-col justify-end">
+            <button
+              type="button"
+              onClick={tagespauseSpeichern}
+              disabled={savingPause}
+              className="rounded-xl bg-orange-600 p-3 font-black text-white shadow-lg shadow-orange-600/25 transition hover:bg-orange-500 disabled:opacity-50"
+            >
+              {savingPause ? "Speichern..." : "Tagespause speichern"}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div>
             <h2 className="text-2xl font-black text-white">Zusammenfassung</h2>
             <p className="mt-1 text-white/55">
-              Tage einklappen. Klick auf den Tag öffnet die Projektübersicht.
+              Tagespause wird automatisch vom Gesamt abgezogen.
             </p>
           </div>
 
@@ -455,19 +594,17 @@ export default function ArbeitszeitenPage() {
                             sum + Number(p.eintraege.length || 0),
                           0
                         )}{" "}
-                        Buchungen
-                        {Number(tag.pauseGesamt || 0) > 0 &&
-                          ` · Pause ${tag.pauseGesamt} Min.`}
+                        Buchungen · Brutto{" "}
+                        {Number(tag.gesamt || 0).toFixed(2)}h
+                        {Number(tag.tagespause || 0) > 0 &&
+                          ` · Pause ${tag.tagespause} Min.`}
                       </div>
                     </div>
                   </div>
 
                   <div className="rounded-xl bg-orange-600 px-4 py-2 text-lg font-black text-white shadow-lg shadow-orange-600/25">
-  {`Gesamt ${(
-    Number(tag.gesamt || 0) -
-    Number(tag.pauseGesamt || 0) / 60
-  ).toFixed(2)}h`}
-</div>
+                    Netto {Number(tag.netto || 0).toFixed(2)}h
+                  </div>
                 </button>
 
                 {tagOffen && (
@@ -497,8 +634,6 @@ export default function ArbeitszeitenPage() {
                                 {projektGruppe.eintraege.length === 1
                                   ? ""
                                   : "en"}
-                                {Number(projektGruppe.pauseGesamt || 0) > 0 &&
-                                  ` · Pause ${projektGruppe.pauseGesamt} Min.`}
                               </div>
                             </div>
 
@@ -530,10 +665,6 @@ export default function ArbeitszeitenPage() {
                                     <div>
                                       <div className="text-sm text-white/50">
                                         Arbeitszeit
-                                      </div>
-
-                                      <div className="mt-1 text-sm text-white/50">
-                                        Pause {zeit.pause || 0} Min.
                                       </div>
                                     </div>
 
