@@ -463,8 +463,11 @@ export default function ArbeitszeitenPage() {
                   </div>
 
                   <div className="rounded-xl bg-orange-600 px-4 py-2 text-lg font-black text-white shadow-lg shadow-orange-600/25">
-                    Gesamt {Number(tag.gesamt || 0).toFixed(2)}h
-                  </div>
+  {`Gesamt ${(
+    Number(tag.gesamt || 0) -
+    Number(tag.pauseGesamt || 0) / 60
+  ).toFixed(2)}h`}
+</div>
                 </button>
 
                 {tagOffen && (
