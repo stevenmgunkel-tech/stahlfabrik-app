@@ -11,8 +11,7 @@ export default function ArbeitszeitenPage() {
 
   const [datum, setDatum] = useState("");
   const [projekt, setProjekt] = useState("");
-  const [startzeit, setStartzeit] = useState("");
-  const [endzeit, setEndzeit] = useState("");
+  const [stunden, setStunden] = useState("");
   const [pause, setPause] = useState("");
 
   const [saving, setSaving] = useState(false);
@@ -33,7 +32,7 @@ export default function ArbeitszeitenPage() {
       .select("*")
       .eq("user_id", user.id)
       .order("datum", { ascending: false })
-      .order("startzeit", { ascending: true });
+      .order("id", { ascending: false });
 
     if (zeitError) {
       setMeldung(zeitError.message);
@@ -59,23 +58,6 @@ export default function ArbeitszeitenPage() {
     ladeDaten();
   }, []);
 
-  function berechneStunden() {
-    if (!startzeit || !endzeit) return 0;
-
-    const [startH, startM] = startzeit.split(":").map(Number);
-    const [endH, endM] = endzeit.split(":").map(Number);
-
-    const startMinuten = startH * 60 + startM;
-    const endMinuten = endH * 60 + endM;
-    const pauseMinuten = Number(pause || 0);
-
-    const arbeitsMinuten = endMinuten - startMinuten - pauseMinuten;
-
-    if (arbeitsMinuten <= 0) return 0;
-
-    return Number((arbeitsMinuten / 60).toFixed(2));
-  }
-
   function kundeFuerProjekt(projektName: string) {
     const gefunden = projekte.find((p) => p.name === projektName);
     return gefunden?.kunde || "Kein Kunde hinterlegt";
@@ -84,15 +66,15 @@ export default function ArbeitszeitenPage() {
   async function zeitSpeichern() {
     setMeldung("");
 
-    if (!datum || !projekt || !startzeit || !endzeit) {
-      setMeldung("Bitte Datum, Projekt, Von und Bis ausfüllen.");
+    if (!datum || !projekt || !stunden) {
+      setMeldung("Bitte Datum, Projekt und Stunden ausfüllen.");
       return;
     }
 
-    const berechneteStunden = berechneStunden();
+    const berechneteStunden = Number(stunden);
 
-    if (berechneteStunden <= 0) {
-      setMeldung("Bitte gültige Arbeitszeit eingeben.");
+    if (!Number.isFinite(berechneteStunden) || berechneteStunden <= 0) {
+      setMeldung("Bitte gültige Stunden eingeben.");
       return;
     }
 
@@ -114,8 +96,8 @@ export default function ArbeitszeitenPage() {
         .update({
           datum,
           projekt,
-          startzeit,
-          endzeit,
+          startzeit: null,
+          endzeit: null,
           pause: Number(pause || 0),
           stunden: berechneteStunden,
         })
@@ -135,8 +117,8 @@ export default function ArbeitszeitenPage() {
         {
           datum,
           projekt,
-          startzeit,
-          endzeit,
+          startzeit: null,
+          endzeit: null,
           pause: Number(pause || 0),
           stunden: berechneteStunden,
           user_id: user.id,
@@ -155,8 +137,7 @@ export default function ArbeitszeitenPage() {
 
     setDatum("");
     setProjekt("");
-    setStartzeit("");
-    setEndzeit("");
+    setStunden("");
     setPause("");
     setBearbeitenId(null);
 
@@ -197,8 +178,7 @@ export default function ArbeitszeitenPage() {
     setBearbeitenId(zeit.id);
     setDatum(zeit.datum || "");
     setProjekt(zeit.projekt || "");
-    setStartzeit(zeit.startzeit || "");
-    setEndzeit(zeit.endzeit || "");
+    setStunden(String(zeit.stunden || ""));
     setPause(String(zeit.pause || ""));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -207,8 +187,7 @@ export default function ArbeitszeitenPage() {
     setBearbeitenId(null);
     setDatum("");
     setProjekt("");
-    setStartzeit("");
-    setEndzeit("");
+    setStunden("");
     setPause("");
   }
 
@@ -239,23 +218,27 @@ export default function ArbeitszeitenPage() {
         tageMap.set(datumKey, {
           datum: datumKey,
           gesamt: 0,
+          pauseGesamt: 0,
           projekte: new Map<string, any>(),
         });
       }
 
       const tag = tageMap.get(datumKey);
       tag.gesamt += Number(zeit.stunden || 0);
+      tag.pauseGesamt += Number(zeit.pause || 0);
 
       if (!tag.projekte.has(projektKey)) {
         tag.projekte.set(projektKey, {
           name: projektKey,
           stunden: 0,
+          pauseGesamt: 0,
           eintraege: [],
         });
       }
 
       const projektGruppe = tag.projekte.get(projektKey);
       projektGruppe.stunden += Number(zeit.stunden || 0);
+      projektGruppe.pauseGesamt += Number(zeit.pause || 0);
       projektGruppe.eintraege.push(zeit);
     });
 
@@ -276,7 +259,7 @@ export default function ArbeitszeitenPage() {
     });
   }
 
-  const vorschauStunden = berechneStunden();
+  const vorschauStunden = Number(stunden || 0);
   const gruppierteTage = gruppierteArbeitszeiten();
 
   return (
@@ -291,7 +274,7 @@ export default function ArbeitszeitenPage() {
         </h1>
 
         <p className="mt-3 text-white/60">
-          Eigene Arbeitszeiten erfassen und übersichtlich zusammenfassen
+          Arbeitszeiten einfach nach Projekt und Stunden erfassen
         </p>
       </div>
 
@@ -302,19 +285,19 @@ export default function ArbeitszeitenPage() {
               {bearbeitenId ? "Arbeitszeit bearbeiten" : "Arbeitszeit erfassen"}
             </h2>
             <p className="mt-1 text-white/55">
-              Datum, Projekt und Arbeitszeit eintragen
+              Datum, Projekt, Stunden und Pause eintragen
             </p>
           </div>
 
           <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-3">
-            <span className="text-sm text-white/60">Berechnet</span>{" "}
+            <span className="text-sm text-white/60">Eingetragen</span>{" "}
             <span className="font-black text-orange-500">
               {vorschauStunden}h
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-6">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
           <Field label="Datum">
             <input
               type="date"
@@ -339,20 +322,14 @@ export default function ArbeitszeitenPage() {
             </select>
           </Field>
 
-          <Field label="Von">
+          <Field label="Stunden">
             <input
-              type="time"
-              value={startzeit}
-              onChange={(e) => setStartzeit(e.target.value)}
-              className="dark-input"
-            />
-          </Field>
-
-          <Field label="Bis">
-            <input
-              type="time"
-              value={endzeit}
-              onChange={(e) => setEndzeit(e.target.value)}
+              type="number"
+              step="0.25"
+              min="0"
+              placeholder="z.B. 3 oder 4.5"
+              value={stunden}
+              onChange={(e) => setStunden(e.target.value)}
               className="dark-input"
             />
           </Field>
@@ -360,6 +337,7 @@ export default function ArbeitszeitenPage() {
           <Field label="Pause Min.">
             <input
               type="number"
+              min="0"
               placeholder="0"
               value={pause}
               onChange={(e) => setPause(e.target.value)}
@@ -452,6 +430,8 @@ export default function ArbeitszeitenPage() {
                           0
                         )}{" "}
                         Buchungen
+                        {Number(tag.pauseGesamt || 0) > 0 &&
+                          ` · Pause ${tag.pauseGesamt} Min.`}
                       </div>
                     </div>
                   </div>
@@ -488,6 +468,8 @@ export default function ArbeitszeitenPage() {
                                 {projektGruppe.eintraege.length === 1
                                   ? ""
                                   : "en"}
+                                {Number(projektGruppe.pauseGesamt || 0) > 0 &&
+                                  ` · Pause ${projektGruppe.pauseGesamt} Min.`}
                               </div>
                             </div>
 
@@ -518,8 +500,7 @@ export default function ArbeitszeitenPage() {
                                   <div className="flex items-center justify-between gap-3">
                                     <div>
                                       <div className="text-sm text-white/50">
-                                        {zeit.startzeit || "-"} bis{" "}
-                                        {zeit.endzeit || "-"}
+                                        Arbeitszeit
                                       </div>
 
                                       <div className="mt-1 text-sm text-white/50">
