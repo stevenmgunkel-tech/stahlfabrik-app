@@ -390,13 +390,9 @@ export default function ProjektePage() {
                     Kommission: {projekt.kommission || "-"}
                   </div>
 
-                  <div className="mt-2 text-sm text-white/60">
-                    Projektname: {projekt.projektname || "-"}
-                  </div>
-
-                  <div className="mt-2 text-sm font-bold text-orange-400">
-                    Anzeige: {projekt.name || "-"}
-                  </div>
+                  <div className="mt-3 text-lg font-black text-orange-400">
+  {projekt.projektname || "-"}
+</div>
                 </div>
 
                 <span
