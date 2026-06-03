@@ -8,6 +8,7 @@ export default function ProjektePage() {
 
   const [kunde, setKunde] = useState("");
   const [kommission, setKommission] = useState("");
+  const [projektname, setProjektname] = useState("");
   const [status, setStatus] = useState("Aktiv");
 
   const [loading, setLoading] = useState(false);
@@ -65,7 +66,7 @@ export default function ProjektePage() {
     ladeProjekte();
   }, []);
 
-  function projektNameBauen(kundeWert: string, kommissionWert: string) {
+  function anzeigeBauen(kundeWert: string, kommissionWert: string) {
     const saubererKunde = kundeWert.trim();
     const saubereKommission = kommissionWert.trim();
 
@@ -96,7 +97,12 @@ export default function ProjektePage() {
       return;
     }
 
-    const name = projektNameBauen(kunde, kommission);
+    if (!projektname.trim()) {
+      setMeldung("Bitte Projektname eingeben.");
+      return;
+    }
+
+    const name = anzeigeBauen(kunde, kommission);
 
     setLoading(true);
 
@@ -107,6 +113,7 @@ export default function ProjektePage() {
           name,
           kunde: kunde.trim(),
           kommission: kommission.trim(),
+          projektname: projektname.trim(),
           status,
         })
         .eq("id", bearbeitenId);
@@ -125,6 +132,7 @@ export default function ProjektePage() {
           name,
           kunde: kunde.trim(),
           kommission: kommission.trim(),
+          projektname: projektname.trim(),
           status,
         },
       ]);
@@ -141,6 +149,7 @@ export default function ProjektePage() {
 
     setKunde("");
     setKommission("");
+    setProjektname("");
     setStatus("Aktiv");
     setBearbeitenId(null);
 
@@ -172,7 +181,8 @@ export default function ProjektePage() {
   function bearbeitungStarten(projekt: any) {
     setBearbeitenId(projekt.id);
     setKunde(projekt.kunde || "");
-    setKommission(projekt.kommission || projekt.name || "");
+    setKommission(projekt.kommission || "");
+    setProjektname(projekt.projektname || "");
     setStatus(projekt.status || "Aktiv");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -181,6 +191,7 @@ export default function ProjektePage() {
     setBearbeitenId(null);
     setKunde("");
     setKommission("");
+    setProjektname("");
     setStatus("Aktiv");
   }
 
@@ -228,7 +239,7 @@ export default function ProjektePage() {
         </h1>
 
         <p className="mt-3 text-white/60">
-          Kunden, Kommissionen und Projektstatus verwalten
+          Kunden, Kommissionen, Projektname und Status verwalten
         </p>
       </div>
 
@@ -245,7 +256,7 @@ export default function ProjektePage() {
               {bearbeitenId ? "Projekt bearbeiten" : "Projekt hinzufügen"}
             </h2>
             <p className="mt-1 text-white/55">
-              Kunde, Kommission und Status verwalten
+              Kunde, Kommission, Projektname und Status verwalten
             </p>
           </div>
 
@@ -256,7 +267,7 @@ export default function ProjektePage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
           <Field label="Kunde">
             <input
               type="text"
@@ -273,6 +284,16 @@ export default function ProjektePage() {
               placeholder="z.B. Kessler Küsnacht"
               value={kommission}
               onChange={(e) => setKommission(e.target.value)}
+              className="dark-input"
+            />
+          </Field>
+
+          <Field label="Projektname">
+            <input
+              type="text"
+              placeholder="z.B. Zaunanlage"
+              value={projektname}
+              onChange={(e) => setProjektname(e.target.value)}
               className="dark-input"
             />
           </Field>
@@ -305,11 +326,11 @@ export default function ProjektePage() {
           </div>
         </div>
 
-        {(kunde || kommission) && (
+        {(kunde || kommission || projektname) && (
           <div className="mt-5 rounded-xl border border-white/10 bg-black/25 p-4 text-sm text-white/60">
             Anzeige in Arbeitszeiten:{" "}
             <span className="font-black text-orange-400">
-              {projektNameBauen(kunde, kommission) || "-"}
+              {anzeigeBauen(kunde, kommission) || "-"}
             </span>
           </div>
         )}
@@ -338,7 +359,7 @@ export default function ProjektePage() {
               Projektübersicht
             </h2>
             <p className="mt-1 text-white/55">
-              Alle Kunden und Kommissionen
+              Alle Kunden, Kommissionen und Projektnamen
             </p>
           </div>
 
@@ -366,11 +387,15 @@ export default function ProjektePage() {
                   </div>
 
                   <div className="mt-2 text-sm text-white/60">
-                    Kommission: {projekt.kommission || projekt.name || "-"}
+                    Kommission: {projekt.kommission || "-"}
                   </div>
 
-                  <div className="mt-2 text-sm text-orange-400">
-                    {projekt.name || "-"}
+                  <div className="mt-2 text-sm text-white/60">
+                    Projektname: {projekt.projektname || "-"}
+                  </div>
+
+                  <div className="mt-2 text-sm font-bold text-orange-400">
+                    Anzeige: {projekt.name || "-"}
                   </div>
                 </div>
 
@@ -405,9 +430,10 @@ export default function ProjektePage() {
         </div>
 
         <div className="hidden overflow-hidden rounded-xl border border-white/10 md:block">
-          <div className="grid min-w-[1000px] grid-cols-5 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+          <div className="grid min-w-[1150px] grid-cols-6 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
             <div>Kunde</div>
             <div>Kommission</div>
+            <div>Projektname</div>
             <div>Anzeige</div>
             <div>Status</div>
             <div>Aktion</div>
@@ -417,13 +443,15 @@ export default function ProjektePage() {
             {projekte.map((projekt) => (
               <div
                 key={projekt.id}
-                className="grid min-w-[1000px] grid-cols-5 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
+                className="grid min-w-[1150px] grid-cols-6 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
               >
                 <div className="font-black text-white">
                   {projekt.kunde || "-"}
                 </div>
 
-                <div>{projekt.kommission || projekt.name || "-"}</div>
+                <div>{projekt.kommission || "-"}</div>
+
+                <div>{projekt.projektname || "-"}</div>
 
                 <div className="font-bold text-orange-400">
                   {projekt.name || "-"}
