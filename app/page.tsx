@@ -99,6 +99,11 @@ export default function DashboardPage() {
       .from("arbeitszeiten")
       .select("*");
 
+    const { data: tagespausen } = await supabase
+      .from("tagespausen")
+      .select("*")
+      .eq("user_id", user.id);
+
     const { data: urlaub } = await supabase.from("urlaub").select("*");
     const { data: projekte } = await supabase.from("projekte").select("*");
 
@@ -129,15 +134,29 @@ export default function DashboardPage() {
     const eigeneAbwesenheiten =
       urlaub?.filter((item) => item.user_id === user.id) || [];
 
+    function pauseFuerDatum(datum: string) {
+      const pause = tagespausen?.find((p) => p.datum === datum);
+      return Number(pause?.pause || 0) / 60;
+    }
+
+    function pausenFuerZeitraum(start: string, ende: string) {
+      return (
+        tagespausen
+          ?.filter((p) => p.datum >= start && p.datum <= ende)
+          .reduce((sum, p) => sum + Number(p.pause || 0) / 60, 0) || 0
+      );
+    }
+
     const eigeneZeitenHeute = eigeneArbeitszeiten.filter(
       (item) => item.datum === heute
     );
 
-    const heuteIst = eigeneZeitenHeute.reduce(
+    const heuteBrutto = eigeneZeitenHeute.reduce(
       (sum, item) => sum + Number(item.stunden || 0),
       0
     );
 
+    const heuteIst = heuteBrutto - pauseFuerDatum(heute);
     const heuteSoll = tagesSoll;
     const heuteDifferenz = heuteIst - heuteSoll;
 
@@ -145,11 +164,12 @@ export default function DashboardPage() {
       (item) => item.datum >= montag && item.datum <= heute
     );
 
-    const wocheIst = eigeneZeitenWoche.reduce(
+    const wocheBrutto = eigeneZeitenWoche.reduce(
       (sum, item) => sum + Number(item.stunden || 0),
       0
     );
 
+    const wocheIst = wocheBrutto - pausenFuerZeitraum(montag, heute);
     const wocheTage = zaehleArbeitstage(montagDate, heuteDate);
     const wocheSoll = tagesSoll * wocheTage;
     const wocheDifferenz = wocheIst - wocheSoll;
@@ -158,11 +178,12 @@ export default function DashboardPage() {
       (item) => item.datum >= monatsStart && item.datum <= heute
     );
 
-    const monatIst = eigeneZeitenMonat.reduce(
+    const monatBrutto = eigeneZeitenMonat.reduce(
       (sum, item) => sum + Number(item.stunden || 0),
       0
     );
 
+    const monatIst = monatBrutto - pausenFuerZeitraum(monatsStart, heute);
     const monatTage = zaehleArbeitstage(monatsStartDate, heuteDate);
     const monatSoll = tagesSoll * monatTage;
 
@@ -407,9 +428,7 @@ function OvertimeCard({ value }: { value: number }) {
           Gesamt
         </div>
 
-        <h2 className="mt-2 text-2xl font-black text-white">
-          Überstunden
-        </h2>
+        <h2 className="mt-2 text-2xl font-black text-white">Überstunden</h2>
 
         <p className="mt-1 text-sm text-white/55">
           Startwert + aktueller Monatsstand
