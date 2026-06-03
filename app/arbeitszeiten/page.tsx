@@ -63,8 +63,25 @@ export default function ArbeitszeitenPage() {
     ladeDaten();
   }, []);
 
+  function projektAnzeige(projektItem: any) {
+    const name = projektItem.name || "";
+    const kommission = projektItem.kommission || "";
+    const kunde = projektItem.kunde || "";
+
+    if (kunde === "Intern") return name;
+
+    if (kommission && kommission !== "NULL") {
+      return `${name} - ${kommission}`;
+    }
+
+    return name;
+  }
+
   function kundeFuerProjekt(projektName: string) {
-    const gefunden = projekte.find((p) => p.name === projektName);
+    const gefunden = projekte.find(
+      (p) => p.name === projektName || projektAnzeige(p) === projektName
+    );
+
     return gefunden?.kunde || "Kein Kunde hinterlegt";
   }
 
@@ -319,11 +336,15 @@ export default function ArbeitszeitenPage() {
               className="dark-input"
             >
               <option value="">Projekt auswählen</option>
-              {projekte.map((projektItem) => (
-                <option key={projektItem.id} value={projektItem.name}>
-                  {projektItem.name}
-                </option>
-              ))}
+              {projekte.map((projektItem) => {
+                const anzeige = projektAnzeige(projektItem);
+
+                return (
+                  <option key={projektItem.id} value={anzeige}>
+                    {anzeige}
+                  </option>
+                );
+              })}
             </select>
           </Field>
 
