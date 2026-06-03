@@ -6,8 +6,8 @@ import { supabase } from "../../lib/supabase";
 export default function ProjektePage() {
   const [projekte, setProjekte] = useState<any[]>([]);
 
-  const [name, setName] = useState("");
   const [kunde, setKunde] = useState("");
+  const [kommission, setKommission] = useState("");
   const [status, setStatus] = useState("Aktiv");
 
   const [loading, setLoading] = useState(false);
@@ -39,7 +39,6 @@ export default function ProjektePage() {
 
     setIsAdmin(true);
     setSeiteGeprueft(true);
-
     return true;
   }
 
@@ -50,7 +49,8 @@ export default function ProjektePage() {
     const { data, error } = await supabase
       .from("projekte")
       .select("*")
-      .order("name", { ascending: true });
+      .order("kunde", { ascending: true })
+      .order("kommission", { ascending: true });
 
     if (error) {
       setMeldung(error.message);
@@ -65,6 +65,19 @@ export default function ProjektePage() {
     ladeProjekte();
   }, []);
 
+  function projektNameBauen(kundeWert: string, kommissionWert: string) {
+    const saubererKunde = kundeWert.trim();
+    const saubereKommission = kommissionWert.trim();
+
+    if (!saubererKunde && !saubereKommission) return "";
+    if (!saubererKunde) return saubereKommission;
+    if (!saubereKommission) return saubererKunde;
+
+    if (saubererKunde === "Intern") return saubereKommission;
+
+    return `${saubererKunde} - ${saubereKommission}`;
+  }
+
   async function projektSpeichern() {
     if (!isAdmin) {
       setMeldung("Keine Berechtigung.");
@@ -73,10 +86,17 @@ export default function ProjektePage() {
 
     setMeldung("");
 
-    if (!name.trim()) {
-      setMeldung("Bitte Projektname eingeben.");
+    if (!kunde.trim()) {
+      setMeldung("Bitte Kunde eingeben.");
       return;
     }
+
+    if (!kommission.trim()) {
+      setMeldung("Bitte Kommission eingeben.");
+      return;
+    }
+
+    const name = projektNameBauen(kunde, kommission);
 
     setLoading(true);
 
@@ -84,8 +104,9 @@ export default function ProjektePage() {
       const { error } = await supabase
         .from("projekte")
         .update({
-          name: name.trim(),
+          name,
           kunde: kunde.trim(),
+          kommission: kommission.trim(),
           status,
         })
         .eq("id", bearbeitenId);
@@ -101,8 +122,9 @@ export default function ProjektePage() {
     } else {
       const { error } = await supabase.from("projekte").insert([
         {
-          name: name.trim(),
+          name,
           kunde: kunde.trim(),
+          kommission: kommission.trim(),
           status,
         },
       ]);
@@ -117,8 +139,8 @@ export default function ProjektePage() {
       setMeldung("Projekt gespeichert.");
     }
 
-    setName("");
     setKunde("");
+    setKommission("");
     setStatus("Aktiv");
     setBearbeitenId(null);
 
@@ -149,15 +171,16 @@ export default function ProjektePage() {
 
   function bearbeitungStarten(projekt: any) {
     setBearbeitenId(projekt.id);
-    setName(projekt.name || "");
     setKunde(projekt.kunde || "");
+    setKommission(projekt.kommission || projekt.name || "");
     setStatus(projekt.status || "Aktiv");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function bearbeitungAbbrechen() {
     setBearbeitenId(null);
-    setName("");
     setKunde("");
+    setKommission("");
     setStatus("Aktiv");
   }
 
@@ -205,7 +228,7 @@ export default function ProjektePage() {
         </h1>
 
         <p className="mt-3 text-white/60">
-          Projekt- & Kundenverwaltung
+          Kunden, Kommissionen und Projektstatus verwalten
         </p>
       </div>
 
@@ -222,7 +245,7 @@ export default function ProjektePage() {
               {bearbeitenId ? "Projekt bearbeiten" : "Projekt hinzufügen"}
             </h2>
             <p className="mt-1 text-white/55">
-              Projektname, Kunde und Status verwalten
+              Kunde, Kommission und Status verwalten
             </p>
           </div>
 
@@ -234,22 +257,22 @@ export default function ProjektePage() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <Field label="Projektname">
+          <Field label="Kunde">
             <input
               type="text"
-              placeholder="Projektname"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              placeholder="z.B. Alpsteinzaun AG"
+              value={kunde}
+              onChange={(e) => setKunde(e.target.value)}
               className="dark-input"
             />
           </Field>
 
-          <Field label="Kunde">
+          <Field label="Kommission">
             <input
               type="text"
-              placeholder="Kunde"
-              value={kunde}
-              onChange={(e) => setKunde(e.target.value)}
+              placeholder="z.B. Kessler Küsnacht"
+              value={kommission}
+              onChange={(e) => setKommission(e.target.value)}
               className="dark-input"
             />
           </Field>
@@ -282,6 +305,15 @@ export default function ProjektePage() {
           </div>
         </div>
 
+        {(kunde || kommission) && (
+          <div className="mt-5 rounded-xl border border-white/10 bg-black/25 p-4 text-sm text-white/60">
+            Anzeige in Arbeitszeiten:{" "}
+            <span className="font-black text-orange-400">
+              {projektNameBauen(kunde, kommission) || "-"}
+            </span>
+          </div>
+        )}
+
         {bearbeitenId && (
           <button
             type="button"
@@ -306,7 +338,7 @@ export default function ProjektePage() {
               Projektübersicht
             </h2>
             <p className="mt-1 text-white/55">
-              Alle angelegten Projekte und Kunden
+              Alle Kunden und Kommissionen
             </p>
           </div>
 
@@ -330,11 +362,15 @@ export default function ProjektePage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="text-xl font-black text-white">
-                    {projekt.name}
+                    {projekt.kunde || "-"}
                   </div>
 
                   <div className="mt-2 text-sm text-white/60">
-                    Kunde: {projekt.kunde || "-"}
+                    Kommission: {projekt.kommission || projekt.name || "-"}
+                  </div>
+
+                  <div className="mt-2 text-sm text-orange-400">
+                    {projekt.name || "-"}
                   </div>
                 </div>
 
@@ -369,9 +405,10 @@ export default function ProjektePage() {
         </div>
 
         <div className="hidden overflow-hidden rounded-xl border border-white/10 md:block">
-          <div className="grid min-w-[900px] grid-cols-4 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
-            <div>Projekt</div>
+          <div className="grid min-w-[1000px] grid-cols-5 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
             <div>Kunde</div>
+            <div>Kommission</div>
+            <div>Anzeige</div>
             <div>Status</div>
             <div>Aktion</div>
           </div>
@@ -380,11 +417,17 @@ export default function ProjektePage() {
             {projekte.map((projekt) => (
               <div
                 key={projekt.id}
-                className="grid min-w-[900px] grid-cols-4 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
+                className="grid min-w-[1000px] grid-cols-5 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
               >
-                <div className="font-black text-white">{projekt.name}</div>
+                <div className="font-black text-white">
+                  {projekt.kunde || "-"}
+                </div>
 
-                <div>{projekt.kunde || "-"}</div>
+                <div>{projekt.kommission || projekt.name || "-"}</div>
+
+                <div className="font-bold text-orange-400">
+                  {projekt.name || "-"}
+                </div>
 
                 <div>
                   <span
