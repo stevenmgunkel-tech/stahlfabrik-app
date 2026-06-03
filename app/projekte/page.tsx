@@ -430,21 +430,20 @@ export default function ProjektePage() {
         </div>
 
         <div className="hidden overflow-hidden rounded-xl border border-white/10 md:block">
-          <div className="grid min-w-[1150px] grid-cols-6 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
-            <div>Kunde</div>
-            <div>Kommission</div>
-            <div>Projektname</div>
-            <div>Anzeige</div>
-            <div>Status</div>
-            <div>Aktion</div>
-          </div>
+          <div className="grid min-w-[1000px] grid-cols-5 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+  <div>Kunde</div>
+  <div>Kommission</div>
+  <div>Projektname</div>
+  <div>Status</div>
+  <div>Aktion</div>
+</div>
 
           <div className="overflow-x-auto">
             {projekte.map((projekt) => (
               <div
-                key={projekt.id}
-                className="grid min-w-[1150px] grid-cols-6 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
-              >
+  key={projekt.id}
+  className="grid min-w-[1000px] grid-cols-5 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
+>
                 <div className="font-black text-white">
                   {projekt.kunde || "-"}
                 </div>
@@ -452,11 +451,7 @@ export default function ProjektePage() {
                 <div>{projekt.kommission || "-"}</div>
 
                 <div>{projekt.projektname || "-"}</div>
-
-                <div className="font-bold text-orange-400">
-                  {projekt.name || "-"}
-                </div>
-
+                
                 <div>
                   <span
                     className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(
