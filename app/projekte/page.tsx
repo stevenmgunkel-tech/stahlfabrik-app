@@ -271,7 +271,7 @@ export default function ProjektePage() {
           <Field label="Kunde">
             <input
               type="text"
-              placeholder="z.B. Alpsteinzaun AG"
+              placeholder="z.B. Firma"
               value={kunde}
               onChange={(e) => setKunde(e.target.value)}
               className="dark-input"
@@ -281,7 +281,7 @@ export default function ProjektePage() {
           <Field label="Kommission">
             <input
               type="text"
-              placeholder="z.B. Kessler Küsnacht"
+              placeholder="z.B. Baustelle"
               value={kommission}
               onChange={(e) => setKommission(e.target.value)}
               className="dark-input"
