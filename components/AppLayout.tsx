@@ -11,6 +11,9 @@ const navItems = [
   { href: "/urlaub", label: "Urlaub / Krank" },
   { href: "/resturlaub", label: "Resturlaub" },
   { href: "/projekte", label: "Projekte" },
+
+  { href: "/projektstatistik", label: "Projektstatistik" },
+
   { href: "/mitarbeiter", label: "Mitarbeiter" },
   { href: "/chef-dashboard", label: "Chef Dashboard" },
 ];
