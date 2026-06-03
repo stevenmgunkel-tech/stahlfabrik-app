@@ -44,7 +44,6 @@ export default function ArbeitszeitenPage() {
     const { data: projektData, error: projektError } = await supabase
       .from("projekte")
       .select("*")
-      .order("kunde", { ascending: true })
       .order("name", { ascending: true });
 
     if (projektError) {
@@ -67,16 +66,6 @@ export default function ArbeitszeitenPage() {
   function kundeFuerProjekt(projektName: string) {
     const gefunden = projekte.find((p) => p.name === projektName);
     return gefunden?.kunde || "Kein Kunde hinterlegt";
-  }
-
-  function projektAnzeige(projektItem: any) {
-    const kunde = projektItem.kunde?.trim();
-
-    if (!kunde || kunde === "EMPTY") {
-      return `Ohne Kunde - ${projektItem.name}`;
-    }
-
-    return `${kunde} - ${projektItem.name}`;
   }
 
   async function zeitSpeichern() {
@@ -301,7 +290,7 @@ export default function ArbeitszeitenPage() {
               {bearbeitenId ? "Arbeitszeit bearbeiten" : "Arbeitszeit erfassen"}
             </h2>
             <p className="mt-1 text-white/55">
-              Datum, Kunde, Projekt, Stunden und Pause eintragen
+              Datum, Projekt, Stunden und Pause eintragen
             </p>
           </div>
 
@@ -323,7 +312,7 @@ export default function ArbeitszeitenPage() {
             />
           </Field>
 
-          <Field label="Kunde / Projekt">
+          <Field label="Projekt">
             <select
               value={projekt}
               onChange={(e) => setProjekt(e.target.value)}
@@ -332,7 +321,7 @@ export default function ArbeitszeitenPage() {
               <option value="">Projekt auswählen</option>
               {projekte.map((projektItem) => (
                 <option key={projektItem.id} value={projektItem.name}>
-                  {projektAnzeige(projektItem)}
+                  {projektItem.name}
                 </option>
               ))}
             </select>
