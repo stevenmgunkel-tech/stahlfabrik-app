@@ -9,6 +9,7 @@ export default function UrlaubPage() {
   const [typ, setTyp] = useState("Urlaub");
   const [von, setVon] = useState("");
   const [bis, setBis] = useState("");
+  const [stunden, setStunden] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [meldung, setMeldung] = useState("");
@@ -42,6 +43,7 @@ export default function UrlaubPage() {
   }, []);
 
   function berechneTage() {
+    if (typ === "Überstundenabbau") return 0;
     if (!von || !bis) return 0;
 
     const start = new Date(von);
@@ -68,17 +70,33 @@ export default function UrlaubPage() {
   async function abwesenheitHinzufuegen() {
     setMeldung("");
 
-    if (!von || !bis) {
-      setMeldung("Bitte Start- und Enddatum auswählen.");
-      return;
+    if (typ === "Überstundenabbau") {
+      if (!von || !stunden) {
+        setMeldung("Bitte Datum und Stunden eingeben.");
+        return;
+      }
+
+      const stundenWert = Number(stunden);
+
+      if (!Number.isFinite(stundenWert) || stundenWert <= 0) {
+        setMeldung("Bitte gültige Stunden eingeben.");
+        return;
+      }
+    } else {
+      if (!von || !bis) {
+        setMeldung("Bitte Start- und Enddatum auswählen.");
+        return;
+      }
+
+      const tage = berechneTage();
+
+      if (tage <= 0) {
+        setMeldung("Bitte gültigen Zeitraum auswählen.");
+        return;
+      }
     }
 
     const tage = berechneTage();
-
-    if (tage <= 0) {
-      setMeldung("Bitte gültigen Zeitraum auswählen.");
-      return;
-    }
 
     const userData = await supabase.auth.getUser();
     const user = userData.data.user;
@@ -108,8 +126,9 @@ export default function UrlaubPage() {
         mitarbeiter: mitarbeiterName,
         typ,
         von,
-        bis,
-        tage,
+        bis: typ === "Überstundenabbau" ? von : bis,
+        tage: typ === "Überstundenabbau" ? 0 : tage,
+        stunden: typ === "Überstundenabbau" ? Number(stunden) : 0,
         status: "Beantragt",
         user_id: user.id,
       },
@@ -125,6 +144,7 @@ export default function UrlaubPage() {
     setTyp("Urlaub");
     setVon("");
     setBis("");
+    setStunden("");
 
     await ladeUrlaub();
 
@@ -189,7 +209,24 @@ export default function UrlaubPage() {
     return "border-yellow-400/30 bg-yellow-500/10 text-yellow-300";
   }
 
+  function eintragZeitraum(eintrag: any) {
+    if (eintrag.typ === "Überstundenabbau") {
+      return eintrag.von;
+    }
+
+    return `${eintrag.von} bis ${eintrag.bis}`;
+  }
+
+  function eintragMenge(eintrag: any) {
+    if (eintrag.typ === "Überstundenabbau") {
+      return `${Number(eintrag.stunden || 0).toFixed(2)} Stunden`;
+    }
+
+    return `${eintrag.tage || 0} Arbeitstage`;
+  }
+
   const berechneteTage = berechneTage();
+  const berechneteStunden = Number(stunden || 0);
 
   return (
     <main className="space-y-8">
@@ -214,14 +251,18 @@ export default function UrlaubPage() {
               Abwesenheit erfassen
             </h2>
             <p className="mt-1 text-white/55">
-              Zeitraum auswählen und Antrag speichern
+              {typ === "Überstundenabbau"
+                ? "Datum und Stunden für Überstundenabbau eintragen"
+                : "Zeitraum auswählen und Antrag speichern"}
             </p>
           </div>
 
           <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-3">
             <span className="text-sm text-white/60">Berechnet</span>{" "}
             <span className="font-black text-orange-500">
-              {berechneteTage} Tage
+              {typ === "Überstundenabbau"
+                ? `${berechneteStunden || 0} Stunden`
+                : `${berechneteTage} Tage`}
             </span>
           </div>
         </div>
@@ -230,7 +271,12 @@ export default function UrlaubPage() {
           <Field label="Typ">
             <select
               value={typ}
-              onChange={(e) => setTyp(e.target.value)}
+              onChange={(e) => {
+                setTyp(e.target.value);
+                setVon("");
+                setBis("");
+                setStunden("");
+              }}
               className="dark-input"
             >
               <option value="Urlaub">Urlaub</option>
@@ -239,23 +285,50 @@ export default function UrlaubPage() {
             </select>
           </Field>
 
-          <Field label="Von">
-            <input
-              type="date"
-              value={von}
-              onChange={(e) => setVon(e.target.value)}
-              className="dark-input"
-            />
-          </Field>
+          {typ === "Überstundenabbau" ? (
+            <>
+              <Field label="Datum">
+                <input
+                  type="date"
+                  value={von}
+                  onChange={(e) => setVon(e.target.value)}
+                  className="dark-input"
+                />
+              </Field>
 
-          <Field label="Bis">
-            <input
-              type="date"
-              value={bis}
-              onChange={(e) => setBis(e.target.value)}
-              className="dark-input"
-            />
-          </Field>
+              <Field label="Stunden">
+                <input
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  placeholder="z.B. 2.5"
+                  value={stunden}
+                  onChange={(e) => setStunden(e.target.value)}
+                  className="dark-input"
+                />
+              </Field>
+            </>
+          ) : (
+            <>
+              <Field label="Von">
+                <input
+                  type="date"
+                  value={von}
+                  onChange={(e) => setVon(e.target.value)}
+                  className="dark-input"
+                />
+              </Field>
+
+              <Field label="Bis">
+                <input
+                  type="date"
+                  value={bis}
+                  onChange={(e) => setBis(e.target.value)}
+                  className="dark-input"
+                />
+              </Field>
+            </>
+          )}
 
           <div className="flex flex-col justify-end">
             <button
@@ -271,8 +344,8 @@ export default function UrlaubPage() {
 
         {typ === "Überstundenabbau" && (
           <div className="mt-5 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-sm font-medium text-orange-300">
-            Diese Tage werden später vom Überstundenkonto abgezogen und nicht
-            vom Urlaub.
+            Überstundenabbau wird in Stunden erfasst und später direkt vom
+            Überstundenkonto abgezogen. Urlaubstage bleiben unberührt.
           </div>
         )}
 
@@ -294,9 +367,7 @@ export default function UrlaubPage() {
             </p>
           </div>
 
-          <div className="text-sm text-white/50">
-            {urlaub.length} Einträge
-          </div>
+          <div className="text-sm text-white/50">{urlaub.length} Einträge</div>
         </div>
 
         {urlaub.length === 0 && (
@@ -322,11 +393,11 @@ export default function UrlaubPage() {
                   </span>
 
                   <p className="mt-4 text-lg font-black text-white">
-                    {eintrag.von} bis {eintrag.bis}
+                    {eintragZeitraum(eintrag)}
                   </p>
 
                   <p className="mt-1 text-sm text-white/60">
-                    {eintrag.tage || 0} Arbeitstage
+                    {eintragMenge(eintrag)}
                   </p>
                 </div>
 
@@ -354,8 +425,8 @@ export default function UrlaubPage() {
           <div className="grid min-w-[850px] grid-cols-6 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
             <div>Typ</div>
             <div>Von</div>
-            <div>Bis</div>
-            <div>Tage</div>
+            <div>Bis / Datum</div>
+            <div>Tage / Stunden</div>
             <div>Status</div>
             <div>Aktion</div>
           </div>
@@ -377,10 +448,17 @@ export default function UrlaubPage() {
                 </div>
 
                 <div>{eintrag.von}</div>
-                <div>{eintrag.bis}</div>
+
+                <div>
+                  {eintrag.typ === "Überstundenabbau"
+                    ? eintrag.von
+                    : eintrag.bis}
+                </div>
 
                 <div className="font-black text-orange-500">
-                  {eintrag.tage || 0}
+                  {eintrag.typ === "Überstundenabbau"
+                    ? `${Number(eintrag.stunden || 0).toFixed(2)}h`
+                    : eintrag.tage || 0}
                 </div>
 
                 <div>
