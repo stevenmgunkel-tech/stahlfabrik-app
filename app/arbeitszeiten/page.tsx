@@ -69,7 +69,7 @@ export default function ArbeitszeitenPage() {
 
     if (projektData) {
       const aktiveProjekte = projektData.filter(
-  (p) => p.status !== "Abgerechnet"
+  (p) => p.status !== "Abgeschlossen"
 );
       setProjekte(aktiveProjekte);
     }

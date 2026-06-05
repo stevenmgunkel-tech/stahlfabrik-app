@@ -61,7 +61,7 @@ export default function ProjektePage() {
 
     setProjekte(
   (data || []).filter(
-    (projekt) => projekt.status !== "Abgerechnet"
+    (projekt) => projekt.status !== "Abgeschlossen"
   )
 );
   }
