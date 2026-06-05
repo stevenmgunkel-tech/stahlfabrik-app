@@ -179,10 +179,42 @@ export default function MonatsansichtPage() {
   }
 
   const arbeitstage = berechneArbeitstage();
-  const feiertage = feiertageImMonat();
+const feiertage = feiertageImMonat();
 
-  const tagesSoll = wochenstunden / 5;
-  const sollstunden = tagesSoll * arbeitstage;
+const tagesSoll = wochenstunden / 5;
+
+const aktuellerMonat =
+  monat === new Date().toISOString().slice(0, 7);
+
+let arbeitstageBisHeute = arbeitstage;
+
+if (aktuellerMonat) {
+  arbeitstageBisHeute = 0;
+
+  const heute = new Date();
+
+  for (let tag = 1; tag <= heute.getDate(); tag++) {
+    const datum = new Date(
+      heute.getFullYear(),
+      heute.getMonth(),
+      tag
+    );
+
+    const wochentag = datum.getDay();
+    const istWochenende =
+      wochentag === 0 || wochentag === 6;
+
+    const istFeiertag = istFeiertagSG(datum);
+
+    if (!istWochenende && !istFeiertag) {
+      arbeitstageBisHeute++;
+    }
+  }
+}
+
+const sollstunden =
+  tagesSoll *
+  (aktuellerMonat ? arbeitstageBisHeute : arbeitstage);
 
   const urlaubstage = abwesenheiten
     .filter(
