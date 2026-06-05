@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import jsPDF from "jspdf";
 import { supabase } from "../../lib/supabase";
 import { istFeiertagSG, getFeiertageSG } from "../../lib/feiertage";
 
@@ -213,8 +214,62 @@ export default function MonatsansichtPage() {
   const gesamtUeberstunden =
     ueberstundenStart + differenz - ueberstundenAbbauStunden;
 
+  function exportPdf() {
+    const pdf = new jsPDF();
+
+    pdf.setFontSize(22);
+    pdf.text("StahlFabrik Monatsrapport", 20, 20);
+
+    pdf.setFontSize(12);
+    pdf.text(`Monat: ${monat}`, 20, 38);
+    pdf.text(`Wochenstunden: ${wochenstunden.toFixed(2)}h`, 20, 48);
+    pdf.text(`Arbeitstage: ${arbeitstage}`, 20, 58);
+    pdf.text(`Feiertage SG: ${feiertage.length}`, 20, 68);
+
+    pdf.setFontSize(16);
+    pdf.text("Arbeitszeit", 20, 88);
+
+    pdf.setFontSize(12);
+    pdf.text(`Sollstunden: ${sollstunden.toFixed(2)}h`, 20, 102);
+    pdf.text(`Brutto Arbeitsstunden: ${bruttoArbeitsstunden.toFixed(2)}h`, 20, 112);
+    pdf.text(`Tagespausen: -${tagespausenStunden.toFixed(2)}h`, 20, 122);
+    pdf.text(`Iststunden netto: ${gesamtstunden.toFixed(2)}h`, 20, 132);
+    pdf.text(`Abwesenheitsstunden: ${abwesenheitsstunden.toFixed(2)}h`, 20, 142);
+    pdf.text(`Monatsdifferenz: ${differenz >= 0 ? "+" : ""}${differenz.toFixed(2)}h`, 20, 152);
+
+    pdf.setFontSize(16);
+    pdf.text("Abwesenheiten", 20, 172);
+
+    pdf.setFontSize(12);
+    pdf.text(`Urlaubstage: ${urlaubstage}`, 20, 186);
+    pdf.text(`Kranktage: ${kranktage}`, 20, 196);
+    pdf.text(`Überstundenabbau: -${ueberstundenAbbauStunden.toFixed(2)}h`, 20, 206);
+
+    pdf.setFontSize(16);
+    pdf.text("Überstunden", 20, 226);
+
+    pdf.setFontSize(12);
+    pdf.text(`Startwert: ${ueberstundenStart.toFixed(2)}h`, 20, 240);
+    pdf.text(`Gesamtüberstunden: ${gesamtUeberstunden.toFixed(2)}h`, 20, 250);
+
+    pdf.setFontSize(10);
+    pdf.text("Erstellt mit StahlFabrik ERP", 20, 285);
+
+    pdf.save(`Monatsrapport-${monat}.pdf`);
+  }
+
   return (
     <main>
+      <div className="mb-6">
+        <button
+          type="button"
+          onClick={exportPdf}
+          className="rounded-xl bg-orange-600 px-5 py-3 font-bold text-white hover:bg-orange-500"
+        >
+          📄 PDF Rapport
+        </button>
+      </div>
+
       <h1 className="mb-3 text-5xl font-extrabold text-zinc-900">
         Monatsansicht
       </h1>
