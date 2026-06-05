@@ -27,7 +27,7 @@ export default function ProjektePage() {
       return false;
     }
 
-    const { data, error } = await supabase
+   const { data, error } = await supabase
       .from("mitarbeiter")
       .select("rolle")
       .eq("user_id", user.id)
@@ -59,7 +59,11 @@ export default function ProjektePage() {
       return;
     }
 
-    setProjekte(data || []);
+    setProjekte(
+  (data || []).filter(
+    (projekt) => projekt.status !== "Abgerechnet"
+  )
+);
   }
 
   useEffect(() => {
