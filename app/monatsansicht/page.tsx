@@ -6,12 +6,12 @@ import { istFeiertagSG, getFeiertageSG } from "../../lib/feiertage";
 
 export default function MonatsansichtPage() {
   const [zeiten, setZeiten] = useState<any[]>([]);
+  const [tagespausen, setTagespausen] = useState<any[]>([]);
   const [abwesenheiten, setAbwesenheiten] = useState<any[]>([]);
   const [monat, setMonat] = useState(new Date().toISOString().slice(0, 7));
 
   const [wochenstunden, setWochenstunden] = useState(40);
   const [ueberstundenStart, setUeberstundenStart] = useState(0);
-
   const [eintrittsdatum, setEintrittsdatum] = useState("");
 
   const [loading, setLoading] = useState(true);
@@ -65,6 +65,13 @@ export default function MonatsansichtPage() {
         .lte("datum", ende)
         .order("datum", { ascending: true });
 
+      const { data: pausenData, error: pausenError } = await supabase
+        .from("tagespausen")
+        .select("*")
+        .eq("user_id", user.id)
+        .gte("datum", start)
+        .lte("datum", ende);
+
       const { data: abwesenheitenData, error: abwesenheitenError } =
         await supabase
           .from("urlaub")
@@ -79,12 +86,18 @@ export default function MonatsansichtPage() {
         console.log(zeitenError);
       }
 
+      if (pausenError) {
+        setMeldung(pausenError.message);
+        console.log(pausenError);
+      }
+
       if (abwesenheitenError) {
         setMeldung(abwesenheitenError.message);
         console.log(abwesenheitenError);
       }
 
       setZeiten(zeitenData || []);
+      setTagespausen(pausenData || []);
       setAbwesenheiten(abwesenheitenData || []);
       setLoading(false);
     }
@@ -92,10 +105,17 @@ export default function MonatsansichtPage() {
     ladeZeiten();
   }, [monat]);
 
-  const gesamtstunden = zeiten.reduce(
+  const bruttoArbeitsstunden = zeiten.reduce(
     (sum, eintrag) => sum + Number(eintrag.stunden || 0),
     0
   );
+
+  const tagespausenStunden = tagespausen.reduce(
+    (sum, pause) => sum + Number(pause.pause || 0) / 60,
+    0
+  );
+
+  const gesamtstunden = bruttoArbeitsstunden - tagespausenStunden;
 
   function monatVorEintritt() {
     if (!eintrittsdatum) return false;
@@ -105,51 +125,31 @@ export default function MonatsansichtPage() {
 
     return (
       ausgewaehlterMonat.getFullYear() < eintritt.getFullYear() ||
-      (ausgewaehlterMonat.getFullYear() ===
-        eintritt.getFullYear() &&
-        ausgewaehlterMonat.getMonth() <
-          eintritt.getMonth())
+      (ausgewaehlterMonat.getFullYear() === eintritt.getFullYear() &&
+        ausgewaehlterMonat.getMonth() < eintritt.getMonth())
     );
   }
 
   function berechneArbeitstage() {
-    if (monatVorEintritt()) {
-      return 0;
-    }
+    if (monatVorEintritt()) return 0;
 
     const jahr = Number(monat.slice(0, 4));
     const monatNummer = Number(monat.slice(5, 7));
-
-    const tageImMonat = new Date(
-      jahr,
-      monatNummer,
-      0
-    ).getDate();
+    const tageImMonat = new Date(jahr, monatNummer, 0).getDate();
 
     let arbeitstage = 0;
 
     for (let tag = 1; tag <= tageImMonat; tag++) {
-      const datum = new Date(
-        jahr,
-        monatNummer - 1,
-        tag
-      );
+      const datum = new Date(jahr, monatNummer - 1, tag);
 
       if (eintrittsdatum) {
         const eintritt = new Date(eintrittsdatum);
-
-        if (datum < eintritt) {
-          continue;
-        }
+        if (datum < eintritt) continue;
       }
 
       const wochentag = datum.getDay();
-
-      const istWochenende =
-        wochentag === 0 || wochentag === 6;
-
-      const istFeiertag =
-        istFeiertagSG(datum);
+      const istWochenende = wochentag === 0 || wochentag === 6;
+      const istFeiertag = istFeiertagSG(datum);
 
       if (!istWochenende && !istFeiertag) {
         arbeitstage++;
@@ -160,16 +160,13 @@ export default function MonatsansichtPage() {
   }
 
   function feiertageImMonat() {
-    if (monatVorEintritt()) {
-      return [];
-    }
+    if (monatVorEintritt()) return [];
 
     const jahr = Number(monat.slice(0, 4));
     const monatNummer = Number(monat.slice(5, 7));
 
     return getFeiertageSG(jahr).filter((feiertag) => {
       const datum = new Date(feiertag.datum);
-
       const wochentag = datum.getDay();
 
       return (
@@ -184,14 +181,12 @@ export default function MonatsansichtPage() {
   const feiertage = feiertageImMonat();
 
   const tagesSoll = wochenstunden / 5;
-
   const sollstunden = tagesSoll * arbeitstage;
 
   const urlaubstage = abwesenheiten
     .filter(
       (eintrag) =>
-        eintrag.typ === "Urlaub" &&
-        eintrag.status === "Genehmigt"
+        eintrag.typ === "Urlaub" && eintrag.status === "Genehmigt"
     )
     .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
@@ -199,33 +194,24 @@ export default function MonatsansichtPage() {
     .filter((eintrag) => eintrag.typ === "Krank")
     .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
-  const ueberstundenabbauTage = abwesenheiten
+  const ueberstundenAbbauStunden = abwesenheiten
     .filter(
       (eintrag) =>
         eintrag.typ === "Überstundenabbau" &&
         eintrag.status === "Genehmigt"
     )
-    .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+    .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
 
-  const bezahlteAbwesenheitstage =
-    urlaubstage + kranktage + ueberstundenabbauTage;
-
-  const abwesenheitsstunden =
-    bezahlteAbwesenheitstage * tagesSoll;
+  const bezahlteAbwesenheitstage = urlaubstage + kranktage;
+  const abwesenheitsstunden = bezahlteAbwesenheitstage * tagesSoll;
 
   const angerechneteStunden =
-    gesamtstunden + abwesenheitsstunden;
+    gesamtstunden + abwesenheitsstunden + ueberstundenAbbauStunden;
 
-  const differenz =
-    angerechneteStunden - sollstunden;
-
-  const ueberstundenAbbauStunden =
-    ueberstundenabbauTage * tagesSoll;
+  const differenz = angerechneteStunden - sollstunden;
 
   const gesamtUeberstunden =
-    ueberstundenStart +
-    differenz -
-    ueberstundenAbbauStunden;
+    ueberstundenStart + differenz - ueberstundenAbbauStunden;
 
   return (
     <main>
@@ -256,19 +242,20 @@ export default function MonatsansichtPage() {
         </div>
 
         <div className="rounded-2xl bg-zinc-900 p-6 text-white shadow-sm">
-          <p className="mb-2 font-semibold text-zinc-300">
-            Iststunden
-          </p>
+          <p className="mb-2 font-semibold text-zinc-300">Iststunden</p>
 
           <p className="text-5xl font-extrabold text-orange-400">
             {loading ? "..." : `${gesamtstunden.toFixed(2)}h`}
           </p>
+
+          <p className="mt-2 text-sm text-zinc-400">
+            Brutto {bruttoArbeitsstunden.toFixed(2)}h · Pause{" "}
+            {tagespausenStunden.toFixed(2)}h
+          </p>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <p className="mb-2 font-semibold text-zinc-600">
-            Abwesenheit
-          </p>
+          <p className="mb-2 font-semibold text-zinc-600">Abwesenheit</p>
 
           <p className="text-5xl font-extrabold text-zinc-900">
             {loading ? "..." : `${abwesenheitsstunden.toFixed(2)}h`}
@@ -276,9 +263,7 @@ export default function MonatsansichtPage() {
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <p className="mb-2 font-semibold text-zinc-600">
-            Sollstunden
-          </p>
+          <p className="mb-2 font-semibold text-zinc-600">Sollstunden</p>
 
           <p className="text-5xl font-extrabold text-zinc-900">
             {loading ? "..." : `${sollstunden.toFixed(2)}h`}
@@ -297,9 +282,7 @@ export default function MonatsansichtPage() {
           <p className="text-5xl font-extrabold">
             {loading
               ? "..."
-              : `${differenz >= 0 ? "+" : ""}${differenz.toFixed(
-                  2
-                )}h`}
+              : `${differenz >= 0 ? "+" : ""}${differenz.toFixed(2)}h`}
           </p>
         </div>
       </div>
@@ -311,16 +294,12 @@ export default function MonatsansichtPage() {
           </p>
 
           <p className="text-5xl font-extrabold text-orange-400">
-            {loading
-              ? "..."
-              : `${gesamtUeberstunden.toFixed(2)}h`}
+            {loading ? "..." : `${gesamtUeberstunden.toFixed(2)}h`}
           </p>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="mb-2 font-semibold text-zinc-600">
-            Wochenstunden
-          </p>
+          <p className="mb-2 font-semibold text-zinc-600">Wochenstunden</p>
 
           <p className="text-4xl font-extrabold text-zinc-900">
             {loading ? "..." : `${wochenstunden}h`}
@@ -328,9 +307,7 @@ export default function MonatsansichtPage() {
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="mb-2 font-semibold text-zinc-600">
-            Arbeitstage
-          </p>
+          <p className="mb-2 font-semibold text-zinc-600">Arbeitstage</p>
 
           <p className="text-4xl font-extrabold text-zinc-900">
             {loading ? "..." : arbeitstage}
@@ -338,9 +315,7 @@ export default function MonatsansichtPage() {
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="mb-2 font-semibold text-zinc-600">
-            Feiertage SG
-          </p>
+          <p className="mb-2 font-semibold text-zinc-600">Feiertage SG</p>
 
           <p className="text-4xl font-extrabold text-zinc-900">
             {loading ? "..." : feiertage.length}
@@ -348,9 +323,7 @@ export default function MonatsansichtPage() {
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="mb-2 font-semibold text-zinc-600">
-            Urlaub
-          </p>
+          <p className="mb-2 font-semibold text-zinc-600">Urlaub</p>
 
           <p className="text-4xl font-extrabold text-zinc-900">
             {urlaubstage}
