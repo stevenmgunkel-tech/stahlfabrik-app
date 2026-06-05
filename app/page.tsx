@@ -33,6 +33,8 @@ export default function DashboardPage() {
     monatTage: 0,
 
     gesamtUeberstunden: 0,
+    ueberstundenStart: 0,
+    ueberstundenAbbau: 0,
   });
 
   useEffect(() => {
@@ -249,11 +251,13 @@ const monatDifferenz =
       wocheTage,
 
       monatSoll,
-      monatIst: angerechneteStundenMonat,
-      monatDifferenz,
-      monatTage,
+monatIst: angerechneteStundenMonat,
+monatDifferenz,
+monatTage,
 
-      gesamtUeberstunden,
+gesamtUeberstunden,
+ueberstundenStart,
+ueberstundenAbbau: ueberstundenAbbauStundenMonat,
     });
   }
 
@@ -315,7 +319,12 @@ const monatDifferenz =
           differenz={stats.monatDifferenz}
         />
 
-        <OvertimeCard value={stats.gesamtUeberstunden} />
+        <OvertimeCard
+  value={stats.gesamtUeberstunden}
+  startwert={stats.ueberstundenStart}
+  monat={stats.monatDifferenz}
+  abbau={stats.ueberstundenAbbau}
+/>
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.95fr]">
@@ -422,7 +431,17 @@ function WorkTimeCard({
   );
 }
 
-function OvertimeCard({ value }: { value: number }) {
+function OvertimeCard({
+  value,
+  startwert,
+  monat,
+  abbau,
+}: {
+  value: number;
+  startwert: number;
+  monat: number;
+  abbau: number;
+}) {
   return (
     <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.025] p-6 shadow-2xl shadow-black/30">
       <div className="mb-6">
@@ -430,10 +449,12 @@ function OvertimeCard({ value }: { value: number }) {
           Gesamt
         </div>
 
-        <h2 className="mt-2 text-2xl font-black text-white">Überstunden</h2>
+        <h2 className="mt-2 text-2xl font-black text-white">
+          Überstunden
+        </h2>
 
         <p className="mt-1 text-sm text-white/55">
-          Startwert + aktueller Monatsstand
+          Startwert + Monatsstand - Abbau
         </p>
       </div>
 
@@ -449,6 +470,29 @@ function OvertimeCard({ value }: { value: number }) {
         >
           {value >= 0 ? "+" : ""}
           {value.toFixed(2)}h
+        </div>
+
+        <div className="mt-5 border-t border-white/10 pt-4 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-white/60">Startwert</span>
+            <span className="font-bold text-white">
+              +{startwert.toFixed(2)}h
+            </span>
+          </div>
+
+          <div className="flex justify-between text-sm">
+            <span className="text-white/60">Monat</span>
+            <span className="font-bold text-green-400">
+              +{monat.toFixed(2)}h
+            </span>
+          </div>
+
+          <div className="flex justify-between text-sm">
+            <span className="text-white/60">Abbau</span>
+            <span className="font-bold text-orange-400">
+              -{abbau.toFixed(2)}h
+            </span>
+          </div>
         </div>
       </div>
     </section>
