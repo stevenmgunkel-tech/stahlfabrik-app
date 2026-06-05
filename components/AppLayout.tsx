@@ -13,6 +13,7 @@ const navItems = [
   { href: "/projekte", label: "Projekte" },
 
   { href: "/projektstatistik", label: "Projektstatistik" },
+  { href: "/projektarchiv", label: "Projektarchiv" },
 
   { href: "/mitarbeiter", label: "Mitarbeiter" },
   { href: "/chef-dashboard", label: "Chef Dashboard" },
