@@ -206,23 +206,27 @@ export default function DashboardPage() {
       )
       .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
-    const ueberstundenAbbauStundenMonat = eigeneAbwesenheiten
-      .filter(
-        (eintrag) =>
-          eintrag.typ === "Überstundenabbau" &&
-          eintrag.status === "Genehmigt" &&
-          eintrag.von >= monatsStart &&
-          eintrag.bis <= heute
-      )
-      .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
+const ueberstundenAbbauStundenMonat = eigeneAbwesenheiten
+  .filter(
+    (eintrag) =>
+      eintrag.typ === "Überstundenabbau" &&
+      eintrag.status === "Genehmigt" &&
+      eintrag.von >= monatsStart &&
+      eintrag.bis <= heute
+  )
+  .reduce(
+    (sum, eintrag) => sum + Number(eintrag.stunden || 0),
+    0
+  );
 
-    const abwesenheitsstundenMonat =
-      (urlaubstageMonat + kranktageMonat) * tagesSoll;
+const abwesenheitsstundenMonat =
+  (urlaubstageMonat + kranktageMonat) * tagesSoll;
 
-    const angerechneteStundenMonat =
-      monatIst + abwesenheitsstundenMonat + ueberstundenAbbauStundenMonat;
+const angerechneteStundenMonat =
+  monatIst + abwesenheitsstundenMonat;
 
-    const monatDifferenz = angerechneteStundenMonat - monatSoll;
+const monatDifferenz =
+  angerechneteStundenMonat - monatSoll;
 
     const gesamtUeberstunden =
       ueberstundenStart + monatDifferenz - ueberstundenAbbauStundenMonat;
@@ -429,7 +433,7 @@ function OvertimeCard({ value }: { value: number }) {
         <h2 className="mt-2 text-2xl font-black text-white">Überstunden</h2>
 
         <p className="mt-1 text-sm text-white/55">
-          Startwert + Monatsstand - Abbau
+          Startwert + aktueller Monatsstand
         </p>
       </div>
 
