@@ -260,15 +260,14 @@ export default function MonatsansichtPage() {
 
   return (
     <main>
-      <div className="mb-6">
-        <button
-          type="button"
-          onClick={exportPdf}
-          className="rounded-xl bg-orange-600 px-5 py-3 font-bold text-white hover:bg-orange-500"
-        >
-          📄 PDF Rapport
-        </button>
-      </div>
+      <div className="mb-6 flex justify-end">
+  <button
+    onClick={exportPdf}
+    className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-bold text-white hover:bg-orange-500"
+  >
+    📄 PDF
+  </button>
+</div>
 
       <h1 className="mb-3 text-5xl font-extrabold text-zinc-900">
         Monatsansicht
