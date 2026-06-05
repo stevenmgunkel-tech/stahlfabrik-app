@@ -14,6 +14,12 @@ export default function ChefDashboardPage() {
 
   const monat = new Date().toISOString().slice(0, 7);
 
+  const heute = new Date();
+
+  const aktuellerMonat =
+    heute.getFullYear() === Number(monat.slice(0, 4)) &&
+    heute.getMonth() + 1 === Number(monat.slice(5, 7));
+
   useEffect(() => {
     async function ladeDaten() {
       setMeldung("");
@@ -44,13 +50,18 @@ export default function ChefDashboardPage() {
       }
 
       const start = `${monat}-01`;
-      const ende = new Date(
-        Number(monat.slice(0, 4)),
-        Number(monat.slice(5, 7)),
-        0
-      )
-        .toISOString()
-        .split("T")[0];
+
+      const heuteString = new Date().toISOString().split("T")[0];
+
+      const ende = aktuellerMonat
+        ? heuteString
+        : new Date(
+            Number(monat.slice(0, 4)),
+            Number(monat.slice(5, 7)),
+            0
+          )
+            .toISOString()
+            .split("T")[0];
 
       const { data: mitarbeiterData, error: mitarbeiterError } =
         await supabase
@@ -94,12 +105,15 @@ export default function ChefDashboardPage() {
     }
 
     ladeDaten();
-  }, [monat]);
+  }, [monat, aktuellerMonat]);
 
   function berechneArbeitstageAbDatum(startDatum?: string) {
     const jahr = Number(monat.slice(0, 4));
     const monatNummer = Number(monat.slice(5, 7));
-    const tageImMonat = new Date(jahr, monatNummer, 0).getDate();
+
+    const tageImMonat = aktuellerMonat
+      ? heute.getDate()
+      : new Date(jahr, monatNummer, 0).getDate();
 
     let arbeitstage = 0;
     const start = startDatum ? new Date(startDatum) : null;
@@ -187,6 +201,7 @@ export default function ChefDashboardPage() {
       .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
     const tagesSoll = Number(person.wochenstunden || 0) / 5;
+
     const personArbeitstage = berechneArbeitstageAbDatum(
       person.eintrittsdatum || undefined
     );
@@ -303,7 +318,7 @@ export default function ChefDashboardPage() {
           value={loading ? "..." : `${teamSollstunden.toFixed(2)}h`}
         />
 
-        <KpiCard label="Arbeitstage" value={loading ? "..." : arbeitstage} />
+        <KpiCard label="Arbeitstage bis heute" value={loading ? "..." : arbeitstage} />
 
         <KpiCard
           label="Mitarbeiter"
