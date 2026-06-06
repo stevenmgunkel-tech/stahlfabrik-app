@@ -159,8 +159,20 @@ export default function DashboardPage() {
     );
 
     const heuteIst = heuteBrutto - pauseFuerDatum(heute);
-    const heuteSoll = tagesSoll;
-    const heuteDifferenz = heuteIst - heuteSoll;
+
+const heuteWochentag = heuteDate.getDay();
+
+const istWochenende =
+  heuteWochentag === 0 || heuteWochentag === 6;
+
+const heuteIstFeiertag = istFeiertagSG(heuteDate);
+
+const heuteSoll =
+  istWochenende || heuteIstFeiertag
+    ? 0
+    : tagesSoll;
+
+const heuteDifferenz = heuteIst - heuteSoll;
 
     const eigeneZeitenWoche = eigeneArbeitszeiten.filter(
       (item) => item.datum >= montag && item.datum <= heute
