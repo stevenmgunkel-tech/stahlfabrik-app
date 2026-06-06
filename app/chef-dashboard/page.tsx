@@ -202,9 +202,7 @@ export default function ChefDashboardPage() {
 
     const tagesSoll = Number(person.wochenstunden || 0) / 5;
 
-    const personArbeitstage = berechneArbeitstageAbDatum(
-      person.eintrittsdatum || undefined
-    );
+    const personArbeitstage = berechneArbeitstageAbDatum();
 
     const sollstunden = tagesSoll * personArbeitstage;
     const urlaubStunden = urlaubstagePerson * tagesSoll;
