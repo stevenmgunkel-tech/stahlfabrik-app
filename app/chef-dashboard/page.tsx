@@ -221,7 +221,7 @@ export default function ChefDashboardPage() {
 const gesamtUeberstunden =
   startwert + differenz;
 
-    return {
+   return {
   ...person,
   iststunden,
   sollstunden,
@@ -229,7 +229,12 @@ const gesamtUeberstunden =
   differenz,
   gesamtUeberstunden,
   urlaubstagePerson,
-    };
+  kranktagePerson,
+  ueberstundenabbauPerson,
+  ueberstundenAbbauStunden,
+  personArbeitstage,
+};
+
   });
 
   const teamSollstunden = mitarbeiterStats.reduce(
@@ -408,8 +413,8 @@ const gesamtUeberstunden =
                       : "border-red-400/30 bg-red-500/10 text-red-300"
                   }`}
                 >
-                  {person.differenz >= 0 ? "+" : ""}
-                  {person.differenz.toFixed(2)}h
+                  {Number(person.differenz || 0) >= 0 ? "+" : ""}
+{Number(person.differenz || 0).toFixed(2)}h
                 </span>
               </div>
 
@@ -417,18 +422,18 @@ const gesamtUeberstunden =
                 <Info label="Arbeitstage" value={person.personArbeitstage} />
                 <Info
                   label="Soll"
-                  value={`${person.sollstunden.toFixed(2)}h`}
+                  value={`${Number(person.sollstunden || 0).toFixed(2)}h`}
                 />
-                <Info label="Ist" value={`${person.iststunden.toFixed(2)}h`} />
+                <Info label="Ist" value={`${Number(person.iststunden || 0).toFixed(2)}h`} />
                 <Info
                   label="Angerechnet"
-                  value={`${person.angerechneteStunden.toFixed(2)}h`}
+                  value={`${Number(person.angerechneteStunden || 0).toFixed(2)}h`}
                 />
                 <Info label="Urlaub" value={person.urlaubstagePerson} />
                 <Info label="Krank" value={person.kranktagePerson} />
                 <Info
                   label="ÜA Stunden"
-                  value={`-${person.ueberstundenAbbauStunden.toFixed(2)}h`}
+                  value={`-${Number(person.ueberstundenAbbauStunden || 0).toFixed(2)}h`}
                   orange
                 />
               </div>
@@ -459,22 +464,22 @@ const gesamtUeberstunden =
                   <div className="font-black text-white">{person.name}</div>
                   <div>{person.rolle}</div>
                   <div>{person.personArbeitstage}</div>
-                  <div>{person.sollstunden.toFixed(2)}h</div>
-                  <div>{person.iststunden.toFixed(2)}h</div>
+                  <div>{Number(person.sollstunden || 0).toFixed(2)}h</div>
+                  <div>{Number(person.iststunden || 0).toFixed(2)}h</div>
 
                   <div className="font-black text-white">
-                    {person.angerechneteStunden.toFixed(2)}h
+                    {Number(person.angerechneteStunden || 0).toFixed(2)}h
                   </div>
 
                   <div
                     className={`font-black ${
-                      person.differenz >= 0
+                      Number(person.differenz || 0) >= 0
                         ? "text-green-400"
                         : "text-red-400"
                     }`}
                   >
-                    {person.differenz >= 0 ? "+" : ""}
-                    {person.differenz.toFixed(2)}h
+                    {Number(person.differenz || 0) >= 0 ? "+" : ""}
+                    {Number(person.differenz || 0).toFixed(2)}
                   </div>
 
                   <div>
@@ -483,7 +488,7 @@ const gesamtUeberstunden =
                   </div>
 
                   <div className="font-black text-orange-500">
-                    -{person.ueberstundenAbbauStunden.toFixed(2)}h
+                   -{Number(person.ueberstundenAbbauStunden || 0).toFixed(2)}h
                   </div>
                 </div>
               ))}
