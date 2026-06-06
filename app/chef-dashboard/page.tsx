@@ -303,7 +303,7 @@ const gesamtUeberstunden =
         />
 
         <KpiCard
-          label="Team Überstunden"
+          label="Team Überstunden Brutto"
           value={
             loading
               ? "..."
