@@ -216,18 +216,19 @@ export default function ChefDashboardPage() {
 
     const differenz =
       angerechneteStunden - sollstunden - ueberstundenAbbauStunden;
+      const startwert = Number(person.ueberstunden_start || 0);
+
+const gesamtUeberstunden =
+  startwert + differenz;
 
     return {
-      ...person,
-      iststunden,
-      sollstunden,
-      angerechneteStunden,
-      differenz,
-      urlaubstagePerson,
-      kranktagePerson,
-      ueberstundenabbauPerson,
-      ueberstundenAbbauStunden,
-      personArbeitstage,
+  ...person,
+  iststunden,
+  sollstunden,
+  angerechneteStunden,
+  differenz,
+  gesamtUeberstunden,
+  urlaubstagePerson,
     };
   });
 
@@ -252,9 +253,9 @@ export default function ChefDashboardPage() {
   );
 
   const teamDifferenz = mitarbeiterStats.reduce(
-    (sum, person) => sum + person.differenz,
-    0
-  );
+  (sum, person) => sum + person.gesamtUeberstunden,
+  0
+);
 
   return (
     <main className="space-y-8">
