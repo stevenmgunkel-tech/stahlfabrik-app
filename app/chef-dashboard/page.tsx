@@ -253,7 +253,7 @@ const gesamtUeberstunden =
   );
 
   const teamDifferenz = mitarbeiterStats.reduce(
-  (sum, person) => sum + person.gesamtUeberstunden,
+  (sum, person) => sum + Number(person.gesamtUeberstunden || 0),
   0
 );
 
