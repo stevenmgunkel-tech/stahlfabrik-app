@@ -304,7 +304,11 @@ ueberstundenAbbau: ueberstundenAbbauStundenMonat,
         <WorkTimeCard
           eyebrow="Diese Woche"
           title="Wochenarbeitszeit"
-          description={`Montag bis heute · ${stats.wocheTage} Arbeitstage`}
+          description={`Montag bis ${
+  [0, 6].includes(new Date().getDay())
+    ? "Freitag"
+    : "heute"
+} · ${stats.wocheTage} Arbeitstage`}
           soll={stats.wocheSoll}
           ist={stats.wocheIst}
           differenz={stats.wocheDifferenz}
