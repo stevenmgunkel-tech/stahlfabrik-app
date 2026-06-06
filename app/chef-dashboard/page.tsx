@@ -9,6 +9,7 @@ export default function ChefDashboardPage() {
   const [arbeitszeiten, setArbeitszeiten] = useState<any[]>([]);
   const [urlaub, setUrlaub] = useState<any[]>([]);
   const [projekte, setProjekte] = useState<any[]>([]);
+  const [tagespausen, setTagespausen] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [meldung, setMeldung] = useState("");
 
@@ -76,6 +77,13 @@ export default function ChefDashboardPage() {
           .gte("datum", start)
           .lte("datum", ende);
 
+          const { data: tagespausenData, error: tagespausenError } =
+  await supabase
+    .from("tagespausen")
+    .select("*")
+    .gte("datum", start)
+    .lte("datum", ende);
+
       const { data: urlaubData, error: urlaubError } = await supabase
         .from("urlaub")
         .select("*")
@@ -87,10 +95,11 @@ export default function ChefDashboardPage() {
         .select("*");
 
       const fehler =
-        mitarbeiterError ||
-        arbeitszeitenError ||
-        urlaubError ||
-        projekteError;
+  mitarbeiterError ||
+  arbeitszeitenError ||
+  tagespausenError ||
+  urlaubError ||
+  projekteError;
 
       if (fehler) {
         setMeldung(fehler.message);
@@ -99,6 +108,7 @@ export default function ChefDashboardPage() {
 
       setMitarbeiter(mitarbeiterData || []);
       setArbeitszeiten(arbeitszeitenData || []);
+      setTagespausen(tagespausenData || []);
       setUrlaub(urlaubData || []);
       setProjekte(projekteData || []);
       setLoading(false);
@@ -176,10 +186,16 @@ export default function ChefDashboardPage() {
       (eintrag) => eintrag.user_id === person.user_id
     );
 
-    const iststunden = personArbeitszeiten.reduce(
-      (sum, eintrag) => sum + Number(eintrag.stunden || 0),
-      0
-    );
+    const bruttoStunden = personArbeitszeiten.reduce(
+  (sum, eintrag) => sum + Number(eintrag.stunden || 0),
+  0
+);
+
+const pauseStunden = tagespausen
+  .filter((pause) => pause.user_id === person.user_id)
+  .reduce((sum, pause) => sum + Number(pause.pause || 0) / 60, 0);
+
+const iststunden = bruttoStunden - pauseStunden;
 
     const urlaubstagePerson = personUrlaub
       .filter(
@@ -303,7 +319,7 @@ const gesamtUeberstunden =
         />
 
         <KpiCard
-          label="Team Überstunden Brutto"
+          label="Team Überstunden"
           value={
             loading
               ? "..."
