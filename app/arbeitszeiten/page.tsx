@@ -16,6 +16,8 @@ export default function ArbeitszeitenPage() {
 
   const [pausenDatum, setPausenDatum] = useState("");
   const [tagespause, setTagespause] = useState("");
+  const [tageszeiten, setTageszeiten] = useState<any[]>([]);
+  const [pauseStop, setPauseStop] = useState("0.5");
 
   const [saving, setSaving] = useState(false);
   const [savingPause, setSavingPause] = useState(false);
@@ -56,6 +58,18 @@ export default function ArbeitszeitenPage() {
     }
 
     if (pausenData) setTagespausen(pausenData);
+
+    const { data: tageszeitenData, error: tageszeitenError } = await supabase
+  .from("tageszeiten")
+  .select("*")
+  .eq("user_id", user.id);
+
+if (tageszeitenError) {
+  setMeldung(tageszeitenError.message);
+  console.log(tageszeitenError);
+}
+
+if (tageszeitenData) setTageszeiten(tageszeitenData);
 
     const { data: projektData, error: projektError } = await supabase
       .from("projekte")
@@ -103,6 +117,147 @@ export default function ArbeitszeitenPage() {
 
     return name;
   }
+
+  function formatDateLocal(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+async function startArbeitstag() {
+  setMeldung("");
+
+  const userData = await supabase.auth.getUser();
+  const user = userData.data.user;
+
+  if (!user) return;
+
+  const heute = formatDateLocal(new Date());
+  const jetzt = new Date().toTimeString().slice(0, 8);
+
+  const vorhandenerTag = tageszeiten.find(
+    (tag) => tag.datum === heute && tag.status === "Offen"
+  );
+
+  if (vorhandenerTag) {
+    setMeldung("Arbeitstag läuft bereits.");
+    return;
+  }
+
+  const { error } = await supabase.from("tageszeiten").insert({
+    user_id: user.id,
+    datum: heute,
+    startzeit: jetzt,
+    status: "Offen",
+  });
+
+  if (error) {
+    setMeldung(error.message);
+    return;
+  }
+
+  setMeldung("Arbeitstag gestartet.");
+  await ladeDaten();
+}
+
+async function stopArbeitstag() {
+  setMeldung("");
+
+  const userData = await supabase.auth.getUser();
+  const user = userData.data.user;
+
+  if (!user) return;
+
+  const heute = formatDateLocal(new Date());
+  const jetzt = new Date();
+  const jetztString = jetzt.toTimeString().slice(0, 8);
+  const pauseStunden = Number(pauseStop || 0);
+
+  const tageszeit = tageszeiten.find(
+    (tag) => tag.datum === heute && tag.status === "Offen"
+  );
+
+  if (!tageszeit) {
+    setMeldung("Kein gestarteter Arbeitstag gefunden.");
+    return;
+  }
+
+  const start = new Date(`${heute}T${tageszeit.startzeit}`);
+  const ende = new Date(`${heute}T${jetztString}`);
+
+  const bruttoStunden =
+    (ende.getTime() - start.getTime()) / 1000 / 60 / 60;
+
+  const nettoStunden = bruttoStunden - pauseStunden;
+
+  const heutigeProjektzeiten = zeiten.filter(
+    (eintrag) =>
+      eintrag.user_id === user.id &&
+      eintrag.datum === heute &&
+      eintrag.projekt !== "Betriebsunterhalt"
+  );
+
+  const projektStunden = heutigeProjektzeiten.reduce(
+    (sum, eintrag) => sum + Number(eintrag.stunden || 0),
+    0
+  );
+
+  const betriebsunterhalt = nettoStunden - projektStunden;
+
+  if (betriebsunterhalt < 0) {
+    setMeldung("Projektzeiten sind höher als Tagesarbeitszeit.");
+    return;
+  }
+
+  const { error: updateError } = await supabase
+    .from("tageszeiten")
+    .update({
+      endzeit: jetztString,
+      pause: pauseStunden,
+      netto_stunden: nettoStunden,
+      status: "Abgeschlossen",
+    })
+    .eq("id", tageszeit.id);
+
+  if (updateError) {
+    setMeldung(updateError.message);
+    return;
+  }
+
+  const vorhandenerBetriebsunterhalt = zeiten.find(
+    (eintrag) =>
+      eintrag.user_id === user.id &&
+      eintrag.datum === heute &&
+      eintrag.projekt === "Betriebsunterhalt"
+  );
+
+  if (betriebsunterhalt > 0) {
+    if (vorhandenerBetriebsunterhalt) {
+      await supabase
+        .from("arbeitszeiten")
+        .update({ stunden: betriebsunterhalt })
+        .eq("id", vorhandenerBetriebsunterhalt.id);
+    } else {
+      await supabase.from("arbeitszeiten").insert({
+        user_id: user.id,
+        datum: heute,
+        projekt: "Betriebsunterhalt",
+        stunden: betriebsunterhalt,
+        kommentar: "Automatisch berechnete Restzeit",
+      });
+    }
+  }
+
+  setMeldung(
+    `Arbeitstag beendet. Netto: ${nettoStunden.toFixed(
+      2
+    )}h · Betriebsunterhalt: ${betriebsunterhalt.toFixed(2)}h`
+  );
+
+  await ladeDaten();
+}
 
   function kundeFuerProjekt(projektName: string) {
     const gefunden = projekte.find(
@@ -407,6 +562,42 @@ export default function ArbeitszeitenPage() {
           Arbeitszeiten einfach nach Projekt und Stunden erfassen
         </p>
       </div>
+
+      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+  <div className="mb-5">
+    <h2 className="text-2xl font-black text-white">Arbeitstag</h2>
+    <p className="mt-1 text-white/55">
+      Start / Stop mit automatischem Betriebsunterhalt
+    </p>
+  </div>
+
+  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <button
+      type="button"
+      onClick={startArbeitstag}
+      className="rounded-xl bg-green-600 px-5 py-4 font-black text-white shadow-lg shadow-green-600/20 transition hover:bg-green-700"
+    >
+      ▶ Arbeitstag starten
+    </button>
+
+    <input
+      type="number"
+      step="0.25"
+      value={pauseStop}
+      onChange={(e) => setPauseStop(e.target.value)}
+      className="dark-input"
+      placeholder="Pause in Stunden"
+    />
+
+    <button
+      type="button"
+      onClick={stopArbeitstag}
+      className="rounded-xl bg-orange-600 px-5 py-4 font-black text-white shadow-lg shadow-orange-600/20 transition hover:bg-orange-700"
+    >
+      ■ Arbeitstag stoppen
+    </button>
+  </div>
+</section>
 
       <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-center">
