@@ -385,12 +385,59 @@ export default function ArbeitszeitenPage() {
       }
     }
 
-    await betriebsunterhaltSpeichern(
-      user.id,
-      manuellDatum,
-      betriebsunterhalt,
-      "Manuell berechnete Restzeit"
-    );
+    async function betriebsunterhaltSpeichern(
+  userId: string,
+  datumWert: string,
+  stundenWert: number,
+  kommentar: string
+) {
+  if (stundenWert <= 0) return;
+
+  const { data: vorhandenerBetriebsunterhalt, error: sucheError } =
+    await supabase
+      .from("arbeitszeiten")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("datum", datumWert)
+      .eq("projekt", "Betriebsunterhalt")
+      .maybeSingle();
+
+  if (sucheError) {
+    setMeldung(sucheError.message);
+    console.log(sucheError);
+    return;
+  }
+
+  if (vorhandenerBetriebsunterhalt) {
+    const { error } = await supabase
+      .from("arbeitszeiten")
+      .update({
+        stunden: Number(stundenWert.toFixed(2)),
+        kommentar,
+      })
+      .eq("id", vorhandenerBetriebsunterhalt.id);
+
+    if (error) {
+      setMeldung(error.message);
+      console.log(error);
+    }
+
+    return;
+  }
+
+  const { error } = await supabase.from("arbeitszeiten").insert({
+    user_id: userId,
+    datum: datumWert,
+    projekt: "Betriebsunterhalt",
+    stunden: Number(stundenWert.toFixed(2)),
+    kommentar,
+  });
+
+  if (error) {
+    setMeldung(error.message);
+    console.log(error);
+  }
+}
 
     setMeldung(
       projektWarnung
