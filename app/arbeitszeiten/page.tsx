@@ -3,6 +3,15 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "../../lib/supabase";
 
+function heuteDatum() {
+  const heute = new Date();
+  const year = heute.getFullYear();
+  const month = String(heute.getMonth() + 1).padStart(2, "0");
+  const day = String(heute.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
 export default function ArbeitszeitenPage() {
   const [zeiten, setZeiten] = useState<any[]>([]);
   const [projekte, setProjekte] = useState<any[]>([]);
@@ -11,7 +20,7 @@ export default function ArbeitszeitenPage() {
   const [offeneDetails, setOffeneDetails] = useState<string[]>([]);
 
   const [datum, setDatum] = useState(
-  new Date().toISOString().split("T")[0]
+  heuteDatum()
 );
   const [projekt, setProjekt] = useState("");
   const [stunden, setStunden] = useState("");
@@ -19,8 +28,10 @@ export default function ArbeitszeitenPage() {
   const [pauseStop, setPauseStop] = useState("0");
   const [timerJetzt, setTimerJetzt] = useState(new Date());
 
-  const [manuellDatum, setManuellDatum] = useState("");
-  const [manuellStart, setManuellStart] = useState("");
+  const [manuellDatum, setManuellDatum] = useState(
+    heuteDatum()
+  );
+  const [manuellStart, setManuellStart] = useState("07:00");
   const [manuellEnde, setManuellEnde] = useState("");
   const [manuellPause, setManuellPause] = useState("0");
 
@@ -204,6 +215,35 @@ export default function ArbeitszeitenPage() {
       setMeldung(error.message);
     }
   }
+
+  async function betriebsunterhaltNeuBerechnen(userId: string, datumWert: string) {
+  const { data: tag } = await supabase
+    .from("tageszeiten")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("datum", datumWert)
+    .maybeSingle();
+
+  if (!tag) return;
+
+  const { data: zeiten } = await supabase
+    .from("arbeitszeiten")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("datum", datumWert);
+
+  const projektStunden =
+    zeiten
+      ?.filter((z) => z.projekt !== "Betriebsunterhalt")
+      .reduce((sum, z) => sum + Number(z.stunden || 0), 0) || 0;
+
+  const betriebsunterhalt = Math.max(
+    0,
+    Number(tag.netto_stunden || 0) - projektStunden
+  );
+
+  await betriebsunterhaltSpeichern(userId, datumWert, betriebsunterhalt);
+}
 
   async function startArbeitstag() {
     setMeldung("");
@@ -443,8 +483,8 @@ export default function ArbeitszeitenPage() {
           )}h · Betriebsunterhalt: ${betriebsunterhalt.toFixed(2)}h`
     );
 
-    setManuellDatum("");
-    setManuellStart("");
+    setManuellDatum(heuteDatum());
+    setManuellStart("07:00");
     setManuellEnde("");
     setManuellPause("0");
 
@@ -485,7 +525,24 @@ export default function ArbeitszeitenPage() {
 
     setSaving(true);
 
+    let alteDatumVorBearbeitung: string | null = null;
+
     if (bearbeitenId) {
+      const { data: alteZeit } = await supabase
+        .from("arbeitszeiten")
+        .select("datum, auto_generiert")
+        .eq("id", bearbeitenId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (alteZeit?.auto_generiert) {
+        setSaving(false);
+        setMeldung("Automatisch berechneter Betriebsunterhalt kann nicht bearbeitet werden.");
+        return;
+      }
+
+      alteDatumVorBearbeitung = alteZeit?.datum || null;
+
       const { error } = await supabase
         .from("arbeitszeiten")
         .update({
@@ -530,11 +587,16 @@ export default function ArbeitszeitenPage() {
       setMeldung("Arbeitszeit gespeichert.");
     }
 
-    setDatum(new Date().toISOString().split("T")[0]);
+    setDatum(heuteDatum());
     setProjekt("");
     setStunden("");
     setBearbeitenId(null);
 
+    if (alteDatumVorBearbeitung && alteDatumVorBearbeitung !== datum) {
+      await betriebsunterhaltNeuBerechnen(user.id, alteDatumVorBearbeitung);
+    }
+
+    await betriebsunterhaltNeuBerechnen(user.id, datum);
     await ladeDaten();
     setSaving(false);
   }
@@ -552,6 +614,24 @@ export default function ArbeitszeitenPage() {
       return;
     }
 
+    const { data: zuLoeschendeZeit, error: leseError } = await supabase
+      .from("arbeitszeiten")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .single();
+
+    if (leseError) {
+      setMeldung(leseError.message);
+      console.log(leseError);
+      return;
+    }
+
+    if (zuLoeschendeZeit?.auto_generiert) {
+      setMeldung("Automatisch berechneter Betriebsunterhalt kann nicht gelöscht werden.");
+      return;
+    }
+
     const { error } = await supabase
       .from("arbeitszeiten")
       .delete()
@@ -564,11 +644,20 @@ export default function ArbeitszeitenPage() {
       return;
     }
 
+    if (zuLoeschendeZeit?.datum) {
+      await betriebsunterhaltNeuBerechnen(user.id, zuLoeschendeZeit.datum);
+    }
+
     await ladeDaten();
     setMeldung("Arbeitszeit gelöscht.");
   }
 
   function bearbeitungStarten(zeit: any) {
+    if (zeit.auto_generiert) {
+      setMeldung("Automatisch berechneter Betriebsunterhalt kann nicht bearbeitet werden.");
+      return;
+    }
+
     setBearbeitenId(zeit.id);
     setDatum(zeit.datum || "");
     setProjekt(zeit.projekt || "");
@@ -578,7 +667,7 @@ export default function ArbeitszeitenPage() {
 
   function bearbeitungAbbrechen() {
     setBearbeitenId(null);
-    setDatum("");
+    setDatum(heuteDatum());
     setProjekt("");
     setStunden("");
   }
