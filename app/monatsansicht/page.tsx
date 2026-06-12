@@ -239,12 +239,12 @@ const sollstunden =
   const abwesenheitsstunden = bezahlteAbwesenheitstage * tagesSoll;
 
   const angerechneteStunden =
-    gesamtstunden + abwesenheitsstunden + ueberstundenAbbauStunden;
+  gesamtstunden + abwesenheitsstunden;
 
-  const differenz = angerechneteStunden - sollstunden;
+const differenz = angerechneteStunden - sollstunden;
 
-  const gesamtUeberstunden =
-    ueberstundenStart + differenz - ueberstundenAbbauStunden;
+const gesamtUeberstunden =
+  ueberstundenStart + differenz - ueberstundenAbbauStunden;
 
   function exportPdf() {
     const pdf = new jsPDF();
