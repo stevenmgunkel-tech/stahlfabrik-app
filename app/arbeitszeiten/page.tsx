@@ -402,7 +402,7 @@ export default function ArbeitszeitenPage() {
           endzeit: manuellEnde,
           pause: pauseStunden,
           netto_stunden: Number(nettoStunden.toFixed(2)),
-          status: "Manuell",
+          status: "Abgeschlossen",
         })
         .eq("id", vorhandenerTag.id);
 
@@ -418,7 +418,7 @@ export default function ArbeitszeitenPage() {
         endzeit: manuellEnde,
         pause: pauseStunden,
         netto_stunden: Number(nettoStunden.toFixed(2)),
-        status: "Manuell",
+        status: "Abgeschlossen",
       });
 
       if (error) {
