@@ -311,12 +311,13 @@ const { data: admin } = await supabase
   .single();
 
   const { error } = await supabase
-    .from("tageszeiten")
-    .update({
-  status: "Geprüft",
-  geprueft_von: admin?.name || "Admin",
-  geprueft_am: new Date().toISOString(),
-})
+  .from("tageszeiten")
+  .update({
+    status: "Geprüft",
+    geprueft_von: admin?.name || "Admin",
+    geprueft_am: new Date().toISOString(),
+  })
+  .eq("id", id);
 
   if (error) {
     setMeldung(error.message);
