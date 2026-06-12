@@ -347,6 +347,19 @@ const abgeschlosseneTageListe = tageszeiten
     };
   });
 
+  const gepruefteTageListe = tageszeiten
+  .filter((tag) => tag.status === "Geprüft")
+  .map((tag) => {
+    const person = mitarbeiter.find(
+      (m) => m.user_id === tag.user_id
+    );
+
+    return {
+      ...tag,
+      mitarbeiterName: person?.name || "Unbekannt",
+    };
+  });
+
   return (
     <main className="space-y-8">
       <div>
@@ -481,6 +494,53 @@ const abgeschlosseneTageListe = tageszeiten
           >
             ✓ Als geprüft markieren
           </button>
+        </div>
+      ))}
+    </div>
+  )}
+</section>
+
+<section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+  <div className="mb-6">
+    <h2 className="text-2xl font-black text-white">
+      Geprüfte Tagesabschlüsse
+    </h2>
+
+    <p className="mt-1 text-white/55">
+      Bereits freigegebene Arbeitstage.
+    </p>
+  </div>
+
+  {gepruefteTageListe.length === 0 ? (
+    <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
+      Noch keine geprüften Tage vorhanden.
+    </div>
+  ) : (
+    <div className="space-y-3">
+      {gepruefteTageListe.map((tag) => (
+        <div
+          key={tag.id}
+          className="rounded-xl border border-green-500/20 bg-green-500/5 p-5"
+        >
+          <div className="text-lg font-black text-white">
+            {tag.mitarbeiterName}
+          </div>
+
+          <div className="mt-1 text-sm text-white/55">
+            {tag.datum} · {Number(tag.netto_stunden || 0).toFixed(2)}h
+          </div>
+
+          <div className="mt-2 text-xs font-bold uppercase tracking-widest text-green-400">
+            Status: Geprüft
+          </div>
+
+          <div className="mt-3 text-sm text-white/70">
+            Geprüft von: {tag.geprueft_von || "-"}
+          </div>
+
+          <div className="text-sm text-white/70">
+            Geprüft am: {tag.geprueft_am || "-"}
+          </div>
         </div>
       ))}
     </div>
