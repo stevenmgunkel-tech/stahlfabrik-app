@@ -298,6 +298,44 @@ const gesamtUeberstunden =
   0
 );
 
+async function tagAlsGeprueftMarkieren(id: string) {
+  setMeldung("");
+
+  const { error } = await supabase
+    .from("tageszeiten")
+    .update({
+      status: "Geprüft",
+    })
+    .eq("id", id);
+
+  if (error) {
+    setMeldung(error.message);
+    console.log(error);
+    return;
+  }
+
+  setTageszeiten((aktuell) =>
+    aktuell.map((tag) =>
+      tag.id === id ? { ...tag, status: "Geprüft" } : tag
+    )
+  );
+
+  setMeldung("Tag wurde als geprüft markiert.");
+}
+
+const abgeschlosseneTageListe = tageszeiten
+  .filter((tag) => tag.status === "Abgeschlossen")
+  .map((tag) => {
+    const person = mitarbeiter.find(
+      (m) => m.user_id === tag.user_id
+    );
+
+    return {
+      ...tag,
+      mitarbeiterName: person?.name || "Unbekannt",
+    };
+  });
+
   return (
     <main className="space-y-8">
       <div>
@@ -389,6 +427,54 @@ const gesamtUeberstunden =
   value={loading ? "..." : gepruefteTage}
   green={gepruefteTage > 0}
 />
+
+      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+  <div className="mb-6">
+    <h2 className="text-2xl font-black text-white">
+      Tagesabschlüsse zur Prüfung
+    </h2>
+    <p className="mt-1 text-white/55">
+      Abgeschlossene Arbeitstage können hier vom Chef geprüft werden.
+    </p>
+  </div>
+
+  {abgeschlosseneTageListe.length === 0 ? (
+    <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
+      Keine abgeschlossenen Tage zur Prüfung.
+    </div>
+  ) : (
+    <div className="space-y-3">
+      {abgeschlosseneTageListe.map((tag) => (
+        <div
+          key={tag.id}
+          className="flex flex-col justify-between gap-4 rounded-xl border border-white/10 bg-black/25 p-5 md:flex-row md:items-center"
+        >
+          <div>
+            <div className="text-lg font-black text-white">
+              {tag.mitarbeiterName}
+            </div>
+
+            <div className="mt-1 text-sm text-white/55">
+              {tag.datum} · {Number(tag.netto_stunden || 0).toFixed(2)}h
+            </div>
+
+            <div className="mt-1 text-xs font-bold uppercase tracking-widest text-orange-400">
+              Status: {tag.status}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => tagAlsGeprueftMarkieren(tag.id)}
+            className="rounded-xl bg-green-600 px-5 py-3 font-black text-white shadow-lg shadow-green-600/20 transition hover:bg-green-500"
+          >
+            ✓ Als geprüft markieren
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
+</section>
 
       </section>
 
