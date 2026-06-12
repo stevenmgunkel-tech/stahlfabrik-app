@@ -12,6 +12,7 @@ export default function ChefDashboardPage() {
   const [tagespausen, setTagespausen] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [meldung, setMeldung] = useState("");
+  const [tageszeiten, setTageszeiten] = useState<any[]>([]);
 
   const monat = new Date().toISOString().slice(0, 7);
 
@@ -84,6 +85,13 @@ export default function ChefDashboardPage() {
     .gte("datum", start)
     .lte("datum", ende);
 
+    const { data: tageszeitenData, error: tageszeitenError } =
+  await supabase
+    .from("tageszeiten")
+    .select("*")
+    .gte("datum", start)
+    .lte("datum", ende);
+
       const { data: urlaubData, error: urlaubError } = await supabase
         .from("urlaub")
         .select("*")
@@ -98,6 +106,7 @@ export default function ChefDashboardPage() {
   mitarbeiterError ||
   arbeitszeitenError ||
   tagespausenError ||
+  tageszeitenError ||
   urlaubError ||
   projekteError;
 
@@ -109,6 +118,7 @@ export default function ChefDashboardPage() {
       setMitarbeiter(mitarbeiterData || []);
       setArbeitszeiten(arbeitszeitenData || []);
       setTagespausen(tagespausenData || []);
+      setTageszeiten(tageszeitenData || []);
       setUrlaub(urlaubData || []);
       setProjekte(projekteData || []);
       setLoading(false);
@@ -144,6 +154,18 @@ export default function ChefDashboardPage() {
   }
 
   const arbeitstage = berechneArbeitstageAbDatum();
+
+  const offeneTage = tageszeiten.filter(
+  (t) => t.status === "Offen"
+).length;
+
+const abgeschlosseneTage = tageszeiten.filter(
+  (t) => t.status === "Abgeschlossen"
+).length;
+
+const gepruefteTage = tageszeiten.filter(
+  (t) => t.status === "Geprüft"
+).length;
 
   const offeneAntraege = urlaub.filter(
     (eintrag) => eintrag.status === "Beantragt"
@@ -350,6 +372,24 @@ const gesamtUeberstunden =
           value={loading ? "..." : offeneAntraege}
           orange={offeneAntraege > 0}
         />
+
+        <KpiCard
+  label="Offene Tage"
+  value={loading ? "..." : offeneTage}
+  orange={offeneTage > 0}
+/>
+
+<KpiCard
+  label="Abgeschlossen"
+  value={loading ? "..." : abgeschlosseneTage}
+/>
+
+<KpiCard
+  label="Geprüft"
+  value={loading ? "..." : gepruefteTage}
+  green={gepruefteTage > 0}
+/>
+
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
