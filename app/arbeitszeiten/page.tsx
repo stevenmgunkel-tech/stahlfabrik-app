@@ -187,11 +187,12 @@ export default function ArbeitszeitenPage() {
     }
 
     const { error } = await supabase.from("arbeitszeiten").insert({
-      user_id: userId,
-      datum: datumWert,
-      projekt: "Betriebsunterhalt",
-      stunden: saubererWert,
-    });
+  user_id: userId,
+  datum: datumWert,
+  projekt: "Betriebsunterhalt",
+  stunden: saubererWert,
+  auto_generiert: true,
+});
 
     if (error) {
       console.log("BETRIEBSUNTERHALT INSERT FEHLER:", error);
@@ -452,6 +453,13 @@ export default function ArbeitszeitenPage() {
       setMeldung("Bitte Datum, Projekt und Stunden ausfüllen.");
       return;
     }
+
+    if (projekt === "Betriebsunterhalt") {
+  setMeldung(
+    "Betriebsunterhalt wird automatisch berechnet und kann nicht manuell erfasst werden."
+  );
+  return;
+}
 
     const berechneteStunden = Number(stunden);
 
@@ -1017,23 +1025,29 @@ export default function ArbeitszeitenPage() {
                                     </div>
                                   </div>
 
-                                  <div className="mt-4 grid grid-cols-2 gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => bearbeitungStarten(zeit)}
-                                      className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm font-bold text-white transition hover:bg-white/[0.10]"
-                                    >
-                                      Bearbeiten
-                                    </button>
+                                  {zeit.auto_generiert ? (
+  <div className="mt-4 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-center text-xs font-black text-orange-400">
+    Automatisch berechnet · nicht bearbeitbar
+  </div>
+) : (
+  <div className="mt-4 grid grid-cols-2 gap-2">
+    <button
+      type="button"
+      onClick={() => bearbeitungStarten(zeit)}
+      className="rounded-lg bg-white/[0.06] px-3 py-2 text-sm font-bold text-white transition hover:bg-white/[0.10]"
+    >
+      Bearbeiten
+    </button>
 
-                                    <button
-                                      type="button"
-                                      onClick={() => zeitLoeschen(zeit.id)}
-                                      className="rounded-lg bg-red-600 px-3 py-2 text-sm font-bold text-white transition hover:bg-red-500"
-                                    >
-                                      Löschen
-                                    </button>
-                                  </div>
+    <button
+      type="button"
+      onClick={() => zeitLoeschen(zeit.id)}
+      className="rounded-lg bg-red-600 px-3 py-2 text-sm font-bold text-white transition hover:bg-red-500"
+    >
+      Löschen
+    </button>
+  </div>
+)}
                                 </div>
                               ))}
                             </div>
