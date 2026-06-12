@@ -301,12 +301,22 @@ const gesamtUeberstunden =
 async function tagAlsGeprueftMarkieren(id: string) {
   setMeldung("");
 
+  const userData = await supabase.auth.getUser();
+const user = userData.data.user;
+
+const { data: admin } = await supabase
+  .from("mitarbeiter")
+  .select("name")
+  .eq("user_id", user?.id)
+  .single();
+
   const { error } = await supabase
     .from("tageszeiten")
     .update({
-      status: "Geprüft",
-    })
-    .eq("id", id);
+  status: "Geprüft",
+  geprueft_von: admin?.name || "Admin",
+  geprueft_am: new Date().toISOString(),
+})
 
   if (error) {
     setMeldung(error.message);
