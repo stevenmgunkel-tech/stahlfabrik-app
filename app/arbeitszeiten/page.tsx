@@ -430,7 +430,6 @@ export default function ArbeitszeitenPage() {
     datum: datumWert,
     projekt: "Betriebsunterhalt",
     stunden: Number(stundenWert.toFixed(2)),
-    kommentar,
   });
 
   if (error) {
