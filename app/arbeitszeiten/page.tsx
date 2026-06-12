@@ -23,6 +23,7 @@ export default function ArbeitszeitenPage() {
   const [manuellStart, setManuellStart] = useState("");
   const [manuellEnde, setManuellEnde] = useState("");
   const [manuellPause, setManuellPause] = useState("0");
+  const [timerJetzt, setTimerJetzt] = useState(new Date());
   
 
   const [saving, setSaving] = useState(false);
@@ -97,6 +98,13 @@ if (tageszeitenData) setTageszeiten(tageszeitenData);
 
   useEffect(() => {
     ladeDaten();
+    useEffect(() => {
+  const interval = setInterval(() => {
+    setTimerJetzt(new Date());
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, []);
   }, []);
 
   function projektAnzeige(projektItem: any) {
@@ -629,6 +637,31 @@ async function betriebsunterhaltSpeichern(
   const vorschauStunden = Number(stunden || 0);
   const gruppierteTage = gruppierteArbeitszeiten();
 
+  const heuteKey = formatDateLocal(new Date());
+
+const offenerArbeitstag = tageszeiten.find(
+  (tag) => tag.datum === heuteKey && tag.status === "Offen"
+);
+
+function laufzeitText() {
+  if (!offenerArbeitstag?.startzeit) return "00:00:00";
+
+  const start = new Date(`${heuteKey}T${offenerArbeitstag.startzeit}`);
+  const differenzMs = timerJetzt.getTime() - start.getTime();
+
+  if (differenzMs <= 0) return "00:00:00";
+
+  const sekundenGesamt = Math.floor(differenzMs / 1000);
+  const stunden = Math.floor(sekundenGesamt / 3600);
+  const minuten = Math.floor((sekundenGesamt % 3600) / 60);
+  const sekunden = sekundenGesamt % 60;
+
+  return `${String(stunden).padStart(2, "0")}:${String(minuten).padStart(
+    2,
+    "0"
+  )}:${String(sekunden).padStart(2, "0")}`;
+}
+
   return (
     <main className="space-y-8">
       <div>
@@ -652,7 +685,28 @@ async function betriebsunterhaltSpeichern(
       Start / Stop mit automatischem Betriebsunterhalt
     </p>
   </div>
-  
+
+  <div className="mb-5 rounded-xl border border-white/10 bg-black/25 p-5">
+    <div className="text-sm font-bold text-white/50">Status</div>
+
+    {offenerArbeitstag ? (
+      <>
+        <div className="mt-2 text-xl font-black text-green-400">
+          🟢 Arbeitstag läuft
+        </div>
+        <div className="mt-3 text-sm text-white/50">
+          Gestartet um {offenerArbeitstag.startzeit}
+        </div>
+        <div className="mt-3 text-4xl font-black text-white">
+          {laufzeitText()}
+        </div>
+      </>
+    ) : (
+      <div className="mt-2 text-xl font-black text-white/70">
+        Kein Arbeitstag gestartet
+      </div>
+    )}
+  </div>
 
   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
     <button
