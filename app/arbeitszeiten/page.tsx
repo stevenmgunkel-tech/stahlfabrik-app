@@ -97,15 +97,16 @@ if (tageszeitenData) setTageszeiten(tageszeitenData);
   }
 
   useEffect(() => {
-    ladeDaten();
-    useEffect(() => {
+  ladeDaten();
+}, []);
+
+useEffect(() => {
   const interval = setInterval(() => {
     setTimerJetzt(new Date());
   }, 1000);
 
   return () => clearInterval(interval);
 }, []);
-  }, []);
 
   function projektAnzeige(projektItem: any) {
     const name = projektItem.name || "";
