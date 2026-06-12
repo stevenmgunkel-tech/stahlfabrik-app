@@ -141,12 +141,16 @@ export default function ArbeitszeitenPage() {
   }
 
   function kundeFuerProjekt(projektName: string) {
-    const gefunden = projekte.find(
-      (p) => p.name === projektName || projektAnzeige(p) === projektName
-    );
-
-    return gefunden?.kunde || "Kein Kunde hinterlegt";
+  if (projektName === "Betriebsunterhalt") {
+    return "Intern";
   }
+
+  const gefunden = projekte.find(
+    (p) => p.name === projektName || projektAnzeige(p) === projektName
+  );
+
+  return gefunden?.kunde || "Kein Kunde hinterlegt";
+}
 
   async function betriebsunterhaltSpeichern(
     userId: string,
