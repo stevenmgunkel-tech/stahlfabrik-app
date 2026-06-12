@@ -72,11 +72,14 @@ export default function ArbeitszeitenPage() {
     }
 
     if (projektData) {
-      const aktiveProjekte = projektData.filter(
-        (p) => p.status !== "Abgeschlossen"
-      );
-      setProjekte(aktiveProjekte);
-    }
+  const aktiveProjekte = projektData.filter(
+    (p) =>
+      p.status !== "Abgeschlossen" &&
+      p.name !== "Betriebsunterhalt"
+  );
+
+  setProjekte(aktiveProjekte);
+}
   }
 
   useEffect(() => {
