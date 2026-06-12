@@ -10,7 +10,9 @@ export default function ArbeitszeitenPage() {
   const [offeneTage, setOffeneTage] = useState<string[]>([]);
   const [offeneDetails, setOffeneDetails] = useState<string[]>([]);
 
-  const [datum, setDatum] = useState("");
+  const [datum, setDatum] = useState(
+  new Date().toISOString().split("T")[0]
+);
   const [projekt, setProjekt] = useState("");
   const [stunden, setStunden] = useState("");
 
@@ -528,7 +530,7 @@ export default function ArbeitszeitenPage() {
       setMeldung("Arbeitszeit gespeichert.");
     }
 
-    setDatum("");
+    setDatum(new Date().toISOString().split("T")[0]);
     setProjekt("");
     setStunden("");
     setBearbeitenId(null);
