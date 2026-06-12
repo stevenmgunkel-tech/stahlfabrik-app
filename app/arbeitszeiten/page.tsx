@@ -1075,6 +1075,26 @@ export default function ArbeitszeitenPage() {
                                 </span>
                               </div>
 
+                              {projektGruppe.name === "Betriebsunterhalt" && (() => {
+  const tageszeit = tageszeiten.find(
+    (t) => t.datum === tag.datum
+  );
+
+  if (!tageszeit) return null;
+
+  return (
+    <div className="mt-2 text-sm text-white/50">
+      <div>
+        🕒 {tageszeit.startzeit} - {tageszeit.endzeit}
+      </div>
+
+      <div className="text-white/40">
+        Pause: {tageszeit.pause || 0}h
+      </div>
+    </div>
+  );
+})()}
+
                               <div className="mt-1 text-sm text-white/45">
                                 {projektGruppe.eintraege.length} Buchung
                                 {projektGruppe.eintraege.length === 1
