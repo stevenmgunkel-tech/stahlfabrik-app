@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "../../lib/supabase";
 
 export default function ArbeitszeitenPage() {
   const [zeiten, setZeiten] = useState<any[]>([]);
   const [projekte, setProjekte] = useState<any[]>([]);
-  const [tagespausen, setTagespausen] = useState<any[]>([]);
+  const [tageszeiten, setTageszeiten] = useState<any[]>([]);
   const [offeneTage, setOffeneTage] = useState<string[]>([]);
   const [offeneDetails, setOffeneDetails] = useState<string[]>([]);
 
@@ -14,22 +14,17 @@ export default function ArbeitszeitenPage() {
   const [projekt, setProjekt] = useState("");
   const [stunden, setStunden] = useState("");
 
-  const [pausenDatum, setPausenDatum] = useState("");
-  const [tagespause, setTagespause] = useState("");
-  const [tageszeiten, setTageszeiten] = useState<any[]>([]);
   const [pauseStop, setPauseStop] = useState("0");
+  const [timerJetzt, setTimerJetzt] = useState(new Date());
 
   const [manuellDatum, setManuellDatum] = useState("");
   const [manuellStart, setManuellStart] = useState("");
   const [manuellEnde, setManuellEnde] = useState("");
   const [manuellPause, setManuellPause] = useState("0");
-  const [timerJetzt, setTimerJetzt] = useState(new Date());
-  
 
   const [saving, setSaving] = useState(false);
-  const [savingPause, setSavingPause] = useState(false);
   const [meldung, setMeldung] = useState("");
-  const [bearbeitenId, setBearbeitenId] = useState<number | null>(null);
+  const [bearbeitenId, setBearbeitenId] = useState<string | number | null>(null);
 
   async function ladeDaten() {
     const userData = await supabase.auth.getUser();
@@ -54,29 +49,17 @@ export default function ArbeitszeitenPage() {
 
     if (zeitData) setZeiten(zeitData);
 
-    const { data: pausenData, error: pausenError } = await supabase
-      .from("tagespausen")
+    const { data: tageszeitenData, error: tageszeitenError } = await supabase
+      .from("tageszeiten")
       .select("*")
       .eq("user_id", user.id);
 
-    if (pausenError) {
-      setMeldung(pausenError.message);
-      console.log(pausenError);
+    if (tageszeitenError) {
+      setMeldung(tageszeitenError.message);
+      console.log(tageszeitenError);
     }
 
-    if (pausenData) setTagespausen(pausenData);
-
-    const { data: tageszeitenData, error: tageszeitenError } = await supabase
-  .from("tageszeiten")
-  .select("*")
-  .eq("user_id", user.id);
-
-if (tageszeitenError) {
-  setMeldung(tageszeitenError.message);
-  console.log(tageszeitenError);
-}
-
-if (tageszeitenData) setTageszeiten(tageszeitenData);
+    if (tageszeitenData) setTageszeiten(tageszeitenData);
 
     const { data: projektData, error: projektError } = await supabase
       .from("projekte")
@@ -90,23 +73,31 @@ if (tageszeitenData) setTageszeiten(tageszeitenData);
 
     if (projektData) {
       const aktiveProjekte = projektData.filter(
-  (p) => p.status !== "Abgeschlossen"
-);
+        (p) => p.status !== "Abgeschlossen"
+      );
       setProjekte(aktiveProjekte);
     }
   }
 
   useEffect(() => {
-  ladeDaten();
-}, []);
+    ladeDaten();
+  }, []);
 
-useEffect(() => {
-  const interval = setInterval(() => {
-    setTimerJetzt(new Date());
-  }, 1000);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimerJetzt(new Date());
+    }, 1000);
 
-  return () => clearInterval(interval);
-}, []);
+    return () => clearInterval(interval);
+  }, []);
+
+  function formatDateLocal(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  }
 
   function projektAnzeige(projektItem: any) {
     const name = projektItem.name || "";
@@ -133,223 +124,6 @@ useEffect(() => {
     return name;
   }
 
-function formatDateLocal(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-async function startArbeitstag() {
-  setMeldung("");
-
-  const userData = await supabase.auth.getUser();
-  const user = userData.data.user;
-  if (!user) return;
-
-  const heute = formatDateLocal(new Date());
-  const jetzt = new Date().toTimeString().slice(0, 8);
-
-  const vorhandenerTag = tageszeiten.find(
-    (tag) => tag.datum === heute && tag.status === "Offen"
-  );
-
-  if (vorhandenerTag) {
-    setMeldung("Arbeitstag läuft bereits.");
-    return;
-  }
-
-  const { error } = await supabase.from("tageszeiten").insert({
-    user_id: user.id,
-    datum: heute,
-    startzeit: jetzt,
-    status: "Offen",
-  });
-
-  if (error) {
-    setMeldung(error.message);
-    return;
-  }
-
-  setMeldung("Arbeitstag gestartet.");
-  await ladeDaten();
-}
-
-async function stopArbeitstag() {
-  setMeldung("");
-
-  const userData = await supabase.auth.getUser();
-  const user = userData.data.user;
-  if (!user) return;
-
-  const heute = formatDateLocal(new Date());
-  const jetztString = new Date().toTimeString().slice(0, 8);
-  const pauseStunden = Number(pauseStop || 0);
-
-  const tageszeit = tageszeiten.find(
-    (tag) => tag.datum === heute && tag.status === "Offen"
-  );
-
-  if (!tageszeit) {
-    setMeldung("Kein gestarteter Arbeitstag gefunden.");
-    return;
-  }
-
-  const start = new Date(`${heute}T${tageszeit.startzeit}`);
-  const ende = new Date(`${heute}T${jetztString}`);
-  const bruttoStunden = (ende.getTime() - start.getTime()) / 1000 / 60 / 60;
-  const nettoStunden = bruttoStunden - pauseStunden;
-
-  const projektStunden = zeiten
-    .filter(
-      (eintrag) =>
-        eintrag.user_id === user.id &&
-        eintrag.datum === heute &&
-        eintrag.projekt !== "Betriebsunterhalt"
-    )
-    .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
-
-  const betriebsunterhalt = nettoStunden - projektStunden;
-
-  if (betriebsunterhalt < 0) {
-    setMeldung("Projektzeiten sind höher als Tagesarbeitszeit.");
-    return;
-  }
-
-  await supabase
-    .from("tageszeiten")
-    .update({
-      endzeit: jetztString,
-      pause: pauseStunden,
-      netto_stunden: nettoStunden,
-      status: "Abgeschlossen",
-    })
-    .eq("id", tageszeit.id);
-
-  await betriebsunterhaltSpeichern(user.id, heute, betriebsunterhalt, "Automatisch berechnete Restzeit");
-
-  setMeldung(
-    `Arbeitstag beendet. Netto: ${nettoStunden.toFixed(2)}h · Betriebsunterhalt: ${betriebsunterhalt.toFixed(2)}h`
-  );
-
-  await ladeDaten();
-}
-
-async function arbeitstagManuellSpeichern() {
-  setMeldung("");
-
-  if (!manuellDatum || !manuellStart || !manuellEnde) {
-    setMeldung("Bitte Datum, Start und Ende ausfüllen.");
-    return;
-  }
-
-  const userData = await supabase.auth.getUser();
-  const user = userData.data.user;
-  if (!user) return;
-
-  const pauseStunden = Number(manuellPause || 0);
-  const start = new Date(`${manuellDatum}T${manuellStart}`);
-  const ende = new Date(`${manuellDatum}T${manuellEnde}`);
-  const bruttoStunden = (ende.getTime() - start.getTime()) / 1000 / 60 / 60;
-  const nettoStunden = bruttoStunden - pauseStunden;
-
-  if (nettoStunden <= 0) {
-    setMeldung("Endzeit muss nach Startzeit liegen.");
-    return;
-  }
-
-  const projektStunden = zeiten
-    .filter(
-      (eintrag) =>
-        eintrag.user_id === user.id &&
-        eintrag.datum === manuellDatum &&
-        eintrag.projekt !== "Betriebsunterhalt"
-    )
-    .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
-
-  const betriebsunterhalt = nettoStunden - projektStunden;
-
-  if (betriebsunterhalt < 0) {
-    setMeldung("Projektzeiten sind höher als Tagesarbeitszeit.");
-    return;
-  }
-
-  const { data: vorhandenerTag } = await supabase
-    .from("tageszeiten")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("datum", manuellDatum)
-    .maybeSingle();
-
-  if (vorhandenerTag) {
-    await supabase
-      .from("tageszeiten")
-      .update({
-        startzeit: manuellStart,
-        endzeit: manuellEnde,
-        pause: pauseStunden,
-        netto_stunden: nettoStunden,
-        status: "Manuell",
-      })
-      .eq("id", vorhandenerTag.id);
-  } else {
-    await supabase.from("tageszeiten").insert({
-      user_id: user.id,
-      datum: manuellDatum,
-      startzeit: manuellStart,
-      endzeit: manuellEnde,
-      pause: pauseStunden,
-      netto_stunden: nettoStunden,
-      status: "Manuell",
-    });
-  }
-
-  await betriebsunterhaltSpeichern(user.id, manuellDatum, betriebsunterhalt, "Manuell berechnete Restzeit");
-
-  setMeldung(
-    `Arbeitstag manuell gespeichert. Netto: ${nettoStunden.toFixed(2)}h · Betriebsunterhalt: ${betriebsunterhalt.toFixed(2)}h`
-  );
-
-  setManuellDatum("");
-  setManuellStart("");
-  setManuellEnde("");
-  setManuellPause("0");
-
-  await ladeDaten();
-}
-
-async function betriebsunterhaltSpeichern(
-  userId: string,
-  datumWert: string,
-  stundenWert: number,
-  kommentar: string
-) {
-  const vorhandenerBetriebsunterhalt = zeiten.find(
-    (eintrag) =>
-      eintrag.user_id === userId &&
-      eintrag.datum === datumWert &&
-      eintrag.projekt === "Betriebsunterhalt"
-  );
-
-  if (stundenWert > 0) {
-    if (vorhandenerBetriebsunterhalt) {
-      await supabase
-        .from("arbeitszeiten")
-        .update({ stunden: stundenWert })
-        .eq("id", vorhandenerBetriebsunterhalt.id);
-    } else {
-      await supabase.from("arbeitszeiten").insert({
-        user_id: userId,
-        datum: datumWert,
-        projekt: "Betriebsunterhalt",
-        stunden: stundenWert,
-        kommentar,
-      });
-    }
-  }
-}
-
   function kundeFuerProjekt(projektName: string) {
     const gefunden = projekte.find(
       (p) => p.name === projektName || projektAnzeige(p) === projektName
@@ -358,89 +132,284 @@ async function betriebsunterhaltSpeichern(
     return gefunden?.kunde || "Kein Kunde hinterlegt";
   }
 
-  function tagespauseFuerDatum(datumWert: string) {
-    const gefunden = tagespausen.find((p) => p.datum === datumWert);
-    return Number(gefunden?.pause || 0);
+  async function betriebsunterhaltSpeichern(
+    userId: string,
+    datumWert: string,
+    stundenWert: number,
+    kommentar: string
+  ) {
+    const saubererWert = Math.max(0, Number(stundenWert || 0));
+
+    const { data: vorhandenerBetriebsunterhalt } = await supabase
+      .from("arbeitszeiten")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("datum", datumWert)
+      .eq("projekt", "Betriebsunterhalt")
+      .maybeSingle();
+
+    if (saubererWert > 0) {
+      if (vorhandenerBetriebsunterhalt) {
+        await supabase
+          .from("arbeitszeiten")
+          .update({ stunden: saubererWert, kommentar })
+          .eq("id", vorhandenerBetriebsunterhalt.id);
+      } else {
+        await supabase.from("arbeitszeiten").insert({
+          user_id: userId,
+          datum: datumWert,
+          projekt: "Betriebsunterhalt",
+          stunden: saubererWert,
+          kommentar,
+        });
+      }
+    } else if (vorhandenerBetriebsunterhalt) {
+      await supabase
+        .from("arbeitszeiten")
+        .delete()
+        .eq("id", vorhandenerBetriebsunterhalt.id);
+    }
   }
 
-  async function tagespauseSpeichern() {
+  async function startArbeitstag() {
     setMeldung("");
 
-    if (!pausenDatum) {
-      setMeldung("Bitte Datum für Tagespause auswählen.");
+    const userData = await supabase.auth.getUser();
+    const user = userData.data.user;
+    if (!user) return;
+
+    const heute = formatDateLocal(new Date());
+    const jetzt = new Date().toTimeString().slice(0, 8);
+
+    const { data: vorhandenerTag, error: sucheError } = await supabase
+      .from("tageszeiten")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("datum", heute)
+      .eq("status", "Offen")
+      .maybeSingle();
+
+    if (sucheError) {
+      setMeldung(sucheError.message);
       return;
     }
 
-    const pauseMinuten = Number(tagespause || 0);
+    if (vorhandenerTag) {
+      setMeldung("Arbeitstag läuft bereits.");
+      await ladeDaten();
+      return;
+    }
 
-    if (!Number.isFinite(pauseMinuten) || pauseMinuten < 0) {
-      setMeldung("Bitte gültige Pause eingeben.");
+    const { error } = await supabase.from("tageszeiten").insert({
+      user_id: user.id,
+      datum: heute,
+      startzeit: jetzt,
+      pause: 0,
+      netto_stunden: 0,
+      status: "Offen",
+    });
+
+    if (error) {
+      setMeldung(error.message);
+      return;
+    }
+
+    setMeldung("Arbeitstag gestartet.");
+    await ladeDaten();
+  }
+
+  async function stopArbeitstag() {
+    setMeldung("");
+
+    const userData = await supabase.auth.getUser();
+    const user = userData.data.user;
+    if (!user) return;
+
+    const heute = formatDateLocal(new Date());
+    const jetztString = new Date().toTimeString().slice(0, 8);
+    const pauseStunden = Number(pauseStop || 0);
+
+    const { data: tageszeit, error: tageszeitError } = await supabase
+      .from("tageszeiten")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("datum", heute)
+      .eq("status", "Offen")
+      .maybeSingle();
+
+    if (tageszeitError) {
+      setMeldung(tageszeitError.message);
+      return;
+    }
+
+    if (!tageszeit) {
+      setMeldung("Kein gestarteter Arbeitstag gefunden.");
+      return;
+    }
+
+    const start = new Date(`${heute}T${tageszeit.startzeit}`);
+    const ende = new Date(`${heute}T${jetztString}`);
+    const bruttoStunden = (ende.getTime() - start.getTime()) / 1000 / 60 / 60;
+    const nettoStunden = Math.max(0, bruttoStunden - pauseStunden);
+
+    const { data: heutigeZeiten } = await supabase
+      .from("arbeitszeiten")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("datum", heute);
+
+    const projektStunden =
+      heutigeZeiten
+        ?.filter((eintrag) => eintrag.projekt !== "Betriebsunterhalt")
+        .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0) || 0;
+
+    const betriebsunterhalt = Math.max(0, nettoStunden - projektStunden);
+    const projektWarnung = projektStunden > nettoStunden;
+
+    const { error: updateError } = await supabase
+      .from("tageszeiten")
+      .update({
+        endzeit: jetztString,
+        pause: pauseStunden,
+        netto_stunden: nettoStunden,
+        status: "Abgeschlossen",
+      })
+      .eq("id", tageszeit.id);
+
+    if (updateError) {
+      setMeldung(updateError.message);
+      return;
+    }
+
+    await betriebsunterhaltSpeichern(
+      user.id,
+      heute,
+      betriebsunterhalt,
+      "Automatisch berechnete Restzeit"
+    );
+
+    setMeldung(
+      projektWarnung
+        ? `Arbeitstag beendet. Netto: ${nettoStunden.toFixed(
+            2
+          )}h. Hinweis: Projektzeiten (${projektStunden.toFixed(
+            2
+          )}h) sind höher als Tageszeit. Betriebsunterhalt wurde auf 0.00h gesetzt.`
+        : `Arbeitstag beendet. Netto: ${nettoStunden.toFixed(
+            2
+          )}h · Betriebsunterhalt: ${betriebsunterhalt.toFixed(2)}h`
+    );
+
+    await ladeDaten();
+  }
+
+  async function arbeitstagManuellSpeichern() {
+    setMeldung("");
+
+    if (!manuellDatum || !manuellStart || !manuellEnde) {
+      setMeldung("Bitte Datum, Start und Ende ausfüllen.");
       return;
     }
 
     const userData = await supabase.auth.getUser();
     const user = userData.data.user;
+    if (!user) return;
 
-    if (!user) {
-      setMeldung("Bitte zuerst einloggen.");
-      window.location.href = "/login";
+    const pauseStunden = Number(manuellPause || 0);
+    const start = new Date(`${manuellDatum}T${manuellStart}`);
+    const ende = new Date(`${manuellDatum}T${manuellEnde}`);
+    const bruttoStunden = (ende.getTime() - start.getTime()) / 1000 / 60 / 60;
+    const nettoStunden = Math.max(0, bruttoStunden - pauseStunden);
+
+    if (bruttoStunden <= 0 || nettoStunden <= 0) {
+      setMeldung("Endzeit muss nach Startzeit liegen und Nettozeit muss größer als 0 sein.");
       return;
     }
 
-    setSavingPause(true);
-
-    const { data: vorhandenePause, error: sucheError } = await supabase
-      .from("tagespausen")
+    const { data: projektzeitenTag } = await supabase
+      .from("arbeitszeiten")
       .select("*")
       .eq("user_id", user.id)
-      .eq("datum", pausenDatum)
+      .eq("datum", manuellDatum);
+
+    const projektStunden =
+      projektzeitenTag
+        ?.filter((eintrag) => eintrag.projekt !== "Betriebsunterhalt")
+        .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0) || 0;
+
+    const betriebsunterhalt = Math.max(0, nettoStunden - projektStunden);
+    const projektWarnung = projektStunden > nettoStunden;
+
+    const { data: vorhandenerTag, error: tagError } = await supabase
+      .from("tageszeiten")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("datum", manuellDatum)
       .maybeSingle();
 
-    if (sucheError) {
-      setSavingPause(false);
-      setMeldung(sucheError.message);
-      console.log(sucheError);
+    if (tagError) {
+      setMeldung(tagError.message);
       return;
     }
 
-    if (vorhandenePause) {
+    if (vorhandenerTag) {
       const { error } = await supabase
-        .from("tagespausen")
+        .from("tageszeiten")
         .update({
-          pause: pauseMinuten,
+          startzeit: manuellStart,
+          endzeit: manuellEnde,
+          pause: pauseStunden,
+          netto_stunden: nettoStunden,
+          status: "Manuell",
         })
-        .eq("id", vorhandenePause.id)
-        .eq("user_id", user.id);
+        .eq("id", vorhandenerTag.id);
 
       if (error) {
-        setSavingPause(false);
         setMeldung(error.message);
-        console.log(error);
         return;
       }
     } else {
-      const { error } = await supabase.from("tagespausen").insert([
-        {
-          datum: pausenDatum,
-          user_id: user.id,
-          pause: pauseMinuten,
-        },
-      ]);
+      const { error } = await supabase.from("tageszeiten").insert({
+        user_id: user.id,
+        datum: manuellDatum,
+        startzeit: manuellStart,
+        endzeit: manuellEnde,
+        pause: pauseStunden,
+        netto_stunden: nettoStunden,
+        status: "Manuell",
+      });
 
       if (error) {
-        setSavingPause(false);
         setMeldung(error.message);
-        console.log(error);
         return;
       }
     }
 
-    setMeldung("Tagespause gespeichert.");
-    setPausenDatum("");
-    setTagespause("");
+    await betriebsunterhaltSpeichern(
+      user.id,
+      manuellDatum,
+      betriebsunterhalt,
+      "Manuell berechnete Restzeit"
+    );
+
+    setMeldung(
+      projektWarnung
+        ? `Arbeitstag manuell gespeichert. Netto: ${nettoStunden.toFixed(
+            2
+          )}h. Hinweis: Projektzeiten (${projektStunden.toFixed(
+            2
+          )}h) sind höher als Tageszeit. Betriebsunterhalt wurde auf 0.00h gesetzt.`
+        : `Arbeitstag manuell gespeichert. Netto: ${nettoStunden.toFixed(
+            2
+          )}h · Betriebsunterhalt: ${betriebsunterhalt.toFixed(2)}h`
+    );
+
+    setManuellDatum("");
+    setManuellStart("");
+    setManuellEnde("");
+    setManuellPause("0");
 
     await ladeDaten();
-    setSavingPause(false);
   }
 
   async function zeitSpeichern() {
@@ -524,7 +493,7 @@ async function betriebsunterhaltSpeichern(
     setSaving(false);
   }
 
-  async function zeitLoeschen(id: number) {
+  async function zeitLoeschen(id: string | number) {
     const bestaetigen = confirm("Arbeitszeit wirklich löschen?");
     if (!bestaetigen) return;
 
@@ -595,14 +564,12 @@ async function betriebsunterhaltSpeichern(
         tageMap.set(datumKey, {
           datum: datumKey,
           gesamt: 0,
-          tagespause: tagespauseFuerDatum(datumKey),
           projekte: new Map<string, any>(),
         });
       }
 
       const tag = tageMap.get(datumKey);
       tag.gesamt += Number(zeit.stunden || 0);
-      tag.tagespause = tagespauseFuerDatum(datumKey);
 
       if (!tag.projekte.has(projektKey)) {
         tag.projekte.set(projektKey, {
@@ -619,7 +586,7 @@ async function betriebsunterhaltSpeichern(
 
     return Array.from(tageMap.values()).map((tag) => ({
       ...tag,
-      netto: Number(tag.gesamt || 0) - Number(tag.tagespause || 0) / 60,
+      netto: Number(tag.gesamt || 0),
       projekte: Array.from(tag.projekte.values()),
     }));
   }
@@ -637,31 +604,30 @@ async function betriebsunterhaltSpeichern(
 
   const vorschauStunden = Number(stunden || 0);
   const gruppierteTage = gruppierteArbeitszeiten();
-
   const heuteKey = formatDateLocal(new Date());
 
-const offenerArbeitstag = tageszeiten.find(
-  (tag) => tag.datum === heuteKey && tag.status === "Offen"
-);
+  const offenerArbeitstag = tageszeiten.find(
+    (tag) => tag.datum === heuteKey && tag.status === "Offen"
+  );
 
-function laufzeitText() {
-  if (!offenerArbeitstag?.startzeit) return "00:00:00";
+  function laufzeitText() {
+    if (!offenerArbeitstag?.startzeit) return "00:00:00";
 
-  const start = new Date(`${heuteKey}T${offenerArbeitstag.startzeit}`);
-  const differenzMs = timerJetzt.getTime() - start.getTime();
+    const start = new Date(`${heuteKey}T${offenerArbeitstag.startzeit}`);
+    const differenzMs = timerJetzt.getTime() - start.getTime();
 
-  if (differenzMs <= 0) return "00:00:00";
+    if (differenzMs <= 0) return "00:00:00";
 
-  const sekundenGesamt = Math.floor(differenzMs / 1000);
-  const stunden = Math.floor(sekundenGesamt / 3600);
-  const minuten = Math.floor((sekundenGesamt % 3600) / 60);
-  const sekunden = sekundenGesamt % 60;
+    const sekundenGesamt = Math.floor(differenzMs / 1000);
+    const stunden = Math.floor(sekundenGesamt / 3600);
+    const minuten = Math.floor((sekundenGesamt % 3600) / 60);
+    const sekunden = sekundenGesamt % 60;
 
-  return `${String(stunden).padStart(2, "0")}:${String(minuten).padStart(
-    2,
-    "0"
-  )}:${String(sekunden).padStart(2, "0")}`;
-}
+    return `${String(stunden).padStart(2, "0")}:${String(minuten).padStart(
+      2,
+      "0"
+    )}:${String(sekunden).padStart(2, "0")}`;
+  }
 
   return (
     <main className="space-y-8">
@@ -680,113 +646,123 @@ function laufzeitText() {
       </div>
 
       <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
-  <div className="mb-5">
-    <h2 className="text-2xl font-black text-white">Arbeitstag</h2>
-    <p className="mt-1 text-white/55">
-      Start / Stop mit automatischem Betriebsunterhalt
-    </p>
-  </div>
-
-  <div className="mb-5 rounded-xl border border-white/10 bg-black/25 p-5">
-    <div className="text-sm font-bold text-white/50">Status</div>
-
-    {offenerArbeitstag ? (
-      <>
-        <div className="mt-2 text-xl font-black text-green-400">
-          🟢 Arbeitstag läuft
+        <div className="mb-5">
+          <h2 className="text-2xl font-black text-white">Arbeitstag</h2>
+          <p className="mt-1 text-white/55">
+            Start / Stop mit automatischem Betriebsunterhalt
+          </p>
         </div>
-        <div className="mt-3 text-sm text-white/50">
-          Gestartet um {offenerArbeitstag.startzeit}
+
+        <div className="mb-5 rounded-xl border border-white/10 bg-black/25 p-5">
+          <div className="text-sm font-bold text-white/50">Status</div>
+
+          {offenerArbeitstag ? (
+            <>
+              <div className="mt-2 text-xl font-black text-green-400">
+                🟢 Arbeitstag läuft
+              </div>
+              <div className="mt-3 text-sm text-white/50">
+                Gestartet um {offenerArbeitstag.startzeit}
+              </div>
+              <div className="mt-3 text-4xl font-black text-white">
+                {laufzeitText()}
+              </div>
+            </>
+          ) : (
+            <div className="mt-2 text-xl font-black text-white/70">
+              Kein Arbeitstag gestartet
+            </div>
+          )}
         </div>
-        <div className="mt-3 text-4xl font-black text-white">
-          {laufzeitText()}
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <button
+            type="button"
+            onClick={startArbeitstag}
+            className="rounded-xl bg-green-600 px-5 py-4 font-black text-white shadow-lg shadow-green-600/20 transition hover:bg-green-700"
+          >
+            ▶ Arbeitstag starten
+          </button>
+
+          <input
+            type="number"
+            step="0.25"
+            value={pauseStop}
+            onChange={(e) => setPauseStop(e.target.value)}
+            className="dark-input"
+            placeholder="Pause in Stunden"
+          />
+
+          <button
+            type="button"
+            onClick={stopArbeitstag}
+            className="rounded-xl bg-orange-600 px-5 py-4 font-black text-white shadow-lg shadow-orange-600/20 transition hover:bg-orange-700"
+          >
+            ■ Arbeitstag stoppen
+          </button>
         </div>
-      </>
-    ) : (
-      <div className="mt-2 text-xl font-black text-white/70">
-        Kein Arbeitstag gestartet
-      </div>
-    )}
-  </div>
+      </section>
 
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-    <button
-      type="button"
-      onClick={startArbeitstag}
-      className="rounded-xl bg-green-600 px-5 py-4 font-black text-white shadow-lg shadow-green-600/20 transition hover:bg-green-700"
-    >
-      ▶ Arbeitstag starten
-    </button>
+      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+        <div className="mb-5">
+          <h2 className="text-2xl font-black text-white">
+            Arbeitstag manuell nachtragen
+          </h2>
+          <p className="mt-1 text-white/55">
+            Für vergessenen Start / Stop. Rechnet automatisch Betriebsunterhalt.
+          </p>
+        </div>
 
-    <input
-      type="number"
-      step="0.25"
-      value={pauseStop}
-      onChange={(e) => setPauseStop(e.target.value)}
-      className="dark-input"
-      placeholder="Pause in Stunden"
-    />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
+          <Field label="Datum">
+            <input
+              type="date"
+              value={manuellDatum}
+              onChange={(e) => setManuellDatum(e.target.value)}
+              className="dark-input"
+            />
+          </Field>
 
-    <button
-      type="button"
-      onClick={stopArbeitstag}
-      className="rounded-xl bg-orange-600 px-5 py-4 font-black text-white shadow-lg shadow-orange-600/20 transition hover:bg-orange-700"
-    >
-      ■ Arbeitstag stoppen
-    </button>
-  </div>
-</section>
+          <Field label="Von">
+            <input
+              type="time"
+              value={manuellStart}
+              onChange={(e) => setManuellStart(e.target.value)}
+              className="dark-input"
+            />
+          </Field>
 
-<section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
-  <div className="mb-5">
-    <h2 className="text-2xl font-black text-white">
-      Arbeitstag manuell nachtragen
-    </h2>
-    <p className="mt-1 text-white/55">
-      Für vergessenen Start / Stop. Rechnet automatisch Betriebsunterhalt.
-    </p>
-  </div>
+          <Field label="Bis">
+            <input
+              type="time"
+              value={manuellEnde}
+              onChange={(e) => setManuellEnde(e.target.value)}
+              className="dark-input"
+            />
+          </Field>
 
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
-    <input
-      type="date"
-      value={manuellDatum}
-      onChange={(e) => setManuellDatum(e.target.value)}
-      className="dark-input"
-    />
+          <Field label="Pause (Std.)">
+            <input
+              type="number"
+              step="0.25"
+              value={manuellPause}
+              onChange={(e) => setManuellPause(e.target.value)}
+              className="dark-input"
+              placeholder="Pause"
+            />
+          </Field>
 
-    <input
-      type="time"
-      value={manuellStart}
-      onChange={(e) => setManuellStart(e.target.value)}
-      className="dark-input"
-    />
-
-    <input
-      type="time"
-      value={manuellEnde}
-      onChange={(e) => setManuellEnde(e.target.value)}
-      className="dark-input"
-    />
-
-    <input
-      type="number"
-      step="0.25"
-      value={manuellPause}
-      onChange={(e) => setManuellPause(e.target.value)}
-      className="dark-input"
-      placeholder="Pause"
-    />
-
-    <button
-      type="button"
-      onClick={arbeitstagManuellSpeichern}
-      className="rounded-xl bg-orange-600 px-5 py-4 font-black text-white shadow-lg shadow-orange-600/20 transition hover:bg-orange-700"
-    >
-      Manuell berechnen
-    </button>
-  </div>
-</section>
+          <div className="flex flex-col justify-end">
+            <button
+              type="button"
+              onClick={arbeitstagManuellSpeichern}
+              className="rounded-xl bg-orange-600 px-5 py-4 font-black text-white shadow-lg shadow-orange-600/20 transition hover:bg-orange-700"
+            >
+              Manuell berechnen
+            </button>
+          </div>
+        </div>
+      </section>
 
       <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-center">
@@ -882,53 +858,11 @@ function laufzeitText() {
       </section>
 
       <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
-        <div className="mb-7">
-          <h2 className="text-2xl font-black text-white">Tagespause</h2>
-          <p className="mt-1 text-white/55">
-            Pause einmal pro Tag erfassen. Sie wird vom Tagesgesamt abgezogen.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <Field label="Datum">
-            <input
-              type="date"
-              value={pausenDatum}
-              onChange={(e) => setPausenDatum(e.target.value)}
-              className="dark-input"
-            />
-          </Field>
-
-          <Field label="Pause Min.">
-            <input
-              type="number"
-              min="0"
-              placeholder="z.B. 30"
-              value={tagespause}
-              onChange={(e) => setTagespause(e.target.value)}
-              className="dark-input"
-            />
-          </Field>
-
-          <div className="flex flex-col justify-end">
-            <button
-              type="button"
-              onClick={tagespauseSpeichern}
-              disabled={savingPause}
-              className="rounded-xl bg-orange-600 p-3 font-black text-white shadow-lg shadow-orange-600/25 transition hover:bg-orange-500 disabled:opacity-50"
-            >
-              {savingPause ? "Speichern..." : "Tagespause speichern"}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div>
             <h2 className="text-2xl font-black text-white">Zusammenfassung</h2>
             <p className="mt-1 text-white/55">
-              Tagespause wird automatisch vom Gesamt abgezogen.
+              Übersicht deiner gebuchten Projektzeiten inklusive Betriebsunterhalt.
             </p>
           </div>
 
@@ -974,16 +908,13 @@ function laufzeitText() {
                             sum + Number(p.eintraege.length || 0),
                           0
                         )}{" "}
-                        Buchungen · Brutto{" "}
-                        {Number(tag.gesamt || 0).toFixed(2)}h
-                        {Number(tag.tagespause || 0) > 0 &&
-                          ` · Pause ${tag.tagespause} Min.`}
+                        Buchungen · Gebucht {Number(tag.gesamt || 0).toFixed(2)}h
                       </div>
                     </div>
                   </div>
 
                   <div className="rounded-xl bg-orange-600 px-4 py-2 text-lg font-black text-white shadow-lg shadow-orange-600/25">
-                    Netto {Number(tag.netto || 0).toFixed(2)}h
+                    Summe {Number(tag.netto || 0).toFixed(2)}h
                   </div>
                 </button>
 
@@ -1110,6 +1041,12 @@ function laufzeitText() {
           background: #111315;
           color: white;
         }
+
+        .dark-input::-webkit-calendar-picker-indicator {
+          filter: brightness(0) invert(1);
+          opacity: 1;
+          cursor: pointer;
+        }
       `}</style>
     </main>
   );
@@ -1120,7 +1057,7 @@ function Field({
   children,
 }: {
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div>
