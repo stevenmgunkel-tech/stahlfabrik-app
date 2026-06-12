@@ -135,39 +135,67 @@ export default function ArbeitszeitenPage() {
   async function betriebsunterhaltSpeichern(
     userId: string,
     datumWert: string,
-    stundenWert: number,
-    kommentar: string
+    stundenWert: number
   ) {
-    const saubererWert = Math.max(0, Number(stundenWert || 0));
+    const saubererWert = Number(Number(stundenWert || 0).toFixed(2));
 
-    const { data: vorhandenerBetriebsunterhalt } = await supabase
-      .from("arbeitszeiten")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("datum", datumWert)
-      .eq("projekt", "Betriebsunterhalt")
-      .maybeSingle();
-
-    if (saubererWert > 0) {
-      if (vorhandenerBetriebsunterhalt) {
-        await supabase
-          .from("arbeitszeiten")
-          .update({ stunden: saubererWert, kommentar })
-          .eq("id", vorhandenerBetriebsunterhalt.id);
-      } else {
-        await supabase.from("arbeitszeiten").insert({
-          user_id: userId,
-          datum: datumWert,
-          projekt: "Betriebsunterhalt",
-          stunden: saubererWert,
-          kommentar,
-        });
-      }
-    } else if (vorhandenerBetriebsunterhalt) {
+    const { data: vorhandenerBetriebsunterhalt, error: sucheError } =
       await supabase
         .from("arbeitszeiten")
-        .delete()
+        .select("*")
+        .eq("user_id", userId)
+        .eq("datum", datumWert)
+        .eq("projekt", "Betriebsunterhalt")
+        .maybeSingle();
+
+    if (sucheError) {
+      console.log("BETRIEBSUNTERHALT SUCHE FEHLER:", sucheError);
+      setMeldung(sucheError.message);
+      return;
+    }
+
+    if (saubererWert <= 0) {
+      if (vorhandenerBetriebsunterhalt) {
+        const { error } = await supabase
+          .from("arbeitszeiten")
+          .delete()
+          .eq("id", vorhandenerBetriebsunterhalt.id);
+
+        if (error) {
+          console.log("BETRIEBSUNTERHALT DELETE FEHLER:", error);
+          setMeldung(error.message);
+        }
+      }
+
+      return;
+    }
+
+    if (vorhandenerBetriebsunterhalt) {
+      const { error } = await supabase
+        .from("arbeitszeiten")
+        .update({
+          stunden: saubererWert,
+        })
         .eq("id", vorhandenerBetriebsunterhalt.id);
+
+      if (error) {
+        console.log("BETRIEBSUNTERHALT UPDATE FEHLER:", error);
+        setMeldung(error.message);
+      }
+
+      return;
+    }
+
+    const { error } = await supabase.from("arbeitszeiten").insert({
+      user_id: userId,
+      datum: datumWert,
+      projekt: "Betriebsunterhalt",
+      stunden: saubererWert,
+    });
+
+    if (error) {
+      console.log("BETRIEBSUNTERHALT INSERT FEHLER:", error);
+      setMeldung(error.message);
     }
   }
 
@@ -252,11 +280,17 @@ export default function ArbeitszeitenPage() {
     const bruttoStunden = (ende.getTime() - start.getTime()) / 1000 / 60 / 60;
     const nettoStunden = Math.max(0, bruttoStunden - pauseStunden);
 
-    const { data: heutigeZeiten } = await supabase
+    const { data: heutigeZeiten, error: zeitenError } = await supabase
       .from("arbeitszeiten")
       .select("*")
       .eq("user_id", user.id)
       .eq("datum", heute);
+
+    if (zeitenError) {
+      setMeldung(zeitenError.message);
+      console.log(zeitenError);
+      return;
+    }
 
     const projektStunden =
       heutigeZeiten
@@ -271,7 +305,7 @@ export default function ArbeitszeitenPage() {
       .update({
         endzeit: jetztString,
         pause: pauseStunden,
-        netto_stunden: nettoStunden,
+        netto_stunden: Number(nettoStunden.toFixed(2)),
         status: "Abgeschlossen",
       })
       .eq("id", tageszeit.id);
@@ -281,12 +315,7 @@ export default function ArbeitszeitenPage() {
       return;
     }
 
-    await betriebsunterhaltSpeichern(
-      user.id,
-      heute,
-      betriebsunterhalt,
-      "Automatisch berechnete Restzeit"
-    );
+    await betriebsunterhaltSpeichern(user.id, heute, betriebsunterhalt);
 
     setMeldung(
       projektWarnung
@@ -300,6 +329,7 @@ export default function ArbeitszeitenPage() {
           )}h · Betriebsunterhalt: ${betriebsunterhalt.toFixed(2)}h`
     );
 
+    setPauseStop("0");
     await ladeDaten();
   }
 
@@ -322,15 +352,23 @@ export default function ArbeitszeitenPage() {
     const nettoStunden = Math.max(0, bruttoStunden - pauseStunden);
 
     if (bruttoStunden <= 0 || nettoStunden <= 0) {
-      setMeldung("Endzeit muss nach Startzeit liegen und Nettozeit muss größer als 0 sein.");
+      setMeldung(
+        "Endzeit muss nach Startzeit liegen und Nettozeit muss größer als 0 sein."
+      );
       return;
     }
 
-    const { data: projektzeitenTag } = await supabase
+    const { data: projektzeitenTag, error: zeitenError } = await supabase
       .from("arbeitszeiten")
       .select("*")
       .eq("user_id", user.id)
       .eq("datum", manuellDatum);
+
+    if (zeitenError) {
+      setMeldung(zeitenError.message);
+      console.log(zeitenError);
+      return;
+    }
 
     const projektStunden =
       projektzeitenTag
@@ -359,7 +397,7 @@ export default function ArbeitszeitenPage() {
           startzeit: manuellStart,
           endzeit: manuellEnde,
           pause: pauseStunden,
-          netto_stunden: nettoStunden,
+          netto_stunden: Number(nettoStunden.toFixed(2)),
           status: "Manuell",
         })
         .eq("id", vorhandenerTag.id);
@@ -375,7 +413,7 @@ export default function ArbeitszeitenPage() {
         startzeit: manuellStart,
         endzeit: manuellEnde,
         pause: pauseStunden,
-        netto_stunden: nettoStunden,
+        netto_stunden: Number(nettoStunden.toFixed(2)),
         status: "Manuell",
       });
 
@@ -385,58 +423,7 @@ export default function ArbeitszeitenPage() {
       }
     }
 
-    async function betriebsunterhaltSpeichern(
-  userId: string,
-  datumWert: string,
-  stundenWert: number,
-  kommentar: string
-) {
-  if (stundenWert <= 0) return;
-
-  const { data: vorhandenerBetriebsunterhalt, error: sucheError } =
-    await supabase
-      .from("arbeitszeiten")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("datum", datumWert)
-      .eq("projekt", "Betriebsunterhalt")
-      .maybeSingle();
-
-  if (sucheError) {
-    setMeldung(sucheError.message);
-    console.log(sucheError);
-    return;
-  }
-
-  if (vorhandenerBetriebsunterhalt) {
-    const { error } = await supabase
-      .from("arbeitszeiten")
-      .update({
-        stunden: Number(stundenWert.toFixed(2)),
-        kommentar,
-      })
-      .eq("id", vorhandenerBetriebsunterhalt.id);
-
-    if (error) {
-      setMeldung(error.message);
-      console.log(error);
-    }
-
-    return;
-  }
-
-  const { error } = await supabase.from("arbeitszeiten").insert({
-    user_id: userId,
-    datum: datumWert,
-    projekt: "Betriebsunterhalt",
-    stunden: Number(stundenWert.toFixed(2)),
-  });
-
-  if (error) {
-    setMeldung(error.message);
-    console.log(error);
-  }
-}
+    await betriebsunterhaltSpeichern(user.id, manuellDatum, betriebsunterhalt);
 
     setMeldung(
       projektWarnung
