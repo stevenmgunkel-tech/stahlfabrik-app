@@ -16,6 +16,7 @@ export default function ArbeitszeitenPage() {
   const [zeiten, setZeiten] = useState<any[]>([]);
   const [projekte, setProjekte] = useState<any[]>([]);
   const [bereich, setBereich] = useState("");
+  const [projektBereiche, setProjektBereiche] = useState<any[]>([]);
   const [tageszeiten, setTageszeiten] = useState<any[]>([]);
   const [offeneTage, setOffeneTage] = useState<string[]>([]);
   const [offeneDetails, setOffeneDetails] = useState<string[]>([]);
@@ -152,6 +153,40 @@ export default function ArbeitszeitenPage() {
 
   return gefunden?.kunde || "Kein Kunde hinterlegt";
 }
+
+
+  async function ladeProjektBereiche(projektName: string) {
+    setBereich("");
+
+    if (!projektName) {
+      setProjektBereiche([]);
+      return;
+    }
+
+    const projektObj = projekte.find(
+      (p) => projektAnzeige(p) === projektName || p.name === projektName
+    );
+
+    if (!projektObj) {
+      setProjektBereiche([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("projekt_bereiche")
+      .select("*")
+      .eq("projekt_id", projektObj.id)
+      .order("bereich", { ascending: true });
+
+    if (error) {
+      console.log("PROJEKT BEREICHE FEHLER:", error);
+      setMeldung(error.message);
+      setProjektBereiche([]);
+      return;
+    }
+
+    setProjektBereiche(data || []);
+  }
 
   async function betriebsunterhaltSpeichern(
     userId: string,
@@ -598,6 +633,7 @@ export default function ArbeitszeitenPage() {
     setDatum(heuteDatum());
     setProjekt("");
     setBereich("");
+    setProjektBereiche([]);
     setStunden("");
     setBearbeitenId(null);
 
@@ -666,10 +702,11 @@ export default function ArbeitszeitenPage() {
       setMeldung("Automatisch berechneter Betriebsunterhalt kann nicht bearbeitet werden.");
       return;
     }
-    setBereich(zeit.bereich || "");
     setBearbeitenId(zeit.id);
     setDatum(zeit.datum || "");
     setProjekt(zeit.projekt || "");
+    setBereich(zeit.bereich || "");
+    ladeProjektBereiche(zeit.projekt || "");
     setStunden(String(zeit.stunden || ""));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -679,6 +716,7 @@ export default function ArbeitszeitenPage() {
     setDatum(heuteDatum());
     setProjekt("");
     setBereich("");
+    setProjektBereiche([]);
     setStunden("");
   }
 
@@ -941,7 +979,10 @@ export default function ArbeitszeitenPage() {
           <Field label="Projekt">
             <select
               value={projekt}
-              onChange={(e) => setProjekt(e.target.value)}
+              onChange={(e) => {
+                setProjekt(e.target.value);
+                ladeProjektBereiche(e.target.value);
+              }}
               className="dark-input"
             >
               <option value="">Projekt auswählen</option>
@@ -961,11 +1002,18 @@ export default function ArbeitszeitenPage() {
             <select
               value={bereich}
               onChange={(e) => setBereich(e.target.value)}
+              disabled={!projekt || projektBereiche.length === 0}
               className="dark-input"
             >
-              <option value="">Bereich auswählen</option>
-              <option value="Werkstatt">Werkstatt</option>
-              <option value="Montage">Montage</option>
+              <option value="">
+                {projekt ? "Bereich auswählen" : "Zuerst Projekt auswählen"}
+              </option>
+
+              {projektBereiche.map((eintrag) => (
+                <option key={eintrag.id} value={eintrag.bereich}>
+                  {eintrag.bereich}
+                </option>
+              ))}
             </select>
           </Field>
 
