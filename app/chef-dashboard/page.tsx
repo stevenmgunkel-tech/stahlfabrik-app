@@ -366,7 +366,7 @@ const letzteGepruefteTage = gepruefteTageListe
       new Date(b.datum).getTime() -
       new Date(a.datum).getTime()
   )
-  .slice(0, 10);
+  .slice(0, 5);
 
   return (
     <main className="space-y-8">
