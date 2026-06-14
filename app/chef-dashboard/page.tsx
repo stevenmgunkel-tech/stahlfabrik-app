@@ -230,13 +230,17 @@ const iststunden = bruttoStunden - pauseStunden;
       .filter((eintrag) => eintrag.typ === "Krank")
       .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
-    const ueberstundenabbauPerson = personUrlaub
-      .filter(
-        (eintrag) =>
-          eintrag.typ === "Überstundenabbau" &&
-          eintrag.status === "Genehmigt"
-      )
-      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+    const ueberstundenAbbauStunden = personUrlaub
+  .filter(
+    (eintrag) =>
+      eintrag.typ === "Überstundenabbau" &&
+      eintrag.status === "Genehmigt"
+  )
+  .reduce(
+    (sum, eintrag) =>
+      sum + Number(eintrag.stunden || 0),
+    0
+  );
 
     const tagesSoll = Number(person.wochenstunden || 0) / 5;
 
@@ -245,7 +249,6 @@ const iststunden = bruttoStunden - pauseStunden;
     const sollstunden = tagesSoll * personArbeitstage;
     const urlaubStunden = urlaubstagePerson * tagesSoll;
     const krankStunden = kranktagePerson * tagesSoll;
-    const ueberstundenAbbauStunden = ueberstundenabbauPerson * tagesSoll;
 
     const angerechneteStunden =
       iststunden + urlaubStunden + krankStunden;
@@ -266,7 +269,6 @@ const gesamtUeberstunden =
   gesamtUeberstunden,
   urlaubstagePerson,
   kranktagePerson,
-  ueberstundenabbauPerson,
   ueberstundenAbbauStunden,
   personArbeitstage,
 };
