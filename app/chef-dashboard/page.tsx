@@ -248,7 +248,7 @@ const iststunden = bruttoStunden - pauseStunden;
     const ueberstundenAbbauStunden = ueberstundenabbauPerson * tagesSoll;
 
     const angerechneteStunden =
-      iststunden + urlaubStunden + krankStunden + ueberstundenAbbauStunden;
+      iststunden + urlaubStunden + krankStunden;
 
     const differenz =
       angerechneteStunden - sollstunden - ueberstundenAbbauStunden;
@@ -360,6 +360,14 @@ const abgeschlosseneTageListe = tageszeiten
     };
   });
 
+const letzteGepruefteTage = gepruefteTageListe
+  .sort(
+    (a, b) =>
+      new Date(b.datum).getTime() -
+      new Date(a.datum).getTime()
+  )
+  .slice(0, 10);
+
   return (
     <main className="space-y-8">
       <div>
@@ -467,7 +475,7 @@ const abgeschlosseneTageListe = tageszeiten
       Keine abgeschlossenen Tage zur Prüfung.
     </div>
   ) : (
-    <div className="space-y-3">
+    <div className="max-h-[500px] space-y-3 overflow-y-auto pr-2">
       {abgeschlosseneTageListe.map((tag) => (
         <div
           key={tag.id}
@@ -517,7 +525,7 @@ const abgeschlosseneTageListe = tageszeiten
     </div>
   ) : (
     <div className="space-y-3">
-      {gepruefteTageListe.map((tag) => (
+      {letzteGepruefteTage.map((tag) => (
         <div
           key={tag.id}
           className="rounded-xl border border-green-500/20 bg-green-500/5 p-5"
