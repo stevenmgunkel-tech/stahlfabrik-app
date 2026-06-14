@@ -12,13 +12,14 @@ export default function ProjektePage() {
   const [status, setStatus] = useState("Aktiv");
 
   const alleBereiche = [
-    "Werkstatt",
-    "Montage",
-    "Logistik",
-    "Lieferung",
-    "Aufräumen",
-    "Sonstiges",
-  ];
+  "Werkstatt",
+  "Montage",
+  "Logistik",
+  "Planung",
+  "Lieferung",
+  "Aufräumen",
+  "Sonstiges",
+];
 
   const [ausgewaehlteBereiche, setAusgewaehlteBereiche] = useState<string[]>([
     "Werkstatt",
