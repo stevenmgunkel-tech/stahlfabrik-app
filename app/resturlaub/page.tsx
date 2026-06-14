@@ -8,7 +8,7 @@ export default function ResturlaubPage() {
   const [genommenerUrlaub, setGenommenerUrlaub] = useState(0);
   const [kranktage, setKranktage] = useState(0);
   const [offeneAntraege, setOffeneAntraege] = useState(0);
-  const [ueberstundenabbauTage, setUeberstundenabbauTage] = useState(0);
+  const [ueberstundenabbauStunden, setUeberstundenabbauStunden] = useState(0);
 
   const [loading, setLoading] = useState(true);
   const [meldung, setMeldung] = useState("");
@@ -69,7 +69,7 @@ export default function ResturlaubPage() {
               eintrag.typ === "Überstundenabbau" &&
               eintrag.status === "Genehmigt"
           )
-          .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+          .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
 
         const offen = abwesenheiten.filter(
           (eintrag) => eintrag.status === "Beantragt"
@@ -77,7 +77,7 @@ export default function ResturlaubPage() {
 
         setGenommenerUrlaub(genehmigterUrlaub);
         setKranktage(krank);
-        setUeberstundenabbauTage(ueberstundenabbau);
+        setUeberstundenabbauStunden(ueberstundenabbau);
         setOffeneAntraege(offen);
       }
 
@@ -143,8 +143,10 @@ export default function ResturlaubPage() {
 
         <KpiCard
           label="Überstundenabbau"
-          value={loading ? "..." : ueberstundenabbauTage}
-          subtext="Genehmigte Abbautage"
+          value={
+            loading ? "..." : `${Number(ueberstundenabbauStunden || 0).toFixed(2)}h`
+          }
+          subtext="Genehmigte Abbaustunden"
           highlight="orange"
         />
       </section>
@@ -207,7 +209,11 @@ export default function ResturlaubPage() {
 
           <StatusRow label="Offene Anträge" value={offeneAntraege} />
           <StatusRow label="Genehmigter Urlaub" value={genommenerUrlaub} />
-          <StatusRow label="Überstundenabbau" value={ueberstundenabbauTage} orange />
+          <StatusRow
+            label="Überstundenabbau"
+            value={`${Number(ueberstundenabbauStunden || 0).toFixed(2)}h`}
+            orange
+          />
           <StatusRow
             label="Verfügbarer Urlaub"
             value={resturlaub}
