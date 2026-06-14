@@ -388,7 +388,7 @@ const letzteGepruefteTage = gepruefteTageListe
         </div>
       )}
 
-      <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-1 items-start gap-5 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           label="Team Iststunden"
           value={loading ? "..." : `${teamIststunden.toFixed(2)}h`}
@@ -426,7 +426,7 @@ const letzteGepruefteTage = gepruefteTageListe
         />
       </section>
 
-      <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-1 items-start gap-5 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           label="Team Sollstunden"
           value={loading ? "..." : `${teamSollstunden.toFixed(2)}h`}
@@ -462,7 +462,7 @@ const letzteGepruefteTage = gepruefteTageListe
   green={gepruefteTage > 0}
 />
 
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+      <section className="min-h-[150px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
   <div className="mb-6">
     <h2 className="text-2xl font-black text-white">
       Tagesabschlüsse zur Prüfung
@@ -526,7 +526,7 @@ const letzteGepruefteTage = gepruefteTageListe
       </p>
     </div>
 
-    <div className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-black text-orange-400">
+    <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-sm font-black text-orange-400">
       {gepruefteOffen ? "Ausblenden ▲" : "Anzeigen ▼"}
     </div>
   </button>
@@ -831,7 +831,7 @@ function KpiCard({
     : "text-white";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.025] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/40">
+    <div className="min-h-[150px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.025] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/40">
       <div className="text-sm font-bold uppercase tracking-widest text-white/45">
         {label}
       </div>
