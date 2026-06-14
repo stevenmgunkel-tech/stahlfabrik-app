@@ -15,6 +15,7 @@ function heuteDatum() {
 export default function ArbeitszeitenPage() {
   const [zeiten, setZeiten] = useState<any[]>([]);
   const [projekte, setProjekte] = useState<any[]>([]);
+  const [bereich, setBereich] = useState("");
   const [tageszeiten, setTageszeiten] = useState<any[]>([]);
   const [offeneTage, setOffeneTage] = useState<string[]>([]);
   const [offeneDetails, setOffeneDetails] = useState<string[]>([]);
@@ -210,6 +211,7 @@ export default function ArbeitszeitenPage() {
   user_id: userId,
   datum: datumWert,
   projekt: "Betriebsunterhalt",
+  bereich: "Betriebsunterhalt",
   stunden: saubererWert,
   auto_generiert: true,
 });
@@ -498,8 +500,8 @@ export default function ArbeitszeitenPage() {
   async function zeitSpeichern() {
     setMeldung("");
 
-    if (!datum || !projekt || !stunden) {
-      setMeldung("Bitte Datum, Projekt und Stunden ausfüllen.");
+    if (!datum || !projekt || !bereich || !stunden) {
+      setMeldung("Bitte Datum, Projekt, Bereich und Stunden ausfüllen.");
       return;
     }
 
@@ -534,7 +536,7 @@ export default function ArbeitszeitenPage() {
     if (bearbeitenId) {
       const { data: alteZeit } = await supabase
         .from("arbeitszeiten")
-        .select("datum, auto_generiert")
+        .select("datum, auto_generiert, bereich")
         .eq("id", bearbeitenId)
         .eq("user_id", user.id)
         .single();
@@ -552,6 +554,7 @@ export default function ArbeitszeitenPage() {
         .update({
           datum,
           projekt,
+          bereich,
           startzeit: null,
           endzeit: null,
           pause: 0,
@@ -573,6 +576,7 @@ export default function ArbeitszeitenPage() {
         {
           datum,
           projekt,
+          bereich,
           startzeit: null,
           endzeit: null,
           pause: 0,
@@ -593,6 +597,7 @@ export default function ArbeitszeitenPage() {
 
     setDatum(heuteDatum());
     setProjekt("");
+    setBereich("");
     setStunden("");
     setBearbeitenId(null);
 
@@ -661,7 +666,7 @@ export default function ArbeitszeitenPage() {
       setMeldung("Automatisch berechneter Betriebsunterhalt kann nicht bearbeitet werden.");
       return;
     }
-
+    setBereich(zeit.bereich || "");
     setBearbeitenId(zeit.id);
     setDatum(zeit.datum || "");
     setProjekt(zeit.projekt || "");
@@ -673,6 +678,7 @@ export default function ArbeitszeitenPage() {
     setBearbeitenId(null);
     setDatum(heuteDatum());
     setProjekt("");
+    setBereich("");
     setStunden("");
   }
 
@@ -922,7 +928,7 @@ export default function ArbeitszeitenPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
           <Field label="Datum">
             <input
               type="date"
@@ -948,6 +954,18 @@ export default function ArbeitszeitenPage() {
                   </option>
                 );
               })}
+            </select>
+          </Field>
+
+          <Field label="Bereich">
+            <select
+              value={bereich}
+              onChange={(e) => setBereich(e.target.value)}
+              className="dark-input"
+            >
+              <option value="">Bereich auswählen</option>
+              <option value="Werkstatt">Werkstatt</option>
+              <option value="Montage">Montage</option>
             </select>
           </Field>
 
@@ -1135,6 +1153,10 @@ export default function ArbeitszeitenPage() {
                                     <div>
                                       <div className="text-sm text-white/50">
                                         Arbeitszeit
+                                      </div>
+
+                                      <div className="mt-1 text-xs font-bold uppercase tracking-widest text-orange-400">
+                                        {zeit.bereich || "Ohne Bereich"}
                                       </div>
                                     </div>
 
