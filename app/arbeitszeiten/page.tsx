@@ -25,6 +25,7 @@ export default function ArbeitszeitenPage() {
   heuteDatum()
 );
   const [projekt, setProjekt] = useState("");
+  const [projektId, setProjektId] = useState<number | null>(null);
   const [stunden, setStunden] = useState("");
 
   const [pauseStop, setPauseStop] = useState("0");
@@ -155,19 +156,10 @@ export default function ArbeitszeitenPage() {
 }
 
 
-  async function ladeProjektBereiche(projektName: string) {
+  async function ladeProjektBereicheById(projektIdWert: number | null) {
     setBereich("");
 
-    if (!projektName) {
-      setProjektBereiche([]);
-      return;
-    }
-
-    const projektObj = projekte.find(
-      (p) => projektAnzeige(p) === projektName || p.name === projektName
-    );
-
-    if (!projektObj) {
+    if (!projektIdWert) {
       setProjektBereiche([]);
       return;
     }
@@ -175,7 +167,7 @@ export default function ArbeitszeitenPage() {
     const { data, error } = await supabase
       .from("projekt_bereiche")
       .select("*")
-      .eq("projekt_id", projektObj.id)
+      .eq("projekt_id", projektIdWert)
       .order("bereich", { ascending: true });
 
     if (error) {
@@ -632,6 +624,7 @@ export default function ArbeitszeitenPage() {
 
     setDatum(heuteDatum());
     setProjekt("");
+    setProjektId(null);
     setBereich("");
     setProjektBereiche([]);
     setStunden("");
@@ -702,11 +695,18 @@ export default function ArbeitszeitenPage() {
       setMeldung("Automatisch berechneter Betriebsunterhalt kann nicht bearbeitet werden.");
       return;
     }
+    const projektObj = projekte.find(
+      (p) => projektAnzeige(p) === (zeit.projekt || "") || p.name === (zeit.projekt || "")
+    );
+
+    const id = projektObj ? Number(projektObj.id) : null;
+
     setBearbeitenId(zeit.id);
     setDatum(zeit.datum || "");
     setProjekt(zeit.projekt || "");
+    setProjektId(id);
     setBereich(zeit.bereich || "");
-    ladeProjektBereiche(zeit.projekt || "");
+    ladeProjektBereicheById(id);
     setStunden(String(zeit.stunden || ""));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -715,6 +715,7 @@ export default function ArbeitszeitenPage() {
     setBearbeitenId(null);
     setDatum(heuteDatum());
     setProjekt("");
+    setProjektId(null);
     setBereich("");
     setProjektBereiche([]);
     setStunden("");
@@ -978,23 +979,28 @@ export default function ArbeitszeitenPage() {
 
           <Field label="Projekt">
             <select
-              value={projekt}
+              value={projektId ?? ""}
               onChange={(e) => {
-                setProjekt(e.target.value);
-                ladeProjektBereiche(e.target.value);
+                const id = e.target.value ? Number(e.target.value) : null;
+
+                const projektObj = id
+                  ? projekte.find((p) => Number(p.id) === id)
+                  : null;
+
+                setProjektId(id);
+                setProjekt(projektObj ? projektAnzeige(projektObj) : "");
+                setBereich("");
+                ladeProjektBereicheById(id);
               }}
               className="dark-input"
             >
               <option value="">Projekt auswählen</option>
-              {projekte.map((projektItem) => {
-                const anzeige = projektAnzeige(projektItem);
 
-                return (
-                  <option key={projektItem.id} value={anzeige}>
-                    {anzeige}
-                  </option>
-                );
-              })}
+              {projekte.map((projektItem) => (
+                <option key={projektItem.id} value={projektItem.id}>
+                  {projektAnzeige(projektItem)}
+                </option>
+              ))}
             </select>
           </Field>
 
@@ -1006,7 +1012,11 @@ export default function ArbeitszeitenPage() {
               className="dark-input"
             >
               <option value="">
-                {projekt ? "Bereich auswählen" : "Zuerst Projekt auswählen"}
+                {!projekt
+                  ? "Zuerst Projekt auswählen"
+                  : projektBereiche.length === 0
+                  ? "Keine Bereiche für dieses Projekt"
+                  : "Bereich auswählen"}
               </option>
 
               {projektBereiche.map((eintrag) => (
