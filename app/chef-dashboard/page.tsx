@@ -13,6 +13,7 @@ export default function ChefDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [meldung, setMeldung] = useState("");
   const [tageszeiten, setTageszeiten] = useState<any[]>([]);
+  const [gepruefteOffen, setGepruefteOffen] = useState(false);
 
   const monat = new Date().toISOString().slice(0, 7);
 
@@ -231,16 +232,12 @@ const iststunden = bruttoStunden - pauseStunden;
       .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
     const ueberstundenAbbauStunden = personUrlaub
-  .filter(
-    (eintrag) =>
-      eintrag.typ === "Überstundenabbau" &&
-      eintrag.status === "Genehmigt"
-  )
-  .reduce(
-    (sum, eintrag) =>
-      sum + Number(eintrag.stunden || 0),
-    0
-  );
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Überstundenabbau" &&
+          eintrag.status === "Genehmigt"
+      )
+      .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
 
     const tagesSoll = Number(person.wochenstunden || 0) / 5;
 
@@ -249,7 +246,6 @@ const iststunden = bruttoStunden - pauseStunden;
     const sollstunden = tagesSoll * personArbeitstage;
     const urlaubStunden = urlaubstagePerson * tagesSoll;
     const krankStunden = kranktagePerson * tagesSoll;
-
     const angerechneteStunden =
       iststunden + urlaubStunden + krankStunden;
 
@@ -368,7 +364,7 @@ const letzteGepruefteTage = gepruefteTageListe
       new Date(b.datum).getTime() -
       new Date(a.datum).getTime()
   )
-  .slice(0, 5);
+  .slice(0, 10);
 
   return (
     <main className="space-y-8">
@@ -407,7 +403,11 @@ const letzteGepruefteTage = gepruefteTageListe
         <KpiCard
           label="Überstundenabbau"
           value={
-            loading ? "..." : `-${teamUeberstundenAbbauStunden.toFixed(2)}h`
+            loading
+              ? "..."
+              : teamUeberstundenAbbauStunden > 0
+              ? `-${teamUeberstundenAbbauStunden.toFixed(2)}h`
+              : "0.00h"
           }
           orange
         />
@@ -477,7 +477,7 @@ const letzteGepruefteTage = gepruefteTageListe
       Keine abgeschlossenen Tage zur Prüfung.
     </div>
   ) : (
-    <div className="max-h-[500px] space-y-3 overflow-y-auto pr-2">
+    <div className="space-y-3">
       {abgeschlosseneTageListe.map((tag) => (
         <div
           key={tag.id}
@@ -511,48 +511,70 @@ const letzteGepruefteTage = gepruefteTageListe
 </section>
 
 <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
-  <div className="mb-6">
-    <h2 className="text-2xl font-black text-white">
-      Geprüfte Tagesabschlüsse
-    </h2>
+  <button
+    type="button"
+    onClick={() => setGepruefteOffen(!gepruefteOffen)}
+    className="flex w-full items-center justify-between gap-4 text-left"
+  >
+    <div>
+      <h2 className="text-2xl font-black text-white">
+        Letzte Freigaben
+      </h2>
 
-    <p className="mt-1 text-white/55">
-      Bereits freigegebene Arbeitstage.
-    </p>
-  </div>
-
-  {gepruefteTageListe.length === 0 ? (
-    <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
-      Noch keine geprüften Tage vorhanden.
+      <p className="mt-1 text-white/55">
+        Zuletzt geprüfte Tagesabschlüsse.
+      </p>
     </div>
-  ) : (
-    <div className="space-y-3">
-      {letzteGepruefteTage.map((tag) => (
-        <div
-          key={tag.id}
-          className="rounded-xl border border-green-500/20 bg-green-500/5 p-5"
-        >
-          <div className="text-lg font-black text-white">
-            {tag.mitarbeiterName}
-          </div>
 
-          <div className="mt-1 text-sm text-white/55">
-            {tag.datum} · {Number(tag.netto_stunden || 0).toFixed(2)}h
-          </div>
+    <div className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-black text-orange-400">
+      {gepruefteOffen ? "Ausblenden ▲" : "Anzeigen ▼"}
+    </div>
+  </button>
 
-          <div className="mt-2 text-xs font-bold uppercase tracking-widest text-green-400">
-            Status: Geprüft
-          </div>
-
-          <div className="mt-3 text-sm text-white/70">
-            Geprüft von: {tag.geprueft_von || "-"}
-          </div>
-
-          <div className="text-sm text-white/70">
-            Geprüft am: {tag.geprueft_am || "-"}
-          </div>
+  {gepruefteOffen && (
+    <div className="mt-6">
+      {letzteGepruefteTage.length === 0 ? (
+        <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
+          Noch keine geprüften Tage vorhanden.
         </div>
-      ))}
+      ) : (
+        <div className="max-h-[420px] space-y-3 overflow-y-auto pr-2">
+          {letzteGepruefteTage.map((tag) => (
+            <div
+              key={tag.id}
+              className="rounded-xl border border-green-500/20 bg-green-500/5 p-4"
+            >
+              <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                <div>
+                  <div className="text-base font-black text-white">
+                    {tag.mitarbeiterName}
+                  </div>
+
+                  <div className="mt-1 text-sm text-white/55">
+                    {tag.datum} · {Number(tag.netto_stunden || 0).toFixed(2)}h
+                  </div>
+
+                  <div className="mt-2 text-xs font-bold uppercase tracking-widest text-green-400">
+                    Status: Geprüft
+                  </div>
+                </div>
+
+                <div className="text-sm text-white/60 md:text-right">
+                  <div>
+                    Geprüft von: {tag.geprueft_von || "-"}
+                  </div>
+
+                  <div>
+                    {tag.geprueft_am
+                      ? new Date(tag.geprueft_am).toLocaleString("de-CH")
+                      : "-"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )}
 </section>
