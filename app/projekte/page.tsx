@@ -11,6 +11,20 @@ export default function ProjektePage() {
   const [projektname, setProjektname] = useState("");
   const [status, setStatus] = useState("Aktiv");
 
+  const alleBereiche = [
+    "Werkstatt",
+    "Montage",
+    "Logistik",
+    "Lieferung",
+    "Aufräumen",
+    "Sonstiges",
+  ];
+
+  const [ausgewaehlteBereiche, setAusgewaehlteBereiche] = useState<string[]>([
+    "Werkstatt",
+    "Montage",
+  ]);
+
   const [loading, setLoading] = useState(false);
   const [meldung, setMeldung] = useState("");
   const [bearbeitenId, setBearbeitenId] = useState<number | null>(null);
@@ -83,6 +97,64 @@ export default function ProjektePage() {
     return `${saubererKunde} - ${saubereKommission}`;
   }
 
+  function bereichUmschalten(bereich: string) {
+    setAusgewaehlteBereiche((aktuell) =>
+      aktuell.includes(bereich)
+        ? aktuell.filter((item) => item !== bereich)
+        : [...aktuell, bereich]
+    );
+  }
+
+  async function projektBereicheSpeichern(projektId: number) {
+    const { error: deleteError } = await supabase
+      .from("projekt_bereiche")
+      .delete()
+      .eq("projekt_id", projektId);
+
+    if (deleteError) {
+      setMeldung(deleteError.message);
+      console.log(deleteError);
+      return false;
+    }
+
+    if (ausgewaehlteBereiche.length === 0) {
+      return true;
+    }
+
+    const datensaetze = ausgewaehlteBereiche.map((bereich) => ({
+      projekt_id: projektId,
+      bereich,
+    }));
+
+    const { error: insertError } = await supabase
+      .from("projekt_bereiche")
+      .insert(datensaetze);
+
+    if (insertError) {
+      setMeldung(insertError.message);
+      console.log(insertError);
+      return false;
+    }
+
+    return true;
+  }
+
+  async function projektBereicheLaden(projektId: number) {
+    const { data, error } = await supabase
+      .from("projekt_bereiche")
+      .select("bereich")
+      .eq("projekt_id", projektId);
+
+    if (error) {
+      setMeldung(error.message);
+      console.log(error);
+      setAusgewaehlteBereiche([]);
+      return;
+    }
+
+    setAusgewaehlteBereiche((data || []).map((eintrag) => eintrag.bereich));
+  }
+
   async function projektSpeichern() {
     if (!isAdmin) {
       setMeldung("Keine Berechtigung.");
@@ -103,6 +175,11 @@ export default function ProjektePage() {
 
     if (!projektname.trim()) {
       setMeldung("Bitte Projektname eingeben.");
+      return;
+    }
+
+    if (ausgewaehlteBereiche.length === 0) {
+      setMeldung("Bitte mindestens einen Bereich auswählen.");
       return;
     }
 
@@ -129,23 +206,43 @@ export default function ProjektePage() {
         return;
       }
 
+      const bereicheOk = await projektBereicheSpeichern(bearbeitenId);
+
+      if (!bereicheOk) {
+        setLoading(false);
+        return;
+      }
+
       setMeldung("Projekt aktualisiert.");
     } else {
-      const { error } = await supabase.from("projekte").insert([
-        {
-          name,
-          kunde: kunde.trim(),
-          kommission: kommission.trim(),
-          projektname: projektname.trim(),
-          status,
-        },
-      ]);
+      const { data: neuesProjekt, error } = await supabase
+        .from("projekte")
+        .insert([
+          {
+            name,
+            kunde: kunde.trim(),
+            kommission: kommission.trim(),
+            projektname: projektname.trim(),
+            status,
+          },
+        ])
+        .select("id")
+        .single();
 
       if (error) {
         setLoading(false);
         setMeldung(error.message);
         console.log(error);
         return;
+      }
+
+      if (neuesProjekt?.id) {
+        const bereicheOk = await projektBereicheSpeichern(Number(neuesProjekt.id));
+
+        if (!bereicheOk) {
+          setLoading(false);
+          return;
+        }
       }
 
       setMeldung("Projekt gespeichert.");
@@ -155,6 +252,7 @@ export default function ProjektePage() {
     setKommission("");
     setProjektname("");
     setStatus("Aktiv");
+    setAusgewaehlteBereiche(["Werkstatt", "Montage"]);
     setBearbeitenId(null);
 
     await ladeProjekte();
@@ -182,12 +280,13 @@ export default function ProjektePage() {
     setMeldung("Projekt gelöscht.");
   }
 
-  function bearbeitungStarten(projekt: any) {
+  async function bearbeitungStarten(projekt: any) {
     setBearbeitenId(projekt.id);
     setKunde(projekt.kunde || "");
     setKommission(projekt.kommission || "");
     setProjektname(projekt.projektname || "");
     setStatus(projekt.status || "Aktiv");
+    await projektBereicheLaden(Number(projekt.id));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -197,6 +296,7 @@ export default function ProjektePage() {
     setKommission("");
     setProjektname("");
     setStatus("Aktiv");
+    setAusgewaehlteBereiche(["Werkstatt", "Montage"]);
   }
 
   function statusFarbe(status: string) {
@@ -327,6 +427,37 @@ export default function ProjektePage() {
                 ? "Änderung speichern"
                 : "Speichern"}
             </button>
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-5">
+          <div className="mb-4">
+            <h3 className="text-lg font-black text-white">Erlaubte Bereiche</h3>
+            <p className="mt-1 text-sm text-white/50">
+              Diese Bereiche erscheinen später in der Zeiterfassung für dieses Projekt.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+            {alleBereiche.map((bereich) => {
+              const aktiv = ausgewaehlteBereiche.includes(bereich);
+
+              return (
+                <button
+                  key={bereich}
+                  type="button"
+                  onClick={() => bereichUmschalten(bereich)}
+                  className={`rounded-xl border px-4 py-3 text-sm font-black transition ${
+                    aktiv
+                      ? "border-orange-500 bg-orange-500/15 text-orange-400"
+                      : "border-white/10 bg-white/[0.04] text-white/60 hover:border-orange-500/40 hover:text-orange-400"
+                  }`}
+                >
+                  {aktiv ? "✓ " : ""}
+                  {bereich}
+                </button>
+              );
+            })}
           </div>
         </div>
 
