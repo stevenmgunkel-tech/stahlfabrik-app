@@ -203,43 +203,29 @@ function Sidebar({
 
 function BrandLogo({ small = false }: { small?: boolean }) {
   return (
-    <div className={small ? "flex items-center gap-3" : "flex flex-col items-center"}>
+    <div className={small ? "flex flex-col items-start" : "flex flex-col items-center"}>
       <div
-        className={`relative flex items-center justify-center overflow-hidden rounded-2xl border border-orange-500/40 bg-gradient-to-br from-[#1a1d20] via-[#0b0d0f] to-black shadow-2xl shadow-orange-500/10 ${
-          small ? "h-11 w-11" : "mb-5 h-20 w-20"
+        className={`leading-none font-black tracking-tight ${
+          small ? "text-2xl" : "text-[48px]"
         }`}
       >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.35),_transparent_55%)]" />
-        <div className="absolute bottom-0 h-[2px] w-full bg-orange-500/70" />
-
-        <span
-          className={`relative font-black tracking-tight text-orange-400 ${
-            small ? "text-xl" : "text-4xl"
-          }`}
-        >
-          SF
-        </span>
+        <span className="text-white">Stahl</span>
+        <span className="text-orange-500">Fabrik</span>
       </div>
 
-      <div className={small ? "leading-tight" : "text-center"}>
-        <div
-          className={`font-black tracking-tight ${
-            small ? "text-xl" : "text-[44px] leading-none"
-          }`}
-        >
-          <span className="text-white">Stahl</span>
-          <span className="text-orange-500">Fabrik</span>
-        </div>
+      <div className="mt-2 flex items-center justify-center gap-3">
+        {!small && <div className="h-[2px] w-8 rounded-full bg-orange-500/70" />}
 
         <div
-          className={`mt-2 flex items-center justify-center gap-2 font-black uppercase text-white/45 ${
-            small ? "text-[8px] tracking-[0.18em]" : "text-[10px] tracking-[0.30em]"
+          className={`whitespace-nowrap font-bold uppercase ${
+            small ? "text-[8px] tracking-[0.2em]" : "text-[11px] tracking-[0.24em]"
           }`}
         >
-          {!small && <span className="h-[1px] w-7 bg-orange-500/60" />}
-          <span>Digitales Betriebssystem</span>
-          {!small && <span className="h-[1px] w-7 bg-orange-500/60" />}
+          <span className="text-orange-500">Swiss</span>{" "}
+          <span className="text-white/90">ERP System</span>
         </div>
+
+        {!small && <div className="h-[2px] w-8 rounded-full bg-orange-500/70" />}
       </div>
     </div>
   );
