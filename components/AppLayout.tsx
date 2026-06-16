@@ -205,17 +205,26 @@ function BrandLogo({ small = false }: { small?: boolean }) {
   return (
     <div className={small ? "flex items-center gap-3" : "flex flex-col items-center"}>
       <div
-        className={`flex items-center justify-center rounded-2xl border border-orange-500/35 bg-gradient-to-br from-orange-500/25 to-black/30 font-black text-orange-400 shadow-lg shadow-orange-500/10 ${
-          small ? "h-10 w-10 text-xl" : "mb-4 h-16 w-16 text-3xl"
+        className={`relative flex items-center justify-center overflow-hidden rounded-2xl border border-orange-500/40 bg-gradient-to-br from-[#1a1d20] via-[#0b0d0f] to-black shadow-2xl shadow-orange-500/10 ${
+          small ? "h-11 w-11" : "mb-5 h-20 w-20"
         }`}
       >
-        SF
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.35),_transparent_55%)]" />
+        <div className="absolute bottom-0 h-[2px] w-full bg-orange-500/70" />
+
+        <span
+          className={`relative font-black tracking-tight text-orange-400 ${
+            small ? "text-xl" : "text-4xl"
+          }`}
+        >
+          SF
+        </span>
       </div>
 
       <div className={small ? "leading-tight" : "text-center"}>
         <div
           className={`font-black tracking-tight ${
-            small ? "text-xl" : "text-[42px] leading-none"
+            small ? "text-xl" : "text-[44px] leading-none"
           }`}
         >
           <span className="text-white">Stahl</span>
@@ -223,11 +232,13 @@ function BrandLogo({ small = false }: { small?: boolean }) {
         </div>
 
         <div
-          className={`mt-2 font-black uppercase text-white/45 ${
-            small ? "text-[8px] tracking-[0.18em]" : "text-[10px] tracking-[0.32em]"
+          className={`mt-2 flex items-center justify-center gap-2 font-black uppercase text-white/45 ${
+            small ? "text-[8px] tracking-[0.18em]" : "text-[10px] tracking-[0.30em]"
           }`}
         >
-          Werkstatt · Zeit · Projekte
+          {!small && <span className="h-[1px] w-7 bg-orange-500/60" />}
+          <span>Digitales Betriebssystem</span>
+          {!small && <span className="h-[1px] w-7 bg-orange-500/60" />}
         </div>
       </div>
     </div>
