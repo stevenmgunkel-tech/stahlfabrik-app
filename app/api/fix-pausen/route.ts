@@ -32,9 +32,8 @@ export async function GET() {
   for (const tag of tage || []) {
     const altePause = Number(tag.pause || 0);
 
-    if (altePause !== 0) continue;
 
-    const neuePause = FIXPAUSE_STUNDEN;
+    const neuePause = altePause + FIXPAUSE_STUNDEN;
     const neueNetto = berechneNetto(
       tag.datum,
       tag.startzeit,
