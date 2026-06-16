@@ -37,6 +37,7 @@ export default function ArbeitszeitenPage() {
   const [manuellStart, setManuellStart] = useState("07:00");
   const [manuellEnde, setManuellEnde] = useState("");
   const [manuellPause, setManuellPause] = useState("0");
+  const FIXPAUSE_MINUTEN = 15;
 
   const [saving, setSaving] = useState(false);
   const [meldung, setMeldung] = useState("");
@@ -424,7 +425,13 @@ export default function ArbeitszeitenPage() {
     const user = userData.data.user;
     if (!user) return;
 
-    const pauseStunden = Number(manuellPause || 0);
+    const zusatzPauseMinuten = Number(manuellPause || 0);
+
+const gesamtPauseMinuten =
+  FIXPAUSE_MINUTEN + zusatzPauseMinuten;
+
+const pauseStunden =
+  gesamtPauseMinuten / 60;
     const start = new Date(`${manuellDatum}T${manuellStart}`);
     const ende = new Date(`${manuellDatum}T${manuellEnde}`);
     const bruttoStunden = (ende.getTime() - start.getTime()) / 1000 / 60 / 60;
@@ -925,15 +932,24 @@ export default function ArbeitszeitenPage() {
             />
           </Field>
 
-          <Field label="Pause (Std.)">
+          <Field label="Zusätzliche Pause (Min.)">
             <input
-              type="number"
-              step="0.25"
-              value={manuellPause}
-              onChange={(e) => setManuellPause(e.target.value)}
-              className="dark-input"
-              placeholder="Pause"
-            />
+  type="number"
+  min="0"
+  step="5"
+  value={manuellPause}
+  onChange={(e) => setManuellPause(e.target.value)}
+  className="dark-input"
+  placeholder="0"
+/>
+
+<p className="mt-2 text-xs text-white/50">
+  Fixpause: 15 Min + Zusatzpause
+</p>
+
+<p className="text-sm font-bold text-orange-400 mt-2">
+  Gesamtpause: {15 + Number(manuellPause || 0)} Minuten
+</p>
           </Field>
 
           <div className="flex flex-col justify-end">
