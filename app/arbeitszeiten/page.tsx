@@ -433,9 +433,25 @@ const gesamtPauseMinuten =
 const pauseStunden =
   gesamtPauseMinuten / 60;
     const start = new Date(`${manuellDatum}T${manuellStart}`);
-    const ende = new Date(`${manuellDatum}T${manuellEnde}`);
-    const bruttoStunden = (ende.getTime() - start.getTime()) / 1000 / 60 / 60;
-    const nettoStunden = Math.max(0, bruttoStunden - pauseStunden);
+const ende = new Date(`${manuellDatum}T${manuellEnde}`);
+
+const jetzt = new Date();
+
+if (
+  manuellDatum === heuteDatum() &&
+  ende > jetzt
+) {
+  setMeldung(
+    "Endzeit darf nicht in der Zukunft liegen."
+  );
+  return;
+}
+
+const bruttoStunden =
+  (ende.getTime() - start.getTime()) / 1000 / 60 / 60;
+
+const nettoStunden =
+  Math.max(0, bruttoStunden - pauseStunden);
 
     if (bruttoStunden <= 0 || nettoStunden <= 0) {
       setMeldung(
