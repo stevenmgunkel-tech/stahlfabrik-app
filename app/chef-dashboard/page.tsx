@@ -381,6 +381,54 @@ const heutigesDatum = new Date().toLocaleDateString("de-CH", {
   year: "numeric",
 });
 
+const heuteKey = new Date().toISOString().split("T")[0];
+
+const teamStatus = mitarbeiter.map((person) => {
+  const tag = tageszeiten.find(
+    (eintrag) =>
+      eintrag.user_id === person.user_id &&
+      eintrag.datum === heuteKey
+  );
+
+  if (!tag) {
+    return {
+      name: person.name,
+      rolle: person.rolle,
+      status: "Kein Eintrag",
+      farbe: "text-red-400",
+      punkt: "bg-red-400",
+    };
+  }
+
+  if (tag.status === "Offen") {
+    return {
+      name: person.name,
+      rolle: person.rolle,
+      status: "Arbeitet",
+      farbe: "text-green-400",
+      punkt: "bg-green-400",
+    };
+  }
+
+  if (tag.status === "Abgeschlossen") {
+    return {
+      name: person.name,
+      rolle: person.rolle,
+      status: "Zur Prüfung",
+      farbe: "text-orange-400",
+      punkt: "bg-orange-400",
+    };
+  }
+
+  return {
+    name: person.name,
+    rolle: person.rolle,
+    status: "Geprüft",
+    farbe: "text-blue-300",
+    punkt: "bg-blue-300",
+  };
+});
+
 const systemStatus =
   offeneTage > 0 || abgeschlosseneTage > 0 || offeneAntraege > 0
     ? "Prüfung erforderlich"
@@ -692,17 +740,17 @@ const systemStatus =
                         <div className="text-xs font-black uppercase tracking-[0.22em] text-orange-400">
                           #{index + 1}
                         </div>
-                        <div className="mt-2 text-lg font-black text-white">{projekt.name}</div>
+                        <div className="mt-2 text-xl font-black text-white">{projekt.name}</div>
                         <div className="mt-1 text-sm text-white/45">{projekt.kunde || "Kein Kunde"}</div>
                       </div>
 
-                      <div className="text-2xl font-black text-orange-500">
+                      <div className="text-3xl font-black text-orange-500">
                         {Number(projekt.stunden || 0).toFixed(2)}h
                       </div>
                     </div>
 
                     <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
-                      <div className="h-full rounded-full bg-orange-500" style={{ width: `${percent}%` }} />
+                      <div className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-400 shadow-lg shadow-orange-500/20" style={{ width: `${percent}%` }} />
                     </div>
                   </div>
                 );
@@ -725,6 +773,45 @@ const systemStatus =
           </div>
         </div>
       </section>
+
+      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+  <div className="mb-7">
+    <h2 className="text-2xl font-black text-white">
+      Team Status
+    </h2>
+
+    <p className="mt-1 text-white/55">
+      Live Übersicht für den heutigen Arbeitstag
+    </p>
+  </div>
+
+  <div className="space-y-3">
+    {teamStatus.map((person) => (
+      <div
+        key={person.name}
+        className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/25 p-4"
+      >
+        <div className="flex items-center gap-4">
+          <span className={`h-3 w-3 rounded-full ${person.punkt}`} />
+
+          <div>
+            <div className="font-black text-white">
+              {person.name}
+            </div>
+
+            <div className="text-sm text-white/45">
+              {person.rolle}
+            </div>
+          </div>
+        </div>
+
+        <div className={`text-sm font-black uppercase tracking-widest ${person.farbe}`}>
+          {person.status}
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
 
       <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
