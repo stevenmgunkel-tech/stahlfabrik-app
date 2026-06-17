@@ -383,11 +383,12 @@ export default function ArbeitszeitenPage() {
     const { error: updateError } = await supabase
       .from("tageszeiten")
       .update({
-        endzeit: jetztString,
-        pause: pauseStunden,
-        netto_stunden: Number(nettoStunden.toFixed(2)),
-        status: "Abgeschlossen",
-      })
+  endzeit: jetztString,
+  pause: pauseStunden,
+  zusatzpause_minuten: 0,
+  netto_stunden: Number(nettoStunden.toFixed(2)),
+  status: "Abgeschlossen",
+})
       .eq("id", tageszeit.id);
 
     if (updateError) {
@@ -499,7 +500,8 @@ const nettoStunden =
           startzeit: manuellStart,
           endzeit: manuellEnde,
           pause: pauseStunden,
-          netto_stunden: Number(nettoStunden.toFixed(2)),
+zusatzpause_minuten: zusatzPauseMinuten,
+netto_stunden: Number(nettoStunden.toFixed(2)),
           status: "Abgeschlossen",
         })
         .eq("id", vorhandenerTag.id);
@@ -515,8 +517,9 @@ const nettoStunden =
         startzeit: manuellStart,
         endzeit: manuellEnde,
         pause: pauseStunden,
-        netto_stunden: Number(nettoStunden.toFixed(2)),
-        status: "Abgeschlossen",
+zusatzpause_minuten: zusatzPauseMinuten,
+netto_stunden: Number(nettoStunden.toFixed(2)),
+status: "Abgeschlossen",
       });
 
       if (error) {
@@ -1201,7 +1204,9 @@ const nettoStunden =
   </div>
 
   <div className="text-white/40">
-    Pause: {Math.round((tageszeit.pause || 0) * 60)} Min
+    Fixpause: 15 Min
+Zusatzpause: {tageszeit.zusatzpause_minuten || 0} Min
+Gesamtpause: {Math.round((tageszeit.pause || 0) * 60)} Min
   </div>
 
   <div className="text-white/40">
