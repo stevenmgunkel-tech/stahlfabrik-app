@@ -368,19 +368,35 @@ const letzteGepruefteTage = gepruefteTageListe
 
   return (
     <main className="space-y-8">
-      <div>
-        <div className="mb-3 text-sm font-medium uppercase tracking-widest text-white/60">
-          Executive Overview
-        </div>
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-8 lg:p-12">
 
-        <h1 className="text-5xl font-black tracking-tight text-white lg:text-6xl">
-          Chef Dashboard
-        </h1>
+  <div className="absolute inset-0 opacity-10">
+    <div
+      className="h-full w-full bg-cover bg-center"
+      style={{
+        backgroundImage: "url('/berg.jpg')",
+      }}
+    />
+  </div>
 
-        <p className="mt-3 text-white/60">
-          Firmenübersicht, Soll/Ist, Überstunden, Abwesenheiten und Projekte
-        </p>
-      </div>
+  <div className="relative z-10">
+    <div className="text-sm font-black uppercase tracking-[0.25em] text-orange-500">
+      ODZ V1.1
+    </div>
+
+    <div className="mt-3 text-white/70">
+      Guten Tag Steven 👋
+    </div>
+
+    <h1 className="mt-3 text-5xl font-black tracking-tight text-white lg:text-7xl">
+      STAHLFABRIK
+    </h1>
+
+    <p className="mt-4 text-lg font-medium text-white/60">
+      Optimiere die Zukunft
+    </p>
+  </div>
+</section>
 
       {meldung && (
         <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-sm font-bold text-orange-400">
