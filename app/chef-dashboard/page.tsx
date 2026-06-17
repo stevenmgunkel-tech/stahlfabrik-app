@@ -481,23 +481,23 @@ const letzteGepruefteTage = gepruefteTageListe
       <section className="min-h-[150px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
   <div className="mb-6">
     <h2 className="text-2xl font-black text-white">
-      Tagesabschlüsse zur Prüfung
+      Prüfzentrum
     </h2>
     <p className="mt-1 text-white/55">
-      Abgeschlossene Arbeitstage können hier vom Chef geprüft werden.
+      Tage prüfen, freigeben und sauber abschließen.
     </p>
   </div>
 
   {abgeschlosseneTageListe.length === 0 ? (
     <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
-      Keine abgeschlossenen Tage zur Prüfung.
+      Alles geprüft. Keine offenen Tagesabschlüsse.
     </div>
   ) : (
     <div className="space-y-3">
       {abgeschlosseneTageListe.map((tag) => (
         <div
           key={tag.id}
-          className="flex flex-col justify-between gap-4 rounded-xl border border-white/10 bg-black/25 p-5 md:flex-row md:items-center"
+          className="flex flex-col justify-between gap-4 rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-black/25 p-5 md:flex-row md:items-center"
         >
           <div>
             <div className="text-lg font-black text-white">
@@ -518,7 +518,7 @@ const letzteGepruefteTage = gepruefteTageListe
             onClick={() => tagAlsGeprueftMarkieren(tag.id)}
             className="rounded-xl bg-green-600 px-5 py-3 font-black text-white shadow-lg shadow-green-600/20 transition hover:bg-green-500"
           >
-            ✓ Als geprüft markieren
+            ✓ Freigeben
           </button>
         </div>
       ))}
