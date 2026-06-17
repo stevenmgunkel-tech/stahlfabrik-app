@@ -561,6 +561,8 @@ const systemStatus =
   green={gepruefteTage > 0}
 />
 
+</section>
+
       <section className="min-h-[150px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
   <div className="mb-6">
     <h2 className="text-2xl font-black text-white">
@@ -678,7 +680,6 @@ const systemStatus =
   )}
 </section>
 
-      </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
@@ -789,13 +790,13 @@ const systemStatus =
     {teamStatus.map((person) => (
       <div
         key={person.name}
-        className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/25 p-4"
+        className="flex items-center justify-between rounded-2xl border border-white/10 bg-gradient-to-r from-black/30 to-white/[0.03] p-4 transition hover:border-orange-500/30"
       >
         <div className="flex items-center gap-4">
           <span className={`h-3 w-3 rounded-full ${person.punkt}`} />
 
           <div>
-            <div className="font-black text-white">
+            <div className="text-lg font-black text-white">
               {person.name}
             </div>
 
@@ -805,7 +806,7 @@ const systemStatus =
           </div>
         </div>
 
-        <div className={`text-sm font-black uppercase tracking-widest ${person.farbe}`}>
+        <div className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-widest ${person.farbe}`}>
           {person.status}
         </div>
       </div>
@@ -900,13 +901,13 @@ const systemStatus =
                   key={person.id}
                   className="grid grid-cols-9 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
                 >
-                  <div className="font-black text-white">{person.name}</div>
+                  <div className="text-lg font-black text-white">{person.name}</div>
                   <div>{person.rolle}</div>
                   <div>{person.personArbeitstage}</div>
                   <div>{Number(person.sollstunden || 0).toFixed(2)}h</div>
                   <div>{Number(person.iststunden || 0).toFixed(2)}h</div>
 
-                  <div className="font-black text-white">
+                  <div className="text-lg font-black text-white">
                     {Number(person.angerechneteStunden || 0).toFixed(2)}h
                   </div>
 
@@ -990,8 +991,8 @@ const systemStatus =
                   key={projekt.name}
                   className="grid grid-cols-3 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
                 >
-                  <div className="font-black text-white">{projekt.name}</div>
-                  <div>{projekt.kunde || "-"}</div>
+                  <div className="text-lg font-black text-white">{projekt.name}</div>
+                  <div className="text-sm text-white/55">{projekt.kunde || "-"}</div>
                   <div className="font-black text-orange-500">
                     {projekt.stunden.toFixed(2)}h
                   </div>
