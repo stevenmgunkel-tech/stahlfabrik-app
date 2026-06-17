@@ -534,16 +534,16 @@ const letzteGepruefteTage = gepruefteTageListe
   >
     <div>
       <h2 className="text-2xl font-black text-white">
-        Letzte Freigaben
+        Freigabehistorie
       </h2>
 
       <p className="mt-1 text-white/55">
-        Zuletzt geprüfte Tagesabschlüsse.
+        Zuletzt freigegebene und geprüfte Arbeitstage.
       </p>
     </div>
 
     <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-sm font-black text-orange-400">
-      {gepruefteOffen ? "Ausblenden ▲" : "Anzeigen ▼"}
+      {gepruefteOffen ? "Schließen ▲" : "Historie öffnen ▼"}
     </div>
   </button>
 
@@ -551,14 +551,14 @@ const letzteGepruefteTage = gepruefteTageListe
     <div className="mt-6">
       {letzteGepruefteTage.length === 0 ? (
         <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
-          Noch keine geprüften Tage vorhanden.
+          Noch keine Freigaben vorhanden.
         </div>
       ) : (
         <div className="max-h-[420px] space-y-3 overflow-y-auto pr-2">
           {letzteGepruefteTage.map((tag) => (
             <div
               key={tag.id}
-              className="rounded-xl border border-green-500/20 bg-green-500/5 p-4"
+              className="rounded-2xl border border-green-500/25 bg-gradient-to-br from-green-500/10 to-black/20 p-5"
             >
               <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
                 <div>
