@@ -450,16 +450,17 @@ const systemStatus =
         <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
           <div>
             <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
-              ODZ V1.1 · StahlFabrik
+              ODZ V1.1
             </div>
 
             <div className="mt-5 text-sm font-bold text-white/60">
-              Guten Morgen {adminName} 👋 · {heutigesDatum}
+              Guten Tag {adminName} 👋 · {heutigesDatum}
             </div>
 
-            <h1 className="mt-3 text-5xl font-black tracking-tight text-white lg:text-7xl">
-              STAHLFABRIK
-            </h1>
+            <h1 className="mt-3 text-5xl font-black tracking-tight lg:text-7xl">
+  <span className="text-slate-100">Stahl</span>
+  <span className="text-orange-500">Fabrik</span>
+</h1>
 
             <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
               Digitales Betriebssystem für Zeit, Projekte, Team und Kontrolle.
