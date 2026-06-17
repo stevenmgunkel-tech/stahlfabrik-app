@@ -760,10 +760,10 @@ const letzteGepruefteTage = gepruefteTageListe
         <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div>
             <h2 className="text-2xl font-black text-white">
-              Projektstunden diesen Monat
+              Projektübersicht
             </h2>
             <p className="mt-1 text-white/55">
-              Aufteilung der Arbeitszeit nach Projekt und Kunde
+              Aktuelle Projektbelastung im laufenden Monat
             </p>
           </div>
 
@@ -788,9 +788,15 @@ const letzteGepruefteTage = gepruefteTageListe
                   </p>
                 </div>
 
-                <div className="font-black text-orange-500">
-                  {projekt.stunden.toFixed(2)}h
-                </div>
+                <div className="text-right">
+  <div className="text-2xl font-black text-orange-500">
+    {projekt.stunden.toFixed(2)}h
+  </div>
+
+  <div className="mt-1 text-xs font-bold uppercase tracking-widest text-white/35">
+    Monat
+  </div>
+</div>
               </div>
             </div>
           ))}
@@ -799,22 +805,28 @@ const letzteGepruefteTage = gepruefteTageListe
         <div className="hidden overflow-hidden rounded-xl border border-white/10 md:block">
           <div className="overflow-x-auto">
             <div className="min-w-[700px]">
-              <div className="grid grid-cols-3 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+              <div className="grid grid-cols-4 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
                 <div>Projekt</div>
-                <div>Kunde</div>
-                <div>Stunden</div>
+<div>Kunde</div>
+<div>Stunden</div>
+<div>Status</div>
               </div>
 
               {projektStunden.map((projekt) => (
                 <div
                   key={projekt.name}
-                  className="grid grid-cols-3 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
+                  className="grid grid-cols-4 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
                 >
                   <div className="font-black text-white">{projekt.name}</div>
                   <div>{projekt.kunde || "-"}</div>
                   <div className="font-black text-orange-500">
                     {projekt.stunden.toFixed(2)}h
                   </div>
+                  <div>
+  <span className="rounded-full border border-green-400/25 bg-green-500/10 px-3 py-1 text-xs font-black uppercase tracking-widest text-green-300">
+    Aktiv
+  </span>
+</div>
                 </div>
               ))}
             </div>
