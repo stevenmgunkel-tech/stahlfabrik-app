@@ -1265,19 +1265,26 @@ Gesamtpause: {Math.round((tageszeit.pause || 0) * 60)} Min
                                   <div className="flex items-center justify-between gap-3">
                                     <div>
                                       <div className="text-sm text-white/50">
-                                        Arbeitszeit
-                                      </div>
+  Rapport
+</div>
 
-                                      <div className="mt-1 text-xs font-bold uppercase tracking-widest text-orange-400">
-                                        {zeit.bereich || "Ohne Bereich"}
-                                      </div>
+                                      <div className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-orange-400">
+  {zeit.bereich || "Ohne Bereich"}
+</div>
                                     </div>
 
-                                    <div className="font-black text-white">
-                                      {zeit.startzeit && zeit.endzeit
-  ? `${zeit.startzeit.slice(0, 5)} - ${zeit.endzeit.slice(0, 5)}`
-  : `${Number(zeit.stunden || 0).toFixed(2)}h`}
-                                    </div>
+                                    <div>
+  <div className="font-black text-orange-400 text-lg">
+    {zeit.startzeit && zeit.endzeit
+      ? `${zeit.startzeit.slice(0, 5)} - ${zeit.endzeit.slice(0, 5)}`
+      : "--:--"}
+  </div>
+
+  <div className="text-sm text-white/50">
+    {zeit.bereich || "Ohne Bereich"} ·{" "}
+    {Number(zeit.stunden || 0).toFixed(2)}h
+  </div>
+</div>
                                   </div>
 
                                   {zeit.auto_generiert ? (
