@@ -200,22 +200,6 @@ const gepruefteTage = tageszeiten.filter(
     };
   });
 
-  const bereichStunden = arbeitszeiten.reduce((acc, zeit) => {
-    const bereich = zeit.bereich || "Sonstiges";
-
-    acc[bereich] = (acc[bereich] || 0) + Number(zeit.stunden || 0);
-
-    return acc;
-  }, {} as Record<string, number>);
-
-  const bereichStats = Object.entries(bereichStunden)
-    .map(([bereich, stunden]) => ({
-      bereich,
-      stunden: Number(stunden || 0),
-    }))
-    .filter((eintrag) => eintrag.stunden > 0)
-    .sort((a, b) => b.stunden - a.stunden);
-
   const mitarbeiterStats = mitarbeiter.map((person) => {
     const personArbeitszeiten = arbeitszeiten.filter(
       (eintrag) => eintrag.user_id === person.user_id
@@ -595,44 +579,6 @@ const letzteGepruefteTage = gepruefteTageListe
   )}
 </section>
 
-      </section>
-
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
-        <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
-          <div>
-            <h2 className="text-2xl font-black text-white">Bereichsauswertung</h2>
-            <p className="mt-1 text-white/55">
-              Wo verbringt das Team seine Arbeitszeit?
-            </p>
-          </div>
-
-          <div className="text-sm text-white/50">
-            {bereichStats.length} Bereiche
-          </div>
-        </div>
-
-        {bereichStats.length === 0 ? (
-          <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
-            Noch keine Bereichsdaten vorhanden.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {bereichStats.map((eintrag) => (
-              <div
-                key={eintrag.bereich}
-                className="rounded-2xl border border-white/10 bg-black/25 p-5 transition hover:border-orange-500/30 hover:bg-black/35"
-              >
-                <div className="text-sm font-black uppercase tracking-widest text-white/45">
-                  {eintrag.bereich}
-                </div>
-
-                <div className="mt-4 text-4xl font-black text-orange-500">
-                  {eintrag.stunden.toFixed(2)}h
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
