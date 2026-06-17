@@ -445,11 +445,11 @@ const systemStatus =
         </div>
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-transparent" />
-        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-orange-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-slate-300/15 blur-3xl" />
 
         <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
           <div>
-            <div className="inline-flex rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-orange-400">
+            <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
               ODZ V1.1 · StahlFabrik
             </div>
 
@@ -561,7 +561,6 @@ const systemStatus =
   green={gepruefteTage > 0}
 />
 
-</section>
 
       <section className="min-h-[150px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
   <div className="mb-6">
@@ -680,6 +679,7 @@ const systemStatus =
   )}
 </section>
 
+      </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
@@ -738,14 +738,14 @@ const systemStatus =
                   <div key={projekt.name} className="rounded-2xl border border-white/10 bg-black/25 p-5">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <div className="text-xs font-black uppercase tracking-[0.22em] text-orange-400">
+                        <div className="text-xs font-black uppercase tracking-[0.22em] text-slate-300">
                           #{index + 1}
                         </div>
                         <div className="mt-2 text-xl font-black text-white">{projekt.name}</div>
                         <div className="mt-1 text-sm text-white/45">{projekt.kunde || "Kein Kunde"}</div>
                       </div>
 
-                      <div className="text-3xl font-black text-orange-500">
+                      <div className="text-3xl font-black text-slate-100">
                         {Number(projekt.stunden || 0).toFixed(2)}h
                       </div>
                     </div>
@@ -790,7 +790,7 @@ const systemStatus =
     {teamStatus.map((person) => (
       <div
         key={person.name}
-        className="flex items-center justify-between rounded-2xl border border-white/10 bg-gradient-to-r from-black/30 to-white/[0.03] p-4 transition hover:border-orange-500/30"
+        className="flex items-center justify-between rounded-2xl border border-white/10 bg-gradient-to-r from-black/30 to-white/[0.03] p-4 transition hover:border-slate-400/30"
       >
         <div className="flex items-center gap-4">
           <span className={`h-3 w-3 rounded-full ${person.punkt}`} />
@@ -927,7 +927,7 @@ const systemStatus =
                     {person.kranktagePerson}
                   </div>
 
-                  <div className="font-black text-orange-500">
+                  <div className="font-black text-slate-100">
                    -{Number(person.ueberstundenAbbauStunden || 0).toFixed(2)}h
                   </div>
                 </div>
@@ -969,7 +969,7 @@ const systemStatus =
                   </p>
                 </div>
 
-                <div className="font-black text-orange-500">
+                <div className="font-black text-slate-100">
                   {projekt.stunden.toFixed(2)}h
                 </div>
               </div>
@@ -993,7 +993,7 @@ const systemStatus =
                 >
                   <div className="text-lg font-black text-white">{projekt.name}</div>
                   <div className="text-sm text-white/55">{projekt.kunde || "-"}</div>
-                  <div className="font-black text-orange-500">
+                  <div className="font-black text-slate-100">
                     {projekt.stunden.toFixed(2)}h
                   </div>
                 </div>
@@ -1019,16 +1019,14 @@ function KpiCard({
   green?: boolean;
   red?: boolean;
 }) {
-  const color = orange
-    ? "text-orange-500"
-    : green
+  const color = green
     ? "text-green-400"
     : red
     ? "text-red-400"
-    : "text-white";
+    : "text-slate-100";
 
   return (
-    <div className="group overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/30">
+    <div className="group overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-slate-400/30">
       <div className={`text-4xl font-black md:text-5xl ${color}`}>
         {value}
       </div>
@@ -1037,7 +1035,7 @@ function KpiCard({
         {label}
       </div>
 
-      <div className="mt-5 h-1 w-16 rounded-full bg-orange-500/60" />
+      <div className="mt-5 h-1 w-16 rounded-full bg-slate-300/60" />
     </div>
   );
 }
@@ -1057,7 +1055,7 @@ function HeroMini({
     ? "text-orange-400"
     : green
     ? "text-green-400"
-    : "text-white";
+    : "text-slate-100";
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center">
@@ -1079,11 +1077,11 @@ function MiniCard({
   orange?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/25 p-5 transition hover:border-orange-500/30 hover:bg-black/35">
+    <div className="rounded-xl border border-white/10 bg-black/25 p-5 transition hover:border-slate-400/30 hover:bg-black/35">
       <div className="text-sm font-bold text-white/50">{label}</div>
       <div
         className={`mt-3 text-4xl font-black ${
-          orange ? "text-orange-500" : "text-white"
+          orange ? "text-orange-500" : "text-slate-100"
         }`}
       >
         {value}
@@ -1096,7 +1094,7 @@ function QuickLink({ href, label }: { href: string; label: string }) {
   return (
     <a
       href={href}
-      className="block rounded-xl border border-white/10 bg-black/25 p-4 font-black text-white transition hover:border-orange-500/40 hover:bg-orange-600"
+      className="block rounded-xl border border-white/10 bg-black/25 p-4 font-black text-white transition hover:border-slate-400/40 hover:bg-slate-700/40"
     >
       {label}
     </a>
@@ -1117,7 +1115,7 @@ function Info({
       <div className="text-xs text-white/45">{label}</div>
       <div
         className={`mt-1 font-bold ${
-          orange ? "text-orange-500" : "text-white"
+          orange ? "text-orange-500" : "text-slate-100"
         }`}
       >
         {value}
