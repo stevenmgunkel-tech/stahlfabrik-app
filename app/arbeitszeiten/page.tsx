@@ -27,6 +27,8 @@ export default function ArbeitszeitenPage() {
   const [projekt, setProjekt] = useState("");
   const [projektId, setProjektId] = useState<number | null>(null);
   const [stunden, setStunden] = useState("");
+  const [vonZeit, setVonZeit] = useState("");
+  const [bisZeit, setBisZeit] = useState("");
 
   const [pauseStop, setPauseStop] = useState("0");
   const [timerJetzt, setTimerJetzt] = useState(new Date());
@@ -553,10 +555,10 @@ status: "Abgeschlossen",
   async function zeitSpeichern() {
     setMeldung("");
 
-    if (!datum || !projekt || !bereich || !stunden) {
-      setMeldung("Bitte Datum, Projekt, Bereich und Stunden ausfüllen.");
-      return;
-    }
+    if (!datum || !projekt || !bereich || !vonZeit || !bisZeit) {
+  setMeldung("Bitte Datum, Projekt, Bereich, Von und Bis ausfüllen.");
+  return;
+}
 
     if (projekt === "Betriebsunterhalt") {
   setMeldung(
@@ -565,7 +567,11 @@ status: "Abgeschlossen",
   return;
 }
 
-    const berechneteStunden = Number(stunden);
+    const start = new Date(`${datum}T${vonZeit}`);
+const ende = new Date(`${datum}T${bisZeit}`);
+
+const berechneteStunden =
+  (ende.getTime() - start.getTime()) / 1000 / 60 / 60;
 
     if (!Number.isFinite(berechneteStunden) || berechneteStunden <= 0) {
       setMeldung("Bitte gültige Stunden eingeben.");
@@ -608,8 +614,8 @@ status: "Abgeschlossen",
           datum,
           projekt,
           bereich,
-          startzeit: null,
-          endzeit: null,
+          startzeit: vonZeit,
+          endzeit: bisZeit,
           pause: 0,
           stunden: berechneteStunden,
         })
@@ -630,8 +636,8 @@ status: "Abgeschlossen",
           datum,
           projekt,
           bereich,
-          startzeit: null,
-          endzeit: null,
+          startzeit: vonZeit,
+endzeit: bisZeit,
           pause: 0,
           stunden: berechneteStunden,
           user_id: user.id,
@@ -654,6 +660,8 @@ status: "Abgeschlossen",
     setBereich("");
     setProjektBereiche([]);
     setStunden("");
+    setVonZeit("");
+setBisZeit("");
     setBearbeitenId(null);
 
     if (alteDatumVorBearbeitung && alteDatumVorBearbeitung !== datum) {
@@ -997,12 +1005,12 @@ status: "Abgeschlossen",
           <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-3">
             <span className="text-sm text-white/60">Eingetragen</span>{" "}
             <span className="font-black text-orange-500">
-              {vorschauStunden}h
+              {vonZeit && bisZeit ? `${vonZeit} - ${bisZeit}` : "Von - Bis"}
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-6">
           <Field label="Datum">
             <input
               type="date"
@@ -1062,17 +1070,23 @@ status: "Abgeschlossen",
             </select>
           </Field>
 
-          <Field label="Stunden">
-            <input
-              type="number"
-              step="0.25"
-              min="0"
-              placeholder="z.B. 3 oder 4.5"
-              value={stunden}
-              onChange={(e) => setStunden(e.target.value)}
-              className="dark-input"
-            />
-          </Field>
+          <Field label="Von">
+  <input
+    type="time"
+    value={vonZeit}
+    onChange={(e) => setVonZeit(e.target.value)}
+    className="dark-input"
+  />
+</Field>
+
+<Field label="Bis">
+  <input
+    type="time"
+    value={bisZeit}
+    onChange={(e) => setBisZeit(e.target.value)}
+    className="dark-input"
+  />
+</Field>
 
           <div className="flex flex-col justify-end">
             <button
@@ -1260,7 +1274,9 @@ Gesamtpause: {Math.round((tageszeit.pause || 0) * 60)} Min
                                     </div>
 
                                     <div className="font-black text-white">
-                                      {Number(zeit.stunden || 0).toFixed(2)}h
+                                      {zeit.startzeit && zeit.endzeit
+  ? `${zeit.startzeit.slice(0, 5)} - ${zeit.endzeit.slice(0, 5)}`
+  : `${Number(zeit.stunden || 0).toFixed(2)}h`}
                                     </div>
                                   </div>
 
