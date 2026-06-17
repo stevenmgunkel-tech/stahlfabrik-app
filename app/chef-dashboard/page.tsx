@@ -14,6 +14,7 @@ export default function ChefDashboardPage() {
   const [meldung, setMeldung] = useState("");
   const [tageszeiten, setTageszeiten] = useState<any[]>([]);
   const [gepruefteOffen, setGepruefteOffen] = useState(false);
+  const [adminName, setAdminName] = useState("Chef");
 
   const monat = new Date().toISOString().slice(0, 7);
 
@@ -51,6 +52,8 @@ export default function ChefDashboardPage() {
         window.location.href = "/";
         return;
       }
+
+      setAdminName(adminCheck?.name || "Chef");
 
       const start = `${monat}-01`;
 
@@ -366,37 +369,69 @@ const letzteGepruefteTage = gepruefteTageListe
   )
   .slice(0, 10);
 
+const topProjekte = projektStunden
+  .filter((projekt) => Number(projekt.stunden || 0) > 0)
+  .sort((a, b) => Number(b.stunden || 0) - Number(a.stunden || 0))
+  .slice(0, 5);
+
+const heutigesDatum = new Date().toLocaleDateString("de-CH", {
+  weekday: "long",
+  day: "2-digit",
+  month: "long",
+  year: "numeric",
+});
+
+const systemStatus =
+  offeneTage > 0 || abgeschlosseneTage > 0 || offeneAntraege > 0
+    ? "Prüfung erforderlich"
+    : "Alles im grünen Bereich";
+
   return (
     <main className="space-y-8">
-      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-8 lg:p-12">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.10]">
+          <div
+            className="h-full w-full bg-cover bg-center"
+            style={{ backgroundImage: "url('/berg.jpg')" }}
+          />
+        </div>
 
-  <div className="absolute inset-0 opacity-10">
-    <div
-      className="h-full w-full bg-cover bg-center"
-      style={{
-        backgroundImage: "url('/berg.jpg')",
-      }}
-    />
-  </div>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-transparent" />
+        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-orange-500/20 blur-3xl" />
 
-  <div className="relative z-10">
-    <div className="text-sm font-black uppercase tracking-[0.25em] text-orange-500">
-      ODZ V1.1
-    </div>
+        <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
+          <div>
+            <div className="inline-flex rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-orange-400">
+              ODZ V1.1 · StahlFabrik
+            </div>
 
-    <div className="mt-3 text-white/70">
-      Guten Tag Steven 👋
-    </div>
+            <div className="mt-5 text-sm font-bold text-white/60">
+              Guten Morgen {adminName} 👋 · {heutigesDatum}
+            </div>
 
-    <h1 className="mt-3 text-5xl font-black tracking-tight text-white lg:text-7xl">
-      STAHLFABRIK
-    </h1>
+            <h1 className="mt-3 text-5xl font-black tracking-tight text-white lg:text-7xl">
+              STAHLFABRIK
+            </h1>
 
-    <p className="mt-4 text-lg font-medium text-white/60">
-      Optimiere die Zukunft
-    </p>
-  </div>
-</section>
+            <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
+              Digitales Betriebssystem für Zeit, Projekte, Team und Kontrolle.
+            </p>
+
+            <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
+              <span className="h-3 w-3 rounded-full bg-green-400 shadow-lg shadow-green-400/40" />
+              <span className="text-sm font-black uppercase tracking-widest text-white/70">
+                {systemStatus}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 backdrop-blur">
+            <HeroMini label="Offen" value={offeneTage} orange={offeneTage > 0} />
+            <HeroMini label="Prüfung" value={abgeschlosseneTage} orange={abgeschlosseneTage > 0} />
+            <HeroMini label="Geprüft" value={gepruefteTage} green={gepruefteTage > 0} />
+          </div>
+        </div>
+      </section>
 
       {meldung && (
         <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-sm font-bold text-orange-400">
@@ -404,7 +439,7 @@ const letzteGepruefteTage = gepruefteTageListe
         </div>
       )}
 
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-1 items-start gap-5 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           label="Team Iststunden"
           value={loading ? "..." : `${teamIststunden.toFixed(2)}h`}
@@ -633,14 +668,72 @@ const letzteGepruefteTage = gepruefteTageListe
         </div>
       </section>
 
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+          <div className="mb-7">
+            <h2 className="text-2xl font-black text-white">Top Projekte</h2>
+            <p className="mt-1 text-white/55">Stärkste Projektbelastung im aktuellen Monat</p>
+          </div>
+
+          {topProjekte.length === 0 ? (
+            <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
+              Noch keine Projektstunden vorhanden.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {topProjekte.map((projekt, index) => {
+                const max = Math.max(...topProjekte.map((p) => Number(p.stunden || 0)), 1);
+                const percent = Math.min(100, Math.round((Number(projekt.stunden || 0) / max) * 100));
+
+                return (
+                  <div key={projekt.name} className="rounded-2xl border border-white/10 bg-black/25 p-5">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <div className="text-xs font-black uppercase tracking-[0.22em] text-orange-400">
+                          #{index + 1}
+                        </div>
+                        <div className="mt-2 text-lg font-black text-white">{projekt.name}</div>
+                        <div className="mt-1 text-sm text-white/45">{projekt.kunde || "Kein Kunde"}</div>
+                      </div>
+
+                      <div className="text-2xl font-black text-orange-500">
+                        {Number(projekt.stunden || 0).toFixed(2)}h
+                      </div>
+                    </div>
+
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+                      <div className="h-full rounded-full bg-orange-500" style={{ width: `${percent}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+          <div className="mb-7">
+            <h2 className="text-2xl font-black text-white">Kontrollstatus</h2>
+            <p className="mt-1 text-white/55">Was Aufmerksamkeit braucht</p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <MiniCard label="Offene Tage" value={offeneTage} orange={offeneTage > 0} />
+            <MiniCard label="Zur Prüfung" value={abgeschlosseneTage} orange={abgeschlosseneTage > 0} />
+            <MiniCard label="Offene Anträge" value={offeneAntraege} orange={offeneAntraege > 0} />
+            <MiniCard label="Geprüft" value={gepruefteTage} />
+          </div>
+        </div>
+      </section>
+
       <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div>
             <h2 className="text-2xl font-black text-white">
-              Team Monatsübersicht
+              Team Performance
             </h2>
             <p className="mt-1 text-white/55">
-              Soll/Ist Vergleich und Überstunden pro Mitarbeiter
+              Leistung, Arbeitszeit und Überstunden im Überblick
             </p>
           </div>
 
@@ -788,15 +881,9 @@ const letzteGepruefteTage = gepruefteTageListe
                   </p>
                 </div>
 
-                <div className="text-right">
-  <div className="text-2xl font-black text-orange-500">
-    {projekt.stunden.toFixed(2)}h
-  </div>
-
-  <div className="mt-1 text-xs font-bold uppercase tracking-widest text-white/35">
-    Monat
-  </div>
-</div>
+                <div className="font-black text-orange-500">
+                  {projekt.stunden.toFixed(2)}h
+                </div>
               </div>
             </div>
           ))}
@@ -805,28 +892,22 @@ const letzteGepruefteTage = gepruefteTageListe
         <div className="hidden overflow-hidden rounded-xl border border-white/10 md:block">
           <div className="overflow-x-auto">
             <div className="min-w-[700px]">
-              <div className="grid grid-cols-4 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+              <div className="grid grid-cols-3 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
                 <div>Projekt</div>
-<div>Kunde</div>
-<div>Stunden</div>
-<div>Status</div>
+                <div>Kunde</div>
+                <div>Stunden</div>
               </div>
 
               {projektStunden.map((projekt) => (
                 <div
                   key={projekt.name}
-                  className="grid grid-cols-4 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
+                  className="grid grid-cols-3 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
                 >
                   <div className="font-black text-white">{projekt.name}</div>
                   <div>{projekt.kunde || "-"}</div>
                   <div className="font-black text-orange-500">
                     {projekt.stunden.toFixed(2)}h
                   </div>
-                  <div>
-  <span className="rounded-full border border-green-400/25 bg-green-500/10 px-3 py-1 text-xs font-black uppercase tracking-widest text-green-300">
-    Aktiv
-  </span>
-</div>
                 </div>
               ))}
             </div>
@@ -860,7 +941,7 @@ function KpiCard({
 
   return (
     <div className="group overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/30">
-      <div className={`text-5xl font-black ${color}`}>
+      <div className={`text-4xl font-black md:text-5xl ${color}`}>
         {value}
       </div>
 
@@ -869,6 +950,33 @@ function KpiCard({
       </div>
 
       <div className="mt-5 h-1 w-16 rounded-full bg-orange-500/60" />
+    </div>
+  );
+}
+
+function HeroMini({
+  label,
+  value,
+  orange,
+  green,
+}: {
+  label: string;
+  value: string | number;
+  orange?: boolean;
+  green?: boolean;
+}) {
+  const color = orange
+    ? "text-orange-400"
+    : green
+    ? "text-green-400"
+    : "text-white";
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center">
+      <div className={`text-3xl font-black ${color}`}>{value}</div>
+      <div className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
+        {label}
+      </div>
     </div>
   );
 }
