@@ -1180,14 +1180,18 @@ const pauseStunden =
 
   return (
     <div className="mt-2 text-sm text-white/50">
-      <div>
-        🕒 {tageszeit.startzeit} - {tageszeit.endzeit}
-      </div>
+  <div className="font-bold text-orange-400">
+    🕒 {tageszeit.startzeit} - {tageszeit.endzeit}
+  </div>
 
-      <div className="text-white/40">
-        Pause: {tageszeit.pause || 0}h
-      </div>
-    </div>
+  <div className="text-white/40">
+    Pause: {Math.round((tageszeit.pause || 0) * 60)} Min
+  </div>
+
+  <div className="text-white/40">
+    Netto: {Number(tageszeit.netto_stunden || 0).toFixed(2)}h
+  </div>
+</div>
   );
 })()}
 
