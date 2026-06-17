@@ -457,10 +457,9 @@ const systemStatus =
               Guten Tag {adminName} 👋 · {heutigesDatum}
             </div>
 
-            <h1 className="mt-3 text-5xl font-black tracking-tight lg:text-7xl">
-  <span className="text-slate-100">Stahl</span>
-  <span className="text-orange-500">Fabrik</span>
-</h1>
+            <h1 className="mt-3 text-5xl font-black tracking-tight text-white lg:text-7xl">
+              STAHLFABRIK 🇨🇭
+            </h1>
 
             <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
               Digitales Betriebssystem für Zeit, Projekte, Team und Kontrolle.
