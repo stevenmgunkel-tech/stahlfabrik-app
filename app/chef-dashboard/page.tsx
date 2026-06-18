@@ -1028,7 +1028,27 @@ function KpiCard({
     : "text-slate-100";
 
   return (
-    <div className="group overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-slate-400/30">
+  <div
+    className="
+      group
+      overflow-hidden
+      rounded-3xl
+      border
+      border-white/10
+      bg-gradient-to-br
+      from-white/[0.08]
+      to-white/[0.03]
+      p-6
+      shadow-2xl
+      shadow-black/30
+      transition-all
+      duration-300
+      hover:-translate-y-1
+      hover:border-orange-500/25
+      hover:shadow-2xl
+      hover:shadow-orange-500/10
+    "
+  >
       <div className={`text-4xl font-black md:text-5xl ${color}`}>
         {value}
       </div>
@@ -1037,7 +1057,7 @@ function KpiCard({
         {label}
       </div>
 
-      <div className="mt-5 h-1 w-16 rounded-full bg-slate-300/60" />
+      <div className="mt-5 h-1 w-16 rounded-full bg-orange-500/70 transition-all duration-300 group-hover:w-24" />
     </div>
   );
 }
