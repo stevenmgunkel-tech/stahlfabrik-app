@@ -15,8 +15,8 @@ export default function ChefDashboardPage() {
   const [tageszeiten, setTageszeiten] = useState<any[]>([]);
   const [gepruefteOffen, setGepruefteOffen] = useState(false);
   const [adminName, setAdminName] = useState("Chef");
-
-  const monat = new Date().toISOString().slice(0, 7);
+const [freigabeSeite, setFreigabeSeite] = useState(1);
+const monat = new Date().toISOString().slice(0, 7);
 
   const heute = new Date();
 
@@ -361,13 +361,23 @@ const abgeschlosseneTageListe = tageszeiten
     };
   });
 
-const letzteGepruefteTage = gepruefteTageListe
-  .sort(
-    (a, b) =>
-      new Date(b.datum).getTime() -
-      new Date(a.datum).getTime()
-  )
-  .slice(0, 10);
+const letzteGepruefteTage = gepruefteTageListe.sort(
+  (a, b) =>
+    new Date(b.datum).getTime() -
+    new Date(a.datum).getTime()
+);
+
+const eintraegeProSeite = 10;
+
+const freigabeSeiten = Math.max(
+  1,
+  Math.ceil(letzteGepruefteTage.length / eintraegeProSeite)
+);
+
+const sichtbareFreigaben = letzteGepruefteTage.slice(
+  (freigabeSeite - 1) * eintraegeProSeite,
+  freigabeSeite * eintraegeProSeite
+);
 
 const topProjekte = projektStunden
   .filter((projekt) => Number(projekt.stunden || 0) > 0)
@@ -682,8 +692,9 @@ const systemStatus =
           Noch keine Freigaben vorhanden.
         </div>
       ) : (
+        <>
         <div className="max-h-[420px] space-y-3 overflow-y-auto pr-2">
-          {letzteGepruefteTage.map((tag) => (
+          {sichtbareFreigaben.map((tag) => (
             <div
               key={tag.id}
               className="rounded-2xl border border-green-500/25 bg-gradient-to-br from-green-500/10 to-black/20 p-5"
@@ -718,6 +729,33 @@ const systemStatus =
             </div>
           ))}
         </div>
+
+        <div className="mt-5 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setFreigabeSeite((s) => Math.max(1, s - 1))}
+            disabled={freigabeSeite === 1}
+            className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 font-black text-white/70 transition hover:border-orange-500/30 hover:text-orange-400 disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            ◀
+          </button>
+
+          <div className="text-sm font-black uppercase tracking-widest text-white/45">
+            Seite {freigabeSeite} / {freigabeSeiten}
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              setFreigabeSeite((s) => Math.min(freigabeSeiten, s + 1))
+            }
+            disabled={freigabeSeite === freigabeSeiten}
+            className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 font-black text-white/70 transition hover:border-orange-500/30 hover:text-orange-400 disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            ▶
+          </button>
+        </div>
+        </>
       )}
     </div>
   )}
