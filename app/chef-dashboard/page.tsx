@@ -440,15 +440,15 @@ const systemStatus =
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-black/10" />
         <div className="pointer-events-none absolute inset-0 opacity-[0.45]">
   <div
-    className="h-full w-full bg-cover bg-[center_30%]"
+    className="h-full w-full bg-cover bg-[center_65%]"
     style={{
   backgroundImage: "url('/berg.png')",
-  filter: "brightness(1.25) contrast(1.05)",
+  filter: "brightness(1.8) contrast(1.05)",
 }}
   />
 </div>
 
-<div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-transparent" />
+<div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
         <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
           <div>
             <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
