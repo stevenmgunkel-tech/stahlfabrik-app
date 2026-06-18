@@ -437,10 +437,11 @@ const systemStatus =
   return (
     <main className="space-y-8">
       <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.10]">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/90 via-black/75 to-black/40" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.08]">
           <div
             className="h-full w-full bg-cover bg-center"
-            style={{ backgroundImage: "url('/berg.jpg')" }}
+            style={{ backgroundImage: "url('/berg.png')" }}
           />
         </div>
 
