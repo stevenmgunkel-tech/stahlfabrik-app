@@ -849,21 +849,90 @@ setBisZeit("");
 
   return (
     <main className="space-y-8">
-      <div>
-        <div className="mb-3 text-sm font-medium uppercase tracking-widest text-white/60">
-          Zeiterfassung
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
+          <div
+            className="h-full w-full bg-cover bg-[center_20%]"
+            style={{
+              backgroundImage: "url('/berg.png')",
+              filter: "brightness(1.65) contrast(1.05)",
+            }}
+          />
         </div>
 
-        <h1 className="text-5xl font-black tracking-tight text-white lg:text-6xl">
-          Arbeitszeiten
-        </h1>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/65 via-black/25 to-transparent" />
 
-        <p className="mt-3 text-white/60">
-          Arbeitszeiten einfach nach Projekt und Stunden erfassen
-        </p>
-      </div>
+        <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
+          <div>
+            <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
+              ODZ V1.1 · Zeiterfassung
+            </div>
 
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+            <h1 className="mt-5 text-5xl font-black tracking-tight text-white lg:text-7xl">
+              ARBEITSZEITEN ⚙️
+            </h1>
+
+            <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
+              Arbeitszeiten einfach nach Projekt, Bereich und Zeitraum erfassen.
+            </p>
+
+            <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
+              <span className={`h-3 w-3 rounded-full ${offenerArbeitstag ? "bg-green-400 shadow-lg shadow-green-400/40" : "bg-slate-400"}`} />
+              <span className="text-sm font-black uppercase tracking-widest text-white/70">
+                {offenerArbeitstag ? "Arbeitstag läuft" : "Bereit zur Erfassung"}
+              </span>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-black/25 p-5 text-right backdrop-blur-xl">
+            <div className="text-xs font-black uppercase tracking-[0.22em] text-white/45">
+              Heute
+            </div>
+            <div className="mt-2 text-3xl font-black text-white">
+              {heuteDatum()}
+            </div>
+            <div className="mt-2 text-sm text-white/50">
+              {zeiten.length} Buchungen gespeichert
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <a
+          href="#arbeitstag"
+          className="group rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:shadow-lg hover:shadow-orange-500/10"
+        >
+          <div className="text-sm text-white/50">Start / Stop</div>
+          <div className="mt-2 text-lg font-black text-white">▶ Arbeitstag</div>
+        </a>
+
+        <a
+          href="#manuell"
+          className="group rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:shadow-lg hover:shadow-orange-500/10"
+        >
+          <div className="text-sm text-white/50">Nachtragen</div>
+          <div className="mt-2 text-lg font-black text-white">🕒 Manuell</div>
+        </a>
+
+        <a
+          href="#buchen"
+          className="group rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:shadow-lg hover:shadow-orange-500/10"
+        >
+          <div className="text-sm text-white/50">Projekt</div>
+          <div className="mt-2 text-lg font-black text-white">🏗️ Buchen</div>
+        </a>
+
+        <a
+          href="#zusammenfassung"
+          className="group rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:shadow-lg hover:shadow-orange-500/10"
+        >
+          <div className="text-sm text-white/50">Übersicht</div>
+          <div className="mt-2 text-lg font-black text-white">📊 Zeiten</div>
+        </a>
+      </section>
+
+      <section id="arbeitstag" className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:border-orange-500/20 lg:p-7">
         <div className="mb-5">
           <h2 className="text-2xl font-black text-white">Arbeitstag</h2>
           <p className="mt-1 text-white/55">
@@ -897,7 +966,7 @@ setBisZeit("");
           <button
             type="button"
             onClick={startArbeitstag}
-            className="rounded-xl bg-green-600 px-5 py-4 font-black text-white shadow-lg shadow-green-600/20 transition hover:bg-green-700"
+            className="rounded-xl bg-green-600 px-5 py-4 font-black text-white shadow-lg shadow-green-600/20 transition hover:bg-green-700 hover:shadow-xl hover:shadow-green-600/20"
           >
             ▶ Arbeitstag starten
           </button>
@@ -914,14 +983,14 @@ setBisZeit("");
           <button
             type="button"
             onClick={stopArbeitstag}
-            className="rounded-xl bg-orange-600 px-5 py-4 font-black text-white shadow-lg shadow-orange-600/20 transition hover:bg-orange-700"
+            className="rounded-xl bg-orange-600 px-5 py-4 font-black text-white shadow-lg shadow-orange-600/20 transition hover:bg-orange-700 hover:shadow-xl hover:shadow-orange-600/20"
           >
             ■ Arbeitstag stoppen
           </button>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+      <section id="manuell" className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:border-orange-500/20 lg:p-7">
         <div className="mb-5">
           <h2 className="text-2xl font-black text-white">
             Arbeitstag manuell nachtragen
@@ -983,7 +1052,7 @@ setBisZeit("");
             <button
               type="button"
               onClick={arbeitstagManuellSpeichern}
-              className="rounded-xl bg-orange-600 px-5 py-4 font-black text-white shadow-lg shadow-orange-600/20 transition hover:bg-orange-700"
+              className="rounded-xl bg-orange-600 px-5 py-4 font-black text-white shadow-lg shadow-orange-600/20 transition hover:bg-orange-700 hover:shadow-xl hover:shadow-orange-600/20"
             >
               Manuell berechnen
             </button>
@@ -991,7 +1060,7 @@ setBisZeit("");
         </div>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+      <section id="buchen" className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:border-orange-500/20 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
             <h2 className="text-2xl font-black text-white">
@@ -1093,7 +1162,7 @@ setBisZeit("");
               type="button"
               onClick={zeitSpeichern}
               disabled={saving}
-              className="rounded-xl bg-orange-600 p-3 font-black text-white shadow-lg shadow-orange-600/25 transition hover:bg-orange-500 disabled:opacity-50"
+              className="rounded-xl bg-orange-600 p-3 font-black text-white shadow-lg shadow-orange-600/25 transition hover:bg-orange-500 hover:shadow-xl hover:shadow-orange-600/20 disabled:opacity-50"
             >
               {saving
                 ? "Speichern..."
@@ -1121,7 +1190,7 @@ setBisZeit("");
         )}
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+      <section id="zusammenfassung" className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:border-orange-500/20 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div>
             <h2 className="text-2xl font-black text-white">Zusammenfassung</h2>
@@ -1148,7 +1217,7 @@ setBisZeit("");
             return (
               <div
                 key={tag.datum}
-                className="overflow-hidden rounded-2xl border border-white/10 bg-black/25"
+                className="overflow-hidden rounded-2xl border border-white/10 bg-black/25 transition-all duration-300 hover:border-orange-500/20 hover:shadow-lg hover:shadow-orange-500/5"
               >
                 <button
                   type="button"
@@ -1260,7 +1329,7 @@ Gesamtpause: {Math.round((tageszeit.pause || 0) * 60)} Min
                               {projektGruppe.eintraege.map((zeit: any) => (
                                 <div
                                   key={zeit.id}
-                                  className="rounded-xl border border-white/10 bg-white/[0.03] p-4"
+                                  className="rounded-xl border border-white/10 bg-white/[0.03] p-4 transition-all duration-300 hover:border-orange-500/25 hover:shadow-lg hover:shadow-orange-500/5"
                                 >
                                   <div className="flex items-center justify-between gap-3">
                                     <div>
