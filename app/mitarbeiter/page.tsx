@@ -26,6 +26,7 @@ export default function MitarbeiterPage() {
   const [loading, setLoading] = useState(false);
   const [meldung, setMeldung] = useState("");
   const [bearbeitenId, setBearbeitenId] = useState<number | null>(null);
+  const [suche, setSuche] = useState("");
 
   async function pruefeAdmin() {
     const userData = await supabase.auth.getUser();
@@ -238,6 +239,16 @@ export default function MitarbeiterPage() {
   const aktive = mitarbeiter.filter((p) => !p.austrittsdatum).length;
   const probezeit = mitarbeiter.filter((p) => istInProbezeit(p.probezeit_bis)).length;
 
+  const gefilterteMitarbeiter = mitarbeiter.filter((person) => {
+    const suchText = suche.toLowerCase();
+
+    return (
+      person.name?.toLowerCase().includes(suchText) ||
+      person.rolle?.toLowerCase().includes(suchText) ||
+      person.vertragsart?.toLowerCase().includes(suchText)
+    );
+  });
+
   if (!seiteGeprueft) {
     return (
       <main>
@@ -250,27 +261,91 @@ export default function MitarbeiterPage() {
 
   return (
     <main className="space-y-8">
-      <div>
-        <div className="mb-3 text-sm font-medium uppercase tracking-widest text-white/60">
-          Personalverwaltung
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.34]">
+          <div
+            className="h-full w-full bg-cover bg-[center_20%]"
+            style={{
+              backgroundImage: "url('/berg.png')",
+              filter: "brightness(1.55) contrast(1.05)",
+            }}
+          />
         </div>
 
-        <h1 className="text-5xl font-black tracking-tight text-white lg:text-6xl">
-          Mitarbeiter
-        </h1>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/65 via-black/25 to-transparent" />
 
-        <p className="mt-3 text-white/60">
-          Mitarbeiter, Login-Zugänge, Verträge und Ferien verwalten
-        </p>
-      </div>
+        <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
+          <div>
+            <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
+              ODZ V1.1 · Personal
+            </div>
 
-      <section className="grid grid-cols-1 gap-5 md:grid-cols-3">
+            <h1 className="mt-5 text-5xl font-black tracking-tight text-white lg:text-7xl">
+              MITARBEITER 👥
+            </h1>
+
+            <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
+              Team, Rollen, Verträge, Ferien und Zugänge zentral verwalten.
+            </p>
+
+            <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
+              <span className="h-3 w-3 rounded-full bg-green-400 shadow-lg shadow-green-400/40" />
+              <span className="text-sm font-black uppercase tracking-widest text-white/70">
+                {aktive} aktive Mitarbeiter
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl">
+            <HeroMini label="Team" value={mitarbeiter.length} />
+            <HeroMini label="Aktiv" value={aktive} green />
+            <HeroMini label="Probezeit" value={probezeit} orange />
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <a
+          href="#formular"
+          className="group rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:shadow-lg hover:shadow-orange-500/10"
+        >
+          <div className="text-sm text-white/50">Neu</div>
+          <div className="mt-2 text-lg font-black text-white">➕ Mitarbeiter</div>
+        </a>
+
+        <a
+          href="#team"
+          className="group rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:shadow-lg hover:shadow-orange-500/10"
+        >
+          <div className="text-sm text-white/50">Übersicht</div>
+          <div className="mt-2 text-lg font-black text-white">📋 Team</div>
+        </a>
+
+        <a
+          href="#formular"
+          className="group rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:shadow-lg hover:shadow-orange-500/10"
+        >
+          <div className="text-sm text-white/50">Vertrag</div>
+          <div className="mt-2 text-lg font-black text-white">📄 Daten</div>
+        </a>
+
+        <a
+          href="#team"
+          className="group rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:shadow-lg hover:shadow-orange-500/10"
+        >
+          <div className="text-sm text-white/50">Entwicklung</div>
+          <div className="mt-2 text-lg font-black text-white">🎯 Stärken</div>
+        </a>
+      </section>
+
+      <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard label="Teammitglieder" value={mitarbeiter.length} />
         <KpiCard label="Aktiv" value={aktive} green />
         <KpiCard label="Probezeit" value={probezeit} orange />
+        <KpiCard label="Admins" value={admins} />
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+      <section id="formular" className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:border-orange-500/20 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
             <h2 className="text-2xl font-black text-white">
@@ -382,7 +457,7 @@ export default function MitarbeiterPage() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+      <section id="team" className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:border-orange-500/20 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div>
             <h2 className="text-2xl font-black text-white">Teamübersicht</h2>
@@ -394,9 +469,19 @@ export default function MitarbeiterPage() {
           </div>
         </div>
 
+        <div className="mb-6">
+          <input
+            type="text"
+            value={suche}
+            onChange={(e) => setSuche(e.target.value)}
+            placeholder="🔍 Mitarbeiter suchen..."
+            className="dark-input"
+          />
+        </div>
+
         <div className="space-y-4 md:hidden">
-          {mitarbeiter.map((person) => (
-            <div key={person.id} className="rounded-2xl border border-white/10 bg-black/25 p-5">
+          {gefilterteMitarbeiter.map((person) => (
+            <div key={person.id} className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:shadow-lg hover:shadow-orange-500/10">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="text-xl font-black text-white">{person.name}</div>
@@ -417,7 +502,7 @@ export default function MitarbeiterPage() {
                 <Info label="Ü-Start" value={`${Number(person.ueberstunden_start || 0).toFixed(2)}h`} />
               </div>
 
-              <div className="mt-5">
+              <div className="mt-5 flex flex-wrap gap-2">
                 <span
                   className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${
                     istInProbezeit(person.probezeit_bis)
@@ -426,6 +511,10 @@ export default function MitarbeiterPage() {
                   }`}
                 >
                   {istInProbezeit(person.probezeit_bis) ? "Probezeit" : person.status || "Aktiv"}
+                </span>
+
+                <span className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-3 py-1 text-sm font-bold text-slate-200">
+                  Stärke: {person.rolle === "Admin" ? "Führung" : person.rolle === "Lehrling" ? "Lernphase" : "Team"}
                 </span>
               </div>
 
@@ -459,8 +548,8 @@ export default function MitarbeiterPage() {
                 <div>Aktion</div>
               </div>
 
-              {mitarbeiter.map((person) => (
-                <div key={person.id} className="grid grid-cols-11 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]">
+              {gefilterteMitarbeiter.map((person) => (
+                <div key={person.id} className="grid grid-cols-11 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03] hover:text-white">
                   <div className="font-black text-white">{person.name}</div>
 
                   <div>
@@ -530,8 +619,42 @@ export default function MitarbeiterPage() {
           background: #111315;
           color: white;
         }
+
+        .dark-input::-webkit-calendar-picker-indicator {
+          filter: brightness(0) invert(1);
+          opacity: 1;
+          cursor: pointer;
+        }
       `}</style>
     </main>
+  );
+}
+
+
+function HeroMini({
+  label,
+  value,
+  orange,
+  green,
+}: {
+  label: string;
+  value: string | number;
+  orange?: boolean;
+  green?: boolean;
+}) {
+  const color = orange
+    ? "text-orange-400"
+    : green
+    ? "text-green-400"
+    : "text-slate-100";
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+      <div className={`text-3xl font-black ${color}`}>{value}</div>
+      <div className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
+        {label}
+      </div>
+    </div>
   );
 }
 
@@ -555,14 +678,23 @@ function KpiCard({
   green?: boolean;
   orange?: boolean;
 }) {
+  const color = green
+    ? "text-green-400"
+    : orange
+    ? "text-orange-500"
+    : "text-slate-100";
+
   return (
-    <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.025] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/40">
-      <div className="text-sm font-bold uppercase tracking-widest text-white/45">
-        {label}
-      </div>
-      <div className={`mt-5 text-5xl font-black ${green ? "text-green-400" : orange ? "text-orange-500" : "text-white"}`}>
+    <div className="group overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-6 shadow-2xl shadow-black/30 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:shadow-2xl hover:shadow-orange-500/10">
+      <div className={`text-5xl font-black ${color}`}>
         {value}
       </div>
+
+      <div className="mt-3 text-xs font-black uppercase tracking-[0.22em] text-white/45">
+        {label}
+      </div>
+
+      <div className="mt-5 h-1 w-16 rounded-full bg-orange-500/70 transition-all duration-300 group-hover:w-24" />
     </div>
   );
 }
