@@ -437,18 +437,18 @@ const systemStatus =
   return (
     <main className="space-y-8">
       <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-black/10" />
         <div className="pointer-events-none absolute inset-0 opacity-[0.45]">
-  <div
-    className="h-full w-full bg-cover bg-[center_20%]"
-    style={{
-  backgroundImage: "url('/berg.png')",
-  filter: "brightness(1.8) contrast(1.05)",
-}}
-  />
-</div>
+          <div
+            className="h-full w-full bg-cover bg-[center_20%]"
+            style={{
+              backgroundImage: "url('/berg.png')",
+              filter: "brightness(1.8) contrast(1.05)",
+            }}
+          />
+        </div>
 
-<div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
+
         <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
           <div>
             <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
@@ -475,12 +475,54 @@ const systemStatus =
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 backdrop-blur">
+          <div className="grid grid-cols-3 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 backdrop-blur-xl">
             <HeroMini label="Offen" value={offeneTage} orange={offeneTage > 0} />
             <HeroMini label="Prüfung" value={abgeschlosseneTage} orange={abgeschlosseneTage > 0} />
             <HeroMini label="Geprüft" value={gepruefteTage} green={gepruefteTage > 0} />
           </div>
         </div>
+      </section>
+
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <a
+          href="/projekte"
+          className="group rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:shadow-lg hover:shadow-orange-500/10"
+        >
+          <div className="text-sm text-white/50">Projekt</div>
+          <div className="mt-2 text-lg font-black text-white">
+            🏗️ Neues Projekt
+          </div>
+        </a>
+
+        <a
+          href="/mitarbeiter"
+          className="group rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:shadow-lg hover:shadow-orange-500/10"
+        >
+          <div className="text-sm text-white/50">Team</div>
+          <div className="mt-2 text-lg font-black text-white">
+            👤 Mitarbeiter
+          </div>
+        </a>
+
+        <a
+          href="/urlaub"
+          className="group rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:shadow-lg hover:shadow-orange-500/10"
+        >
+          <div className="text-sm text-white/50">Abwesenheit</div>
+          <div className="mt-2 text-lg font-black text-white">
+            📅 Urlaub
+          </div>
+        </a>
+
+        <a
+          href="/projektstatistik"
+          className="group rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:shadow-lg hover:shadow-orange-500/10"
+        >
+          <div className="text-sm text-white/50">Auswertung</div>
+          <div className="mt-2 text-lg font-black text-white">
+            📊 Statistik
+          </div>
+        </a>
       </section>
 
       {meldung && (
@@ -562,7 +604,7 @@ const systemStatus =
   value={loading ? "..." : gepruefteTage}
   green={gepruefteTage > 0}
 />
-
+      </section>
 
       <section className="min-h-[150px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
   <div className="mb-6">
@@ -680,8 +722,6 @@ const systemStatus =
     </div>
   )}
 </section>
-
-      </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
@@ -1061,6 +1101,7 @@ function KpiCard({
     </div>
   );
 }
+
 
 function HeroMini({
   label,
