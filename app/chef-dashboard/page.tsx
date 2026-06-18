@@ -440,7 +440,7 @@ const systemStatus =
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-black/10" />
         <div className="pointer-events-none absolute inset-0 opacity-[0.45]">
   <div
-    className="h-full w-full bg-cover bg-[center_65%]"
+    className="h-full w-full bg-cover bg-[center_50%]"
     style={{
   backgroundImage: "url('/berg.png')",
   filter: "brightness(1.8) contrast(1.05)",
