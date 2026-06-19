@@ -184,7 +184,7 @@ function Sidebar({
         <BrandLogo />
       </div>
 
-      <nav className="hide-sidebar-scrollbar min-h-0 flex-1 space-y-5 overflow-y-auto">
+      <nav className="hide-sidebar-scrollbar shrink-0 space-y-5 overflow-y-auto">
         {navGroups.map((group) => {
           const groupOpen = openGroups[group.title];
           const activeInGroup = group.items.some((item) => item.href === pathname);
@@ -260,27 +260,29 @@ function Sidebar({
         })}
       </nav>
 
-      <div className="mt-auto shrink-0 rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-950/10 ring-1 ring-slate-200">
-        <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-500">
-          Angemeldet
+      <div className="mt-5 flex flex-1 flex-col rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-950/10 ring-1 ring-slate-200">
+        <div>
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-500">
+            Angemeldet
+          </div>
+
+          <div className="mt-3 text-lg font-black text-slate-950">{userName}</div>
+
+          <div className="mt-2 inline-flex rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-widest text-slate-700">
+            {role}
+          </div>
+
+          <div className="my-4 h-px bg-slate-200" />
+
+          <button
+            onClick={logout}
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-black text-slate-700 shadow-sm shadow-slate-950/5 transition hover:-translate-y-0.5 hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+          >
+            Logout
+          </button>
         </div>
 
-        <div className="mt-3 text-lg font-black text-slate-950">{userName}</div>
-
-        <div className="mt-2 inline-flex rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-widest text-slate-700">
-          {role}
-        </div>
-
-        <div className="my-4 h-px bg-slate-200" />
-
-        <button
-          onClick={logout}
-          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-black text-slate-700 shadow-sm shadow-slate-950/5 transition hover:-translate-y-0.5 hover:border-red-300 hover:bg-red-50 hover:text-red-600"
-        >
-          Logout
-        </button>
-
-        <div className="mt-4 border-t border-slate-200 pt-4 text-center">
+        <div className="mt-auto border-t border-slate-200 pt-4 text-center">
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">
             © 2026 ODZ.
           </p>
