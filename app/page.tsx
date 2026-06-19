@@ -7,8 +7,6 @@ import {
   CalendarDays,
   Clock3,
   TrendingUp,
-  Timer,
-  ClipboardList,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { istFeiertagSG } from "@/lib/feiertage";
@@ -121,9 +119,7 @@ function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
     const istWochenende = wochentag === 0 || wochentag === 6;
     const istFeiertag = istFeiertagSG(aktuell);
 
-    if (!istWochenende && !istFeiertag) {
-      tage++;
-    }
+    if (!istWochenende && !istFeiertag) tage++;
 
     aktuell.setDate(aktuell.getDate() + 1);
   }
@@ -183,9 +179,7 @@ export default function DashboardPage() {
       projekteError ||
       mitarbeiterError;
 
-    if (error) {
-      setMeldung(error.message);
-    }
+    if (error) setMeldung(error.message);
 
     const heuteDate = new Date();
     const heute = formatDateLocal(heuteDate);
@@ -197,9 +191,7 @@ export default function DashboardPage() {
     const monatsStart = formatDateLocal(monatsStartDate);
 
     const wochenstunden = Number(eigenerMitarbeiter?.wochenstunden || 42.5);
-    const ueberstundenStart = Number(
-      eigenerMitarbeiter?.ueberstunden_start || 0
-    );
+    const ueberstundenStart = Number(eigenerMitarbeiter?.ueberstunden_start || 0);
     const tagesSoll = wochenstunden / 5;
 
     const eigeneArbeitszeiten =
@@ -235,7 +227,6 @@ export default function DashboardPage() {
     );
 
     const heuteIst = heuteBrutto - pauseFuerDatum(heute);
-
     const heuteWochentag = heuteDate.getDay();
     const istWochenende = heuteWochentag === 0 || heuteWochentag === 6;
     const heuteIstFeiertag = istFeiertagSG(heuteDate);
@@ -303,7 +294,6 @@ export default function DashboardPage() {
 
     const angerechneteStundenMonat = monatIst + abwesenheitsstundenMonat;
     const monatDifferenz = angerechneteStundenMonat - monatSoll;
-
     const gesamtUeberstunden =
       ueberstundenStart + monatDifferenz - ueberstundenAbbauStundenMonat;
 
@@ -339,13 +329,12 @@ export default function DashboardPage() {
     setLoading(false);
   }
 
-  const today = new Date().toLocaleDateString("de-CH", {
+  const heutigesDatum = new Date().toLocaleDateString("de-CH", {
+    weekday: "long",
     day: "2-digit",
     month: "long",
     year: "numeric",
   });
-
-  const month = new Date().toISOString().slice(0, 7);
 
   return (
     <main className="space-y-8 text-slate-100">
@@ -363,334 +352,244 @@ export default function DashboardPage() {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
 
         <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
-            <div>
-              <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
-                ODZ SILVER
-              </div>
+          <div>
+            <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
+              ODZ SILVER
+            </div>
 
-              <div className="mt-5 text-sm font-bold text-white/60">
-                Guten Tag {stats.letzterMitarbeiter} 👋 · {today}
-              </div>
+            <div className="mt-5 text-sm font-bold text-white/60">
+              Guten Tag {stats.letzterMitarbeiter} 👋 · {heutigesDatum}
+            </div>
 
-              <h1 className="mt-3 text-5xl font-black tracking-tight text-white lg:text-7xl">
-                DASHBOARD
-              </h1>
+            <h1 className="mt-3 text-5xl font-black uppercase tracking-tight text-white lg:text-7xl">
+              Dashboard
+            </h1>
 
-              <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
-                Willkommen zurück,{" "}
-                <span className="font-black text-sky-100">
-                  {stats.letzterMitarbeiter}
+            <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
+              Willkommen zurück, <span className="font-black text-sky-100">{stats.letzterMitarbeiter}</span>. Woche, Arbeitszeit, Projekte und offene Punkte auf einen Blick.
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={loadDashboard}
+                disabled={loading}
+                className="rounded-2xl border border-white/10 bg-black/25 px-5 py-3 text-sm font-black text-white shadow-lg shadow-black/20 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loading ? "Lädt..." : "Aktualisieren"}
+              </button>
+
+              <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
+                <span className="h-3 w-3 rounded-full bg-sky-300 shadow-lg shadow-sky-300/40" />
+                <span className="text-sm font-black uppercase tracking-widest text-white/70">
+                  Alles im Überblick
                 </span>
-                . Woche, Arbeitszeit, Projekte und offene Punkte auf einen Blick.
-              </p>
-
-              <div className="mt-6 flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={loadDashboard}
-                  disabled={loading}
-                  className="rounded-2xl border border-white/10 bg-black/25 px-5 py-3 text-sm font-black text-white shadow-lg shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {loading ? "Lädt..." : "Aktualisieren"}
-                </button>
-
-                <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
-                  <span
-                    className={`h-3 w-3 rounded-full ${
-                      stats.offeneAntraege > 0 || stats.heuteDifferenz < 0
-                        ? "bg-sky-300 shadow-lg shadow-sky-300/40"
-                        : "bg-green-400 shadow-lg shadow-green-400/40"
-                    }`}
-                  />
-                  <span className="text-sm font-black uppercase tracking-widest text-white/70">
-                    {stats.offeneAntraege > 0
-                      ? `${stats.offeneAntraege} Antrag offen`
-                      : "Alles im Überblick"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl md:grid-cols-4">
-              <HeroMini
-                label="Überstunden"
-                value={formatStunden(stats.gesamtUeberstunden)}
-                green={stats.gesamtUeberstunden >= 0}
-                red={stats.gesamtUeberstunden < 0}
-              />
-              <HeroMini label="Projekte" value={stats.projekte} />
-              <HeroMini
-                label="Offen"
-                value={stats.offeneAntraege}
-                blue={stats.offeneAntraege > 0}
-              />
-              <HeroMini
-                label="Heute"
-                value={formatKurz(stats.heuteDifferenz)}
-                green={stats.heuteDifferenz >= 0}
-                red={stats.heuteDifferenz < 0}
-              />
-            </div>
-          </div>
-        </section>
-
-
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <ActionCard
-            href="/arbeitszeiten"
-            icon={<Timer size={24} />}
-            label="Zeit"
-            title="Arbeitszeiten"
-            description="Start, Stop und Buchungen erfassen"
-          />
-          <ActionCard
-            href="/chef-dashboard"
-            icon={<Activity size={24} />}
-            label="Chef"
-            title="Kommandozentrale"
-            description="Team, Freigaben und Wochenplan"
-          />
-          <ActionCard
-            href="/abwesenheiten"
-            icon={<CalendarDays size={24} />}
-            label="Personal"
-            title="Abwesenheiten"
-            description="Urlaub, Krank und Überstunden"
-          />
-          <ActionCard
-            href="/projektanalyse"
-            icon={<ClipboardList size={24} />}
-            label="Analyse"
-            title="Projektanalyse"
-            description="Wo geht die Zeit wirklich hin?"
-          />
-        </section>
-
-        {meldung && (
-          <div className="rounded-2xl border border-red-400/25 bg-red-500/10 p-5 text-sm font-bold text-red-100">
-            {meldung}
-          </div>
-        )}
-
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
-          <div className="flex flex-col justify-between gap-4 border-b border-white/10 px-5 py-5 sm:px-6 lg:flex-row lg:items-center">
-            <div>
-              <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-sky-100">
-                Wochenplan
-              </div>
-              <h2 className="mt-3 text-2xl font-black text-white">
-                Wochenübersicht
-              </h2>
-              <p className="mt-1 text-sm leading-6 text-white/50">
-                Mo–So direkt im Dashboard. Hier kommt als nächstes der echte
-                Kalender mit Arbeitszeiten, Urlaub, Krankheit und Buchungen.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-black text-white/70">
-              Montag – Sonntag
-            </div>
-          </div>
-
-          <div className="grid gap-3 p-5 sm:p-6 md:grid-cols-7">
-            {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((tag, index) => {
-              const istHeute = index === ((new Date().getDay() + 6) % 7);
-
-              return (
-                <div
-                  key={tag}
-                  className={`min-h-[135px] rounded-3xl border p-4 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10 ${
-                    istHeute
-                      ? "border-sky-300/25 bg-sky-300/10"
-                      : "border-white/10 bg-black/20"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-black uppercase tracking-[0.18em] text-white/55">
-                      {tag}
-                    </div>
-
-                    {istHeute && (
-                      <span className="rounded-full border border-sky-300/20 bg-sky-300/10 px-2 py-1 text-[10px] font-black text-sky-100">
-                        Heute
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-xs font-bold text-white/45">
-                    Kalenderdaten folgen
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        <details className="group overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 transition hover:bg-sky-300/[0.03] sm:px-6">
-            <div>
-              <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-sky-100">
-                Kennzahlen
-              </div>
-
-              <h2 className="mt-3 text-2xl font-black text-white">
-                Arbeitszeit Übersicht
-              </h2>
-
-              <p className="mt-1 text-sm leading-6 text-white/50">
-                Heute, Woche, Monat und Überstunden kompakt aufklappen.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-black text-white/70 transition">
-              <span className="group-open:hidden">▼ Öffnen</span>
-              <span className="hidden group-open:inline">▲ Schließen</span>
-            </div>
-          </summary>
-
-          <div className="grid grid-cols-1 gap-4 border-t border-white/10 p-5 sm:p-6 md:grid-cols-2 xl:grid-cols-4">
-            <WorkTimeCard
-              eyebrow="Heute"
-              title="Tageszeit"
-              description="Persönliche Tagesübersicht"
-              soll={stats.heuteSoll}
-              ist={stats.heuteIst}
-              differenz={stats.heuteDifferenz}
-            />
-
-            <WorkTimeCard
-              eyebrow="Diese Woche"
-              title="Wochenzeit"
-              description={`Montag bis ${
-                [0, 6].includes(new Date().getDay()) ? "Freitag" : "heute"
-              } · ${stats.wocheTage} Arbeitstage`}
-              soll={stats.wocheSoll}
-              ist={stats.wocheIst}
-              differenz={stats.wocheDifferenz}
-            />
-
-            <WorkTimeCard
-              eyebrow="Dieser Monat"
-              title="Monatszeit"
-              description={`1. bis heute · ${stats.monatTage} Arbeitstage`}
-              soll={stats.monatSoll}
-              ist={stats.monatIst}
-              differenz={stats.monatDifferenz}
-            />
-
-            <OvertimeCard
-              value={stats.gesamtUeberstunden}
-              startwert={stats.ueberstundenStart}
-              monat={stats.monatDifferenz}
-              abbau={stats.ueberstundenAbbau}
-            />
-          </div>
-        </details>
-
-        <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.95fr]">
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 backdrop-blur-xl sm:p-7">
-            <div className="mb-6 flex items-center gap-4">
-              <IconBox>
-                <Activity size={24} />
-              </IconBox>
-
-              <div>
-                <h2 className="text-2xl font-black text-white">
-                  Letzte Aktivitäten
-                </h2>
-                <p className="text-sm text-white/50">Aktuelle Übersicht</p>
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-white/10 bg-black/25 p-5 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
-              <div className="mb-4 text-xs font-black uppercase tracking-[0.22em] text-sky-100">
-                Arbeitszeit
-              </div>
-
-              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                <div>
-                  <div className="text-xl font-black text-white">
-                    {stats.letzteZeit}
-                  </div>
-                  <div className="mt-2 text-sm text-white/50">
-                    Letzter Eintrag
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-sky-300/20 bg-sky-300/10 px-4 py-3 text-xl font-black text-sky-100">
-                  {formatStunden(stats.letzteStunden)}
-                </div>
               </div>
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 backdrop-blur-xl sm:p-7">
-            <div className="mb-6">
-              <h2 className="text-2xl font-black text-white">
-                Schnellübersicht
-              </h2>
-              <p className="text-sm text-white/50">Live Infos</p>
-            </div>
-
-            <InfoRow
-              label="Projekte"
-              value={stats.projekte}
-              icon={<Briefcase size={22} />}
-            />
-
-            <InfoRow
+          <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 backdrop-blur-xl md:grid-cols-4">
+            <HeroMini
               label="Überstunden"
               value={formatStunden(stats.gesamtUeberstunden)}
-              highlight={stats.gesamtUeberstunden >= 0}
-              danger={stats.gesamtUeberstunden < 0}
-              icon={<TrendingUp size={22} />}
+              green={stats.gesamtUeberstunden >= 0}
+              red={stats.gesamtUeberstunden < 0}
             />
-
-            <InfoRow
-              label="Offene Anträge"
+            <HeroMini label="Projekte" value={stats.projekte} />
+            <HeroMini
+              label="Offen"
               value={stats.offeneAntraege}
-              highlight={stats.offeneAntraege === 0}
-              danger={stats.offeneAntraege > 0}
-              icon={<CalendarDays size={22} />}
+              blue={stats.offeneAntraege > 0}
+            />
+            <HeroMini
+              label="Heute"
+              value={formatKurz(stats.heuteDifferenz)}
+              green={stats.heuteDifferenz >= 0}
+              red={stats.heuteDifferenz < 0}
             />
           </div>
-        </section>
-    </main>
-  );
-}
-
-
-
-function ActionCard({
-  href,
-  icon,
-  label,
-  title,
-  description,
-}: {
-  href: string;
-  icon: ReactNode;
-  label: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <a
-      href={href}
-      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-white transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
-    >
-      <div className="mb-5 flex items-center justify-between gap-4">
-        <IconBox>{icon}</IconBox>
-        <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
-          {label}
         </div>
-      </div>
+      </section>
 
-      <h3 className="text-2xl font-black text-white">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-white/50">{description}</p>
+      {meldung && (
+        <div className="rounded-xl border border-slate-200/20 bg-slate-200/10 p-4 text-sm font-bold text-slate-100">
+          {meldung}
+        </div>
+      )}
 
-      <div className="mt-5 h-1 w-14 rounded-full bg-sky-200/45 transition-all duration-300 group-hover:w-24 group-hover:bg-sky-200" />
-    </a>
+      <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 shadow-2xl shadow-black/30">
+        <div className="flex flex-col justify-between gap-4 border-b border-white/10 p-6 lg:flex-row lg:items-center lg:p-7">
+          <div>
+            <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">
+              Wochenplan
+            </div>
+            <h2 className="mt-2 text-2xl font-black text-white">
+              Wochenübersicht
+            </h2>
+            <p className="mt-1 text-white/55">
+              Mo–So direkt im Dashboard. Hier kommt als nächstes der echte Kalender mit Arbeitszeiten, Urlaub, Krankheit und Buchungen.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-black text-white/70">
+            Montag – Sonntag
+          </div>
+        </div>
+
+        <div className="grid gap-3 p-6 lg:p-7 md:grid-cols-7">
+          {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((tag, index) => {
+            const istHeute = index === ((new Date().getDay() + 6) % 7);
+
+            return (
+              <div
+                key={tag}
+                className={`min-h-[135px] rounded-3xl border p-4 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10 ${
+                  istHeute
+                    ? "border-sky-300/25 bg-sky-300/10"
+                    : "border-white/10 bg-black/25"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-black uppercase tracking-[0.18em] text-white/55">
+                    {tag}
+                  </div>
+
+                  {istHeute && (
+                    <span className="rounded-full border border-sky-300/20 bg-sky-300/10 px-2 py-1 text-[10px] font-black text-sky-100">
+                      Heute
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-xs font-bold text-white/45">
+                  Kalenderdaten folgen
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <details className="group overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 shadow-2xl shadow-black/30">
+        <summary className="flex cursor-pointer list-none flex-col justify-between gap-4 p-6 text-left transition hover:bg-sky-300/5 lg:flex-row lg:items-center lg:p-7">
+          <div>
+            <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">
+              Kennzahlen
+            </div>
+            <h2 className="mt-2 text-2xl font-black text-white">
+              Arbeitszeit Übersicht
+            </h2>
+            <p className="mt-1 text-white/55">
+              Heute, Woche, Monat und Überstunden kompakt aufklappen.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-black text-white transition hover:border-sky-300/25 hover:bg-sky-300/5">
+            <span className="group-open:hidden">Öffnen ▼</span>
+            <span className="hidden group-open:inline">Schließen ▲</span>
+          </div>
+        </summary>
+
+        <div className="grid grid-cols-1 gap-4 border-t border-white/10 p-6 lg:p-7 md:grid-cols-2 xl:grid-cols-4">
+          <WorkTimeCard
+            eyebrow="Heute"
+            title="Tageszeit"
+            description="Persönliche Tagesübersicht"
+            soll={stats.heuteSoll}
+            ist={stats.heuteIst}
+            differenz={stats.heuteDifferenz}
+          />
+
+          <WorkTimeCard
+            eyebrow="Diese Woche"
+            title="Wochenzeit"
+            description={`Montag bis ${
+              [0, 6].includes(new Date().getDay()) ? "Freitag" : "heute"
+            } · ${stats.wocheTage} Arbeitstage`}
+            soll={stats.wocheSoll}
+            ist={stats.wocheIst}
+            differenz={stats.wocheDifferenz}
+          />
+
+          <WorkTimeCard
+            eyebrow="Dieser Monat"
+            title="Monatszeit"
+            description={`1. bis heute · ${stats.monatTage} Arbeitstage`}
+            soll={stats.monatSoll}
+            ist={stats.monatIst}
+            differenz={stats.monatDifferenz}
+          />
+
+          <OvertimeCard
+            value={stats.gesamtUeberstunden}
+            startwert={stats.ueberstundenStart}
+            monat={stats.monatDifferenz}
+            abbau={stats.ueberstundenAbbau}
+          />
+        </div>
+      </details>
+
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.95fr]">
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-7">
+          <div className="mb-6 flex items-center gap-4">
+            <IconBox>
+              <Activity size={24} />
+            </IconBox>
+
+            <div>
+              <h2 className="text-2xl font-black text-white">
+                Letzte Aktivitäten
+              </h2>
+              <p className="text-sm text-white/50">Aktuelle Übersicht</p>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-black/25 p-5 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
+            <div className="mb-4 text-xs font-black uppercase tracking-[0.22em] text-sky-100">
+              Arbeitszeit
+            </div>
+
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <div>
+                <div className="text-xl font-black text-white">
+                  {stats.letzteZeit}
+                </div>
+                <div className="mt-2 text-sm text-white/50">Letzter Eintrag</div>
+              </div>
+
+              <div className="rounded-2xl border border-sky-300/20 bg-sky-300/10 px-4 py-3 text-xl font-black text-sky-100">
+                {formatStunden(stats.letzteStunden)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-7">
+          <div className="mb-6">
+            <h2 className="text-2xl font-black text-white">Schnellübersicht</h2>
+            <p className="text-sm text-white/50">Live Infos</p>
+          </div>
+
+          <InfoRow label="Projekte" value={stats.projekte} icon={<Briefcase size={22} />} />
+
+          <InfoRow
+            label="Überstunden"
+            value={formatStunden(stats.gesamtUeberstunden)}
+            highlight={stats.gesamtUeberstunden >= 0}
+            danger={stats.gesamtUeberstunden < 0}
+            icon={<TrendingUp size={22} />}
+          />
+
+          <InfoRow
+            label="Offene Anträge"
+            value={stats.offeneAntraege}
+            highlight={stats.offeneAntraege === 0}
+            danger={stats.offeneAntraege > 0}
+            icon={<CalendarDays size={22} />}
+          />
+        </div>
+      </section>
+    </main>
   );
 }
 
@@ -708,9 +607,9 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.055] p-5 text-center transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
       <div
-        className={`text-3xl font-black md:text-4xl ${
+        className={`text-2xl font-black md:text-3xl ${
           red
             ? "text-red-400"
             : green
@@ -795,13 +694,9 @@ function OvertimeCard({
             Gesamt
           </div>
 
-          <h2 className="mt-2 text-2xl font-black text-white">
-            Überstunden
-          </h2>
+          <h2 className="mt-2 text-2xl font-black text-white">Überstunden</h2>
 
-          <p className="mt-1 text-sm text-white/50">
-            Startwert + Monat - Abbau
-          </p>
+          <p className="mt-1 text-sm text-white/50">Startwert + Monat - Abbau</p>
         </div>
 
         <IconBox>
@@ -810,9 +705,7 @@ function OvertimeCard({
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-        <div className="text-sm font-bold text-white/50">
-          Gesamtüberstunden
-        </div>
+        <div className="text-sm font-bold text-white/50">Gesamtüberstunden</div>
 
         <div
           className={`mt-3 text-4xl font-black ${
