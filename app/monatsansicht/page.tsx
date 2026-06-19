@@ -327,18 +327,18 @@ hover:shadow-sky-300/10
       )}
 
       <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-5">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-6 backdrop-blur-xl">
           <p className="mb-2 font-semibold text-white/50">Monat</p>
 
           <input
             type="month"
             value={monat}
             onChange={(e) => setMonat(e.target.value)}
-            className="w-full rounded-xl border border-zinc-300 p-3 text-white"
+            className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-white outline-none"
           />
         </div>
 
-        <div className="rounded-2xl bg-zinc-900 p-6 text-white shadow-sm">
+        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-6 backdrop-blur-xl">
           <p className="mb-2 font-semibold text-zinc-300">Iststunden</p>
 
           <p className="text-5xl font-extrabold text-sky-100">
@@ -351,15 +351,15 @@ hover:shadow-sky-300/10
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <p className="mb-2 font-semibold text-white/50">Abwesenheit</p>
+        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-6 backdrop-blur-xl">
+          <p className="mb-2 font-semibold text-white/50">Angerechnet</p>
 
           <p className="text-5xl font-extrabold text-white">
             {loading ? "..." : `${abwesenheitsstunden.toFixed(2)}h`}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-6 backdrop-blur-xl">
           <p className="mb-2 font-semibold text-white/50">Sollstunden</p>
 
           <p className="text-5xl font-extrabold text-white">
@@ -367,16 +367,14 @@ hover:shadow-sky-300/10
           </p>
         </div>
 
-        <div
-          className={`rounded-2xl p-6 shadow-sm ${
-            differenz >= 0
-              ? "bg-green-600 text-white"
-              : "bg-red-600 text-white"
-          }`}
-        >
-          <p className="mb-2 font-semibold">Monat</p>
+        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-6 backdrop-blur-xl">
+          <p className="mb-2 font-semibold text-white/50">Monatsdifferenz</p>
 
-          <p className="text-5xl font-extrabold">
+          <p
+  className={`text-5xl font-extrabold ${
+    differenz >= 0 ? "text-green-400" : "text-red-400"
+  }`}
+>
             {loading
               ? "..."
               : `${differenz >= 0 ? "+" : ""}${differenz.toFixed(2)}h`}
