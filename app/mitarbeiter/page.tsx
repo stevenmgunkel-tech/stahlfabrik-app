@@ -9,9 +9,6 @@ export default function MitarbeiterPage() {
   const [seiteGeprueft, setSeiteGeprueft] = useState(false);
 
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
   const [rolle, setRolle] = useState("Mitarbeiter");
   const [wochenstunden, setWochenstunden] = useState("");
   const [ferienwochen, setFerienwochen] = useState("4");
@@ -110,8 +107,6 @@ export default function MitarbeiterPage() {
   function formularLeeren() {
     setBearbeitenId(null);
     setName("");
-    setEmail("");
-    setPassword("");
     setRolle("Mitarbeiter");
     setWochenstunden("");
     setFerienwochen("4");
@@ -151,43 +146,25 @@ export default function MitarbeiterPage() {
       vertragsart,
     };
 
-    if (bearbeitenId) {
-      const { error } = await supabase
-        .from("mitarbeiter")
-        .update(daten)
-        .eq("id", bearbeitenId);
-
-      if (error) {
-        setLoading(false);
-        setMeldung(error.message);
-        console.log(error);
-        return;
-      }
-
-      setMeldung("Mitarbeiter aktualisiert.");
-    } else {
-      if (!email.trim() || !password.trim()) {
-        setLoading(false);
-        setMeldung("Bitte E-Mail und Start-Passwort ausfüllen.");
-        return;
-      }
-
-      const response = await fetch("/api/create-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...daten, email, password }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setLoading(false);
-        setMeldung(result.error || "Mitarbeiter konnte nicht erstellt werden.");
-        return;
-      }
-
-      setMeldung("Mitarbeiter wurde erstellt.");
+    if (!bearbeitenId) {
+      setLoading(false);
+      setMeldung("Bitte zuerst einen Mitarbeiter aus der Teamübersicht zum Bearbeiten auswählen. Neue Mitarbeiter werden im Chef Dashboard erstellt.");
+      return;
     }
+
+    const { error } = await supabase
+      .from("mitarbeiter")
+      .update(daten)
+      .eq("id", bearbeitenId);
+
+    if (error) {
+      setLoading(false);
+      setMeldung(error.message);
+      console.log(error);
+      return;
+    }
+
+    setMeldung("Mitarbeiter aktualisiert.");
 
     formularLeeren();
     await ladeMitarbeiter();
@@ -309,8 +286,8 @@ export default function MitarbeiterPage() {
       </section>
 
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <ActionCard href="#formular" label="Neu" title="➕ Mitarbeiter" onClick={() => setFormularOffen(true)} />
         <ActionCard href="#team" label="Übersicht" title="📋 Team" onClick={() => setTeamOffen(true)} />
+        <ActionCard href="#formular" label="Bearbeiten" title="📄 Daten" onClick={() => setFormularOffen(true)} />
         <ActionCard href="#formular" label="Vertrag" title="📄 Daten" onClick={() => setFormularOffen(true)} />
         <ActionCard href="#team" label="Entwicklung" title="🎯 Stärken" onClick={() => setTeamOffen(true)} />
       </section>
@@ -330,9 +307,9 @@ export default function MitarbeiterPage() {
 
       <DropdownPanel
         id="formular"
-        title={bearbeitenId ? "Mitarbeiter bearbeiten" : "Mitarbeiter mit Login erstellen"}
+        title={bearbeitenId ? "Mitarbeiter bearbeiten" : "Personaldaten"}
         eyebrow="Stammdaten · Vertrag · Ferien"
-        description="Mitarbeiterverwaltung clean eingeklappt. Stammdaten, Rolle, Vertrag und Ferienanspruch an einem Ort."
+        description="Neue Mitarbeiter werden im Chef Dashboard erstellt. Hier werden bestehende Personaldaten, Rollen, Verträge und Ferien gepflegt."
         open={formularOffen}
         onToggle={() => setFormularOffen(!formularOffen)}
       >
@@ -342,22 +319,16 @@ export default function MitarbeiterPage() {
           </div>
         )}
 
+        {!bearbeitenId && (
+          <div className="mb-5 rounded-xl border border-sky-300/20 bg-sky-300/5 px-4 py-3 text-sm font-bold text-sky-100">
+            Neue Mitarbeiter werden zentral im Chef Dashboard erstellt. Wähle hier einen Mitarbeiter aus der Teamübersicht, um Personaldaten zu bearbeiten.
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <Field label="Name">
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="dark-input" />
           </Field>
-
-          {!bearbeitenId && (
-            <>
-              <Field label="E-Mail">
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="E-Mail" className="dark-input" />
-              </Field>
-
-              <Field label="Start-Passwort">
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Start-Passwort" className="dark-input" />
-              </Field>
-            </>
-          )}
 
           <Field label="Rolle">
             <select value={rolle} onChange={(e) => setRolle(e.target.value)} className="dark-input">
@@ -415,7 +386,7 @@ export default function MitarbeiterPage() {
             disabled={loading}
             className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/10 hover:shadow-sky-300/10 disabled:opacity-50"
           >
-            {loading ? "Speichern..." : bearbeitenId ? "Änderung speichern" : "Mitarbeiter erstellen"}
+            {loading ? "Speichern..." : bearbeitenId ? "Änderung speichern" : "Mitarbeiter auswählen"}
           </button>
 
           {bearbeitenId && (
