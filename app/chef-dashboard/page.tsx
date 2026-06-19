@@ -686,7 +686,7 @@ const systemStatus =
         <a
           href="#kommandozentrale"
           onClick={() => setVerwaltungsModus("projekt")}
-          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-white transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/25 hover:bg-slate-200/10 hover:shadow-lg hover:shadow-slate-200/10"
+          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-white transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
         >
           <div className="text-sm text-white/50">Projekt</div>
           <div className="mt-2 text-lg font-black text-white">
@@ -697,7 +697,7 @@ const systemStatus =
         <a
           href="#kommandozentrale"
           onClick={() => setVerwaltungsModus("mitarbeiter")}
-          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/25 hover:bg-slate-200/10 hover:shadow-lg hover:shadow-slate-200/10"
+          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
         >
           <div className="text-sm text-white/50">Team</div>
           <div className="mt-2 text-lg font-black text-white">
@@ -708,7 +708,7 @@ const systemStatus =
         <a
           href="#abwesenheit"
           onClick={() => setAbwesenheitOffen(true)}
-          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/25 hover:bg-slate-200/10 hover:shadow-lg hover:shadow-slate-200/10"
+          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
         >
           <div className="text-sm text-white/50">Abwesenheit</div>
           <div className="mt-2 text-lg font-black text-white">
@@ -719,7 +719,7 @@ const systemStatus =
         <a
           href="#auswertung"
           onClick={() => setAuswertungOffen(true)}
-          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/25 hover:bg-slate-200/10 hover:shadow-lg hover:shadow-slate-200/10"
+          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
         >
           <div className="text-sm text-white/50">Auswertung</div>
           <div className="mt-2 text-lg font-black text-white">
@@ -779,7 +779,7 @@ const systemStatus =
               className={`rounded-2xl border px-5 py-4 font-black transition-all duration-300 hover:-translate-y-1 ${
                 verwaltungsModus === "projekt"
                   ? "border-slate-200/40 bg-slate-200/10 text-slate-100 shadow-lg shadow-slate-200/10"
-                  : "border-white/10 bg-white/[0.03] text-white/55 hover:border-slate-200/25 hover:bg-slate-200/10 hover:text-slate-100"
+                  : "border-white/10 bg-white/[0.03] text-white/55 hover:border-sky-300/25 hover:bg-sky-300/5 hover:text-slate-100"
               }`}
             >
               🏗️ Projekt
@@ -790,8 +790,8 @@ const systemStatus =
               onClick={() => setVerwaltungsModus("mitarbeiter")}
               className={`rounded-2xl border px-5 py-4 font-black transition-all duration-300 hover:-translate-y-1 ${
                 verwaltungsModus === "mitarbeiter"
-                  ? "border-green-500/40 bg-green-500/10 text-green-300 shadow-lg shadow-green-500/10"
-                  : "border-white/10 bg-white/[0.03] text-white/55 hover:border-green-500/25 hover:bg-green-500/10 hover:text-green-300"
+                  ? "border-slate-200/40 bg-slate-200/10 text-slate-100 shadow-lg shadow-slate-200/10"
+                  : "border-white/10 bg-white/[0.03] text-white/55 hover:border-sky-300/25 hover:bg-sky-300/5 hover:text-sky-200"
               }`}
             >
               👤 Mitarbeiter
@@ -864,7 +864,7 @@ const systemStatus =
                       className={`rounded-2xl border px-4 py-3 font-black transition-all duration-300 hover:-translate-y-1 ${
                         aktiv
                           ? "border-slate-200/40 bg-slate-200/10 text-slate-100 shadow-lg shadow-slate-200/10"
-                          : "border-white/10 bg-white/[0.03] text-white/55 hover:border-slate-200/25 hover:bg-slate-200/10 hover:text-slate-100"
+                          : "border-white/10 bg-white/[0.03] text-white/55 hover:border-sky-300/25 hover:bg-sky-300/5 hover:text-slate-100"
                       }`}
                     >
                       {aktiv ? "✓ " : ""}
@@ -883,7 +883,7 @@ const systemStatus =
               <button
                 type="button"
                 onClick={projektErstellen}
-                className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-6 py-4 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/50 hover:bg-slate-200/15 hover:shadow-slate-200/20"
+                className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-6 py-4 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/50 hover:bg-slate-200/15 hover:shadow-sky-300/10"
               >
                 + Projekt speichern
               </button>
@@ -898,7 +898,7 @@ const systemStatus =
                   value={mitarbeiterName}
                   onChange={(event) => setMitarbeiterName(event.target.value)}
                   placeholder="z.B. Max Muster"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-green-500/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-sky-300/40 focus:bg-black/40"
                 />
               </label>
 
@@ -909,7 +909,7 @@ const systemStatus =
                   onChange={(event) => setMitarbeiterEmail(event.target.value)}
                   placeholder="max@firma.ch"
                   type="email"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-green-500/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-sky-300/40 focus:bg-black/40"
                 />
               </label>
 
@@ -920,7 +920,7 @@ const systemStatus =
                   onChange={(event) => setMitarbeiterPasswort(event.target.value)}
                   placeholder="mind. 6 Zeichen"
                   type="password"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-green-500/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-sky-300/40 focus:bg-black/40"
                 />
               </label>
             </div>
@@ -931,7 +931,7 @@ const systemStatus =
                 <select
                   value={mitarbeiterRolle}
                   onChange={(event) => setMitarbeiterRolle(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-green-500/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
                 >
                   <option value="Mitarbeiter">Mitarbeiter</option>
                   <option value="Admin">Admin</option>
@@ -947,7 +947,7 @@ const systemStatus =
                   value={mitarbeiterWochenstunden}
                   onChange={(event) => setMitarbeiterWochenstunden(event.target.value)}
                   inputMode="decimal"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-green-500/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
                 />
               </label>
 
@@ -957,7 +957,7 @@ const systemStatus =
                   value={mitarbeiterFerienwochen}
                   onChange={(event) => setMitarbeiterFerienwochen(event.target.value)}
                   inputMode="decimal"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-green-500/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
                 />
               </label>
 
@@ -967,7 +967,7 @@ const systemStatus =
                   value={mitarbeiterUrlaubstage}
                   onChange={(event) => setMitarbeiterUrlaubstage(event.target.value)}
                   inputMode="decimal"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-green-500/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
                 />
               </label>
 
@@ -976,7 +976,7 @@ const systemStatus =
                 <select
                   value={mitarbeiterVertragsart}
                   onChange={(event) => setMitarbeiterVertragsart(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-green-500/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
                 >
                   <option value="Festangestellt">Festangestellt</option>
                   <option value="Befristet">Befristet</option>
@@ -994,7 +994,7 @@ const systemStatus =
               <button
                 type="button"
                 onClick={mitarbeiterErstellen}
-                className="rounded-2xl border border-green-500/30 bg-green-500/10 px-6 py-4 font-black text-green-300 shadow-lg shadow-green-500/10 transition-all duration-300 hover:-translate-y-1 hover:border-green-500/50 hover:bg-green-500/15 hover:shadow-green-500/20"
+                className="rounded-2xl border border-slate-200/25 bg-slate-200/10 px-6 py-4 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/40 hover:bg-sky-300/5 hover:shadow-sky-300/10"
               >
                 + Mitarbeiter speichern
               </button>
@@ -1116,7 +1116,7 @@ const systemStatus =
           <button
             type="button"
             onClick={() => tagAlsGeprueftMarkieren(tag.id)}
-            className="rounded-xl border border-green-500/30 bg-green-500/10 px-5 py-3 font-black text-green-300 shadow-lg shadow-green-500/10 transition-all duration-300 hover:-translate-y-1 hover:border-green-500/50 hover:bg-green-500/15"
+            className="rounded-xl border border-slate-200/25 bg-slate-200/10 px-5 py-3 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/40 hover:bg-sky-300/5 hover:shadow-sky-300/10"
           >
             ✓ Freigeben
           </button>
@@ -1159,7 +1159,7 @@ const systemStatus =
           {sichtbareFreigaben.map((tag) => (
             <div
               key={tag.id}
-              className="rounded-2xl border border-green-500/25 bg-gradient-to-br from-green-500/10 to-black/20 p-5"
+              className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
             >
               <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
                 <div>
@@ -1197,7 +1197,7 @@ const systemStatus =
             type="button"
             onClick={() => setFreigabeSeite((s) => Math.max(1, s - 1))}
             disabled={freigabeSeite === 1}
-            className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 font-black text-white/70 transition hover:border-slate-200/30 hover:text-slate-200 disabled:cursor-not-allowed disabled:opacity-30"
+            className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 font-black text-white/70 transition hover:border-sky-300/30 hover:text-sky-200 disabled:cursor-not-allowed disabled:opacity-30"
           >
             ◀
           </button>
@@ -1212,7 +1212,7 @@ const systemStatus =
               setFreigabeSeite((s) => Math.min(freigabeSeiten, s + 1))
             }
             disabled={freigabeSeite === freigabeSeiten}
-            className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 font-black text-white/70 transition hover:border-slate-200/30 hover:text-slate-200 disabled:cursor-not-allowed disabled:opacity-30"
+            className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 font-black text-white/70 transition hover:border-sky-300/30 hover:text-sky-200 disabled:cursor-not-allowed disabled:opacity-30"
           >
             ▶
           </button>
@@ -1350,7 +1350,7 @@ const systemStatus =
             {topBereiche.map((bereich, index) => (
               <div
                 key={bereich.name}
-                className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/25 hover:shadow-lg hover:shadow-slate-200/10"
+                className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:shadow-lg hover:shadow-sky-300/10"
               >
                 <div className="text-xs font-black uppercase tracking-[0.22em] text-slate-200">
                   #{index + 1}
@@ -1383,7 +1383,7 @@ const systemStatus =
     {teamStatus.map((person) => (
       <div
         key={person.name}
-        className="flex items-center justify-between rounded-2xl border border-white/10 bg-gradient-to-r from-black/30 to-white/[0.03] p-4 transition hover:border-slate-400/30"
+        className="flex items-center justify-between rounded-2xl border border-white/10 bg-gradient-to-r from-black/30 to-white/[0.03] p-4 transition hover:border-sky-300/25"
       >
         <div className="flex items-center gap-4">
           <span className={`h-3 w-3 rounded-full ${person.punkt}`} />
@@ -1644,9 +1644,9 @@ function KpiCard({
       transition-all
       duration-300
       hover:-translate-y-1
-      hover:border-slate-200/25
+      hover:border-sky-300/25
       hover:shadow-2xl
-      hover:shadow-slate-200/10
+      hover:shadow-sky-300/10
     "
   >
       <div className={`text-4xl font-black md:text-5xl ${color}`}>
@@ -1657,7 +1657,7 @@ function KpiCard({
         {label}
       </div>
 
-      <div className="mt-5 h-1 w-16 rounded-full bg-white/30 transition-all duration-300 group-hover:w-24 group-hover:bg-slate-100/70" />
+      <div className="mt-5 h-1 w-16 rounded-full bg-white/30 transition-all duration-300 group-hover:w-24 group-hover:bg-sky-200/70" />
     </div>
   );
 }
@@ -1700,7 +1700,7 @@ function MiniCard({
   orange?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/25 p-5 transition hover:border-slate-400/30 hover:bg-black/35">
+    <div className="rounded-xl border border-white/10 bg-black/25 p-5 transition hover:border-sky-300/25 hover:bg-sky-300/5">
       <div className="text-sm font-bold text-white/50">{label}</div>
       <div
         className={`mt-3 text-4xl font-black ${
@@ -1766,8 +1766,8 @@ function QuickLink({ href, label, orange, onClick }: { href: string; label: stri
       onClick={onClick}
       className={`block rounded-xl border p-4 font-black transition-all duration-300 hover:-translate-y-1 ${
         orange
-          ? "border-slate-200/20 bg-white/[0.03] text-slate-100 hover:border-slate-200/35 hover:bg-slate-200/10"
-          : "border-white/10 bg-white/[0.03] text-white hover:border-slate-200/25 hover:bg-slate-200/10 hover:text-slate-100"
+          ? "border-slate-200/20 bg-white/[0.03] text-slate-100 hover:border-slate-200/35 hover:bg-sky-300/5"
+          : "border-white/10 bg-white/[0.03] text-white hover:border-sky-300/25 hover:bg-sky-300/5 hover:text-slate-100"
       }`}
     >
       {label}
