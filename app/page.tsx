@@ -7,7 +7,6 @@ import {
   CalendarDays,
   Clock3,
   TrendingUp,
-  UserRound,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { istFeiertagSG } from "@/lib/feiertage";
@@ -35,6 +34,8 @@ type DashboardStats = {
   gesamtUeberstunden: number;
   ueberstundenStart: number;
   ueberstundenAbbau: number;
+
+  offeneAntraege: number;
 };
 
 const initialStats: DashboardStats = {
@@ -60,6 +61,8 @@ const initialStats: DashboardStats = {
   gesamtUeberstunden: 0,
   ueberstundenStart: 0,
   ueberstundenAbbau: 0,
+
+  offeneAntraege: 0,
 };
 
 function formatDateLocal(date: Date) {
@@ -203,6 +206,10 @@ export default function DashboardPage() {
     const eigeneAbwesenheiten =
       urlaub?.filter((item) => item.user_id === user.id) || [];
 
+    const offeneAntraege = eigeneAbwesenheiten.filter(
+      (item) => item.status === "Beantragt"
+    ).length;
+
     function pauseFuerDatum(datum: string) {
       const pause = tagespausen?.find((p) => p.datum === datum);
       return Number(pause?.pause || 0) / 60;
@@ -323,6 +330,8 @@ export default function DashboardPage() {
       gesamtUeberstunden,
       ueberstundenStart,
       ueberstundenAbbau: ueberstundenAbbauStundenMonat,
+
+      offeneAntraege,
     });
 
     setLoading(false);
@@ -341,43 +350,72 @@ export default function DashboardPage() {
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.10),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_30%)]" />
 
       <div className="relative mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-2xl shadow-black/30 backdrop-blur-xl">
-          <div className="relative p-6 sm:p-8">
-            <div className="absolute inset-0 bg-gradient-to-br from-sky-300/10 via-transparent to-slate-400/5" />
+        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] p-7 shadow-2xl shadow-black/30 backdrop-blur-xl lg:p-10">
+          <div className="pointer-events-none absolute inset-0 opacity-[0.32]">
+            <div
+              className="h-full w-full bg-cover bg-[center_28%]"
+              style={{
+                backgroundImage: "url('/berg.png')",
+                filter: "brightness(1.45) contrast(1.05)",
+              }}
+            />
+          </div>
 
-            <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-              <div>
-                <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-sky-100">
-                  ODZ Kommandozentrale
-                </div>
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-transparent" />
 
-                <h1 className="mt-5 text-4xl font-black tracking-tight text-white sm:text-5xl">
-                  Dashboard
-                </h1>
-
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60 sm:text-base">
-                  Willkommen zurück,{" "}
-                  <span className="font-black text-sky-100">
-                    {stats.letzterMitarbeiter}
-                  </span>
-                  . Heute, Woche und Monat auf einen Blick.
-                </p>
+          <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
+            <div>
+              <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-sky-100">
+                ODZ Kommandozentrale
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <h1 className="mt-5 text-5xl font-black tracking-tight text-white lg:text-7xl">
+                Dashboard
+              </h1>
+
+              <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
+                Willkommen zurück,{" "}
+                <span className="font-black text-sky-100">
+                  {stats.letzterMitarbeiter}
+                </span>
+                . Woche, Arbeitszeit, Projekte und offene Punkte auf einen Blick.
+              </p>
+
+              <div className="mt-6 flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={loadDashboard}
                   disabled={loading}
-                  className="rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-black text-white shadow-lg shadow-black/20 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-2xl border border-white/10 bg-black/25 px-5 py-3 text-sm font-black text-white shadow-lg shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading ? "Lädt..." : "Aktualisieren"}
                 </button>
 
-                <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-3 text-sm font-black text-white/80 shadow-lg shadow-black/20">
+                <div className="rounded-2xl border border-white/10 bg-black/25 px-5 py-3 text-sm font-black text-white/80 shadow-lg shadow-black/20 backdrop-blur-xl">
                   {today}
                 </div>
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl md:grid-cols-4">
+              <HeroMini
+                label="Überstunden"
+                value={formatStunden(stats.gesamtUeberstunden)}
+                green={stats.gesamtUeberstunden >= 0}
+                red={stats.gesamtUeberstunden < 0}
+              />
+              <HeroMini label="Projekte" value={stats.projekte} />
+              <HeroMini
+                label="Offen"
+                value={stats.offeneAntraege}
+                blue={stats.offeneAntraege > 0}
+              />
+              <HeroMini
+                label="Heute"
+                value={formatKurz(stats.heuteDifferenz)}
+                green={stats.heuteDifferenz >= 0}
+                red={stats.heuteDifferenz < 0}
+              />
             </div>
           </div>
         </section>
@@ -554,21 +592,60 @@ export default function DashboardPage() {
             />
 
             <InfoRow
-              label="Monat"
-              value={month}
-              icon={<CalendarDays size={22} />}
+              label="Überstunden"
+              value={formatStunden(stats.gesamtUeberstunden)}
+              highlight={stats.gesamtUeberstunden >= 0}
+              danger={stats.gesamtUeberstunden < 0}
+              icon={<TrendingUp size={22} />}
             />
 
             <InfoRow
-              label="Mitarbeiter"
-              value={stats.letzterMitarbeiter}
-              highlight
-              icon={<UserRound size={22} />}
+              label="Offene Anträge"
+              value={stats.offeneAntraege}
+              highlight={stats.offeneAntraege === 0}
+              danger={stats.offeneAntraege > 0}
+              icon={<CalendarDays size={22} />}
             />
           </div>
         </section>
       </div>
     </main>
+  );
+}
+
+
+function HeroMini({
+  label,
+  value,
+  green,
+  blue,
+  red,
+}: {
+  label: string;
+  value: string | number;
+  green?: boolean;
+  blue?: boolean;
+  red?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+      <div
+        className={`text-2xl font-black md:text-3xl ${
+          red
+            ? "text-red-400"
+            : green
+            ? "text-green-400"
+            : blue
+            ? "text-sky-200"
+            : "text-slate-100"
+        }`}
+      >
+        {value}
+      </div>
+      <div className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
+        {label}
+      </div>
+    </div>
   );
 }
 
@@ -715,11 +792,13 @@ function InfoRow({
   label,
   value,
   highlight,
+  danger,
   icon,
 }: {
   label: string;
   value: string | number;
   highlight?: boolean;
+  danger?: boolean;
   icon?: ReactNode;
 }) {
   return (
@@ -728,7 +807,7 @@ function InfoRow({
         <div className="text-sm text-white/50">{label}</div>
         <div
           className={`mt-2 truncate text-2xl font-black ${
-            highlight ? "text-sky-100" : "text-white"
+            danger ? "text-red-400" : highlight ? "text-green-400" : "text-white"
           }`}
         >
           {value}
