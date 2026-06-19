@@ -15,13 +15,12 @@ const navGroups = [
     ],
   },
   {
-    title: "Personal",
-    items: [
-      { href: "/urlaub", label: "Urlaub / Krank", icon: "◇" },
-      { href: "/resturlaub", label: "Resturlaub", icon: "◌" },
-      { href: "/mitarbeiter", label: "Mitarbeiter", icon: "●" },
-    ],
-  },
+  title: "Personal",
+  items: [
+    { href: "/abwesenheiten", label: "Abwesenheiten", icon: "◈" },
+    { href: "/mitarbeiter", label: "Mitarbeiter", icon: "◈" },
+  ],
+},
   {
     title: "Projekte",
     items: [
