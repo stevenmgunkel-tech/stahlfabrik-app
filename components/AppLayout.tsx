@@ -76,12 +76,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.075),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(148,163,184,0.13),transparent_38%),linear-gradient(135deg,#11161a,#0d1115_45%,#07090b)]" />
       <div className="pointer-events-none fixed inset-0 opacity-[0.055] [background-image:linear-gradient(rgba(255,255,255,.65)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.65)_1px,transparent_1px)] [background-size:42px_42px]" />
 
-      <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/15 bg-[#101418]/90 px-5 shadow-xl shadow-black/30 backdrop-blur-xl lg:hidden">
+      <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/15 bg-[#12171b]/92 px-5 shadow-xl shadow-black/30 backdrop-blur-xl lg:hidden">
         <BrandLogo small />
 
         <button
           onClick={() => setOpen(true)}
-          className="rounded-xl border border-slate-300/25 bg-white/[0.07] px-4 py-2 text-sm font-black text-slate-100 transition hover:border-sky-300/30 hover:bg-sky-300/5"
+          className="rounded-xl border border-sky-300/30 bg-sky-300/[0.08] px-4 py-2 text-sm font-black text-sky-100 transition hover:border-sky-300/45 hover:bg-sky-300/10"
         >
           Menü
         </button>
@@ -94,7 +94,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             onClick={() => setOpen(false)}
           />
 
-          <aside className="absolute left-0 top-0 h-full w-[320px] border-r border-white/15 bg-[#101418]">
+          <aside className="absolute left-0 top-0 h-full w-[320px] border-r border-white/15 bg-[#14191d]">
             <Sidebar
               pathname={pathname}
               logout={logout}
@@ -106,7 +106,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <aside className="fixed left-0 top-0 z-30 hidden h-screen w-[320px] border-r border-white/15 bg-[#101418]/92 shadow-2xl shadow-black/60 backdrop-blur-xl lg:block">
+      <aside className="fixed left-0 top-0 z-30 hidden h-screen w-[320px] border-r border-white/15 bg-[#14191d]/94 shadow-2xl shadow-black/60 backdrop-blur-xl lg:block">
         <Sidebar
           pathname={pathname}
           logout={logout}
@@ -120,6 +120,40 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+
+      <style jsx global>{`
+        .odz-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(125, 211, 252, 0.75) rgba(255, 255, 255, 0.06);
+        }
+
+        .odz-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .odz-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 999px;
+        }
+
+        .odz-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(
+            180deg,
+            rgba(186, 230, 253, 0.95),
+            rgba(56, 189, 248, 0.8)
+          );
+          border-radius: 999px;
+          border: 2px solid rgba(20, 25, 29, 0.95);
+        }
+
+        .odz-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(
+            180deg,
+            rgba(224, 242, 254, 1),
+            rgba(125, 211, 252, 0.95)
+          );
+        }
+      `}</style>
     </div>
   );
 }
@@ -139,14 +173,14 @@ function Sidebar({
 }) {
   return (
     <div className="flex h-full flex-col px-5 py-7">
-      <div className="mb-8 rounded-3xl border border-white/15 bg-gradient-to-br from-white/[0.13] via-white/[0.07] to-black/20 p-6 shadow-2xl shadow-black/35">
+      <div className="mb-8 rounded-3xl border border-white/15 bg-gradient-to-br from-white/[0.16] via-white/[0.09] to-black/15 p-6 shadow-2xl shadow-black/35">
         <BrandLogo />
       </div>
 
-      <nav className="flex-1 space-y-7 overflow-y-auto pr-1">
+      <nav className="odz-scrollbar flex-1 space-y-7 overflow-y-auto pr-2">
         {navGroups.map((group) => (
           <div key={group.title}>
-            <div className="mb-3 px-3 text-[11px] font-black uppercase tracking-[0.28em] text-slate-300/60">
+            <div className="mb-3 px-3 text-[11px] font-black uppercase tracking-[0.28em] text-slate-300/65">
               {group.title}
             </div>
 
@@ -161,15 +195,15 @@ function Sidebar({
                     onClick={close}
                     className={`group flex items-center gap-3 rounded-2xl px-4 py-3.5 text-[15px] font-black transition-all duration-300 ${
                       active
-                        ? "border border-slate-200/35 bg-gradient-to-r from-white/[0.16] via-white/[0.08] to-white/[0.035] text-white shadow-lg shadow-white/5"
-                        : "border border-transparent text-slate-200/75 hover:-translate-y-0.5 hover:border-sky-300/25 hover:bg-sky-300/5 hover:text-white hover:shadow-lg hover:shadow-sky-300/10"
+                        ? "border border-sky-300/55 bg-gradient-to-r from-sky-300/[0.20] via-white/[0.09] to-white/[0.035] text-white shadow-lg shadow-sky-300/15"
+                        : "border border-transparent text-slate-200/78 hover:-translate-y-0.5 hover:border-sky-300/25 hover:bg-sky-300/5 hover:text-white hover:shadow-lg hover:shadow-sky-300/10"
                     }`}
                   >
                     <span
                       className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm transition ${
                         active
-                          ? "border-slate-200/35 bg-white/[0.12] text-slate-50"
-                          : "border-white/10 bg-black/20 text-slate-300/55 group-hover:border-sky-300/25 group-hover:text-sky-100"
+                          ? "border-sky-300/55 bg-sky-300/15 text-sky-50"
+                          : "border-white/10 bg-black/18 text-slate-300/60 group-hover:border-sky-300/30 group-hover:text-sky-100"
                       }`}
                     >
                       {item.icon}
@@ -184,8 +218,8 @@ function Sidebar({
         ))}
       </nav>
 
-      <div className="mt-7 rounded-3xl border border-white/15 bg-gradient-to-br from-white/[0.11] via-white/[0.055] to-black/20 p-5 shadow-2xl shadow-black/35">
-        <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-300/55">
+      <div className="mt-7 rounded-3xl border border-white/15 bg-gradient-to-br from-white/[0.13] via-white/[0.07] to-black/15 p-5 shadow-2xl shadow-black/35">
+        <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-300/60">
           Angemeldet
         </div>
 
@@ -209,34 +243,47 @@ function Sidebar({
 }
 
 function BrandLogo({ small = false }: { small?: boolean }) {
+  if (small) {
+    return (
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-gradient-to-br from-white/[0.18] via-white/[0.09] to-black/20 text-xl font-black text-white shadow-xl shadow-black/30">
+          SF
+        </div>
+
+        <div>
+          <div className="text-[15px] font-black uppercase tracking-[0.26em] text-white">
+            ODZ.
+          </div>
+          <div className="mt-0.5 text-[9px] font-black uppercase tracking-[0.22em] text-slate-400">
+            v1.1
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center text-center">
-      {!small && (
-        <div className="mb-4 text-[11px] font-black uppercase tracking-[0.4em] text-slate-400">
-          ODZ.
-        </div>
-      )}
+      <div className="text-[34px] font-black uppercase leading-none tracking-[0.16em] text-white drop-shadow-[0_0_18px_rgba(255,255,255,0.18)]">
+        ODZ.
+      </div>
 
-      <div
-        className={`flex items-center justify-center rounded-2xl border border-white/15 bg-gradient-to-br from-white/[0.16] via-white/[0.08] to-black/20 font-black text-white shadow-xl shadow-black/30 ${
-          small ? "h-11 w-11 text-xl" : "h-20 w-20 text-4xl"
-        }`}
-      >
+      <div className="mt-2 inline-flex rounded-full border border-sky-300/25 bg-sky-300/[0.08] px-3 py-1 text-[10px] font-black uppercase tracking-[0.32em] text-sky-100 shadow-lg shadow-sky-300/10">
+        v1.1
+      </div>
+
+      <div className="mt-5 flex h-20 w-20 items-center justify-center rounded-2xl border border-white/15 bg-gradient-to-br from-white/[0.18] via-white/[0.09] to-black/20 text-4xl font-black text-white shadow-xl shadow-black/30">
         SF
       </div>
 
-      {!small && (
-        <>
-          <div className="mt-4 text-[38px] font-black leading-none tracking-tight">
-            <span className="text-white">Stahl</span>
-            <span className="text-orange-400">Fabrik</span>
-          </div>
+      <div className="mt-4 text-[36px] font-black leading-none tracking-tight">
+        <span className="text-white">Stahl</span>
+        <span className="text-orange-400">Fabrik</span>
+      </div>
 
-          <div className="mt-3 text-[11px] font-bold uppercase tracking-[0.28em] text-slate-500">
-            Powered by ODZ.
-          </div>
-        </>
-      )}
+      <div className="mt-3 text-[11px] font-bold uppercase tracking-[0.28em] text-slate-500">
+        Powered by ODZ.
+      </div>
     </div>
   );
 }
