@@ -24,7 +24,7 @@ export default function MitarbeiterPage() {
   const [meldung, setMeldung] = useState("");
   const [bearbeitenId, setBearbeitenId] = useState<number | null>(null);
   const [suche, setSuche] = useState("");
-  const [formularOffen, setFormularOffen] = useState(true);
+  const [formularOffen, setFormularOffen] = useState(false);
   const [teamOffen, setTeamOffen] = useState(true);
 
   async function pruefeAdmin() {
@@ -285,11 +285,9 @@ export default function MitarbeiterPage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <ActionCard href="#team" label="Übersicht" title="📋 Team" onClick={() => setTeamOffen(true)} />
-        <ActionCard href="#formular" label="Bearbeiten" title="📄 Daten" onClick={() => setFormularOffen(true)} />
-        <ActionCard href="#formular" label="Vertrag" title="📄 Daten" onClick={() => setFormularOffen(true)} />
-        <ActionCard href="#team" label="Entwicklung" title="🎯 Stärken" onClick={() => setTeamOffen(true)} />
+        <ActionCard href="#team" label="Entwicklung" title="🎯 Stärken vorbereitet" onClick={() => setTeamOffen(true)} />
       </section>
 
       <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -307,9 +305,9 @@ export default function MitarbeiterPage() {
 
       <DropdownPanel
         id="formular"
-        title={bearbeitenId ? "Mitarbeiter bearbeiten" : "Personaldaten"}
+        title="Mitarbeiter bearbeiten"
         eyebrow="Stammdaten · Vertrag · Ferien"
-        description="Neue Mitarbeiter werden im Chef Dashboard erstellt. Hier werden bestehende Personaldaten, Rollen, Verträge und Ferien gepflegt."
+        description="Bestehende Mitarbeiter aus der Teamübersicht auswählen, Rolle ändern, Vertrag pflegen und speichern."
         open={formularOffen}
         onToggle={() => setFormularOffen(!formularOffen)}
       >
@@ -321,10 +319,12 @@ export default function MitarbeiterPage() {
 
         {!bearbeitenId && (
           <div className="mb-5 rounded-xl border border-sky-300/20 bg-sky-300/5 px-4 py-3 text-sm font-bold text-sky-100">
-            Neue Mitarbeiter werden zentral im Chef Dashboard erstellt. Wähle hier einen Mitarbeiter aus der Teamübersicht, um Personaldaten zu bearbeiten.
+            Neue Mitarbeiter werden zentral im Chef Dashboard erstellt. Wähle hier einen Mitarbeiter aus der Teamübersicht aus, um Rolle, Vertrag, Wochenstunden, Ferien oder Austritt zu ändern.
           </div>
         )}
 
+        {bearbeitenId && (
+          <>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <Field label="Name">
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="dark-input" />
@@ -386,19 +386,19 @@ export default function MitarbeiterPage() {
             disabled={loading}
             className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/10 hover:shadow-sky-300/10 disabled:opacity-50"
           >
-            {loading ? "Speichern..." : bearbeitenId ? "Änderung speichern" : "Mitarbeiter auswählen"}
+            {loading ? "Speichern..." : "Änderung speichern"}
           </button>
 
-          {bearbeitenId && (
-            <button
-              type="button"
-              onClick={formularLeeren}
-              className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/5 hover:text-sky-200"
-            >
-              Abbrechen
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={formularLeeren}
+            className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/5 hover:text-sky-200"
+          >
+            Abbrechen
+          </button>
         </div>
+          </>
+        )}
       </DropdownPanel>
 
       <DropdownPanel
