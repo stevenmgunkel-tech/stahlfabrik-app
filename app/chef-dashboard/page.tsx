@@ -636,22 +636,22 @@ const systemStatus =
   return (
     <main className="space-y-8 text-slate-100">
       <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.45]">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
             style={{
               backgroundImage: "url('/berg.png')",
-              filter: "brightness(1.8) contrast(1.05)",
+              filter: "brightness(1.65) contrast(1.05)",
             }}
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
 
         <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
           <div>
             <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
-              ODZ SILVER
+              ODZ SILVER · Chef Dashboard
             </div>
 
             <div className="mt-5 text-sm font-bold text-white/60">
@@ -736,7 +736,7 @@ const systemStatus =
 
       <section
         id="kommandozentrale"
-        className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-7"
+        className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-7"
       >
         <div className="mb-7 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
@@ -1078,7 +1078,7 @@ const systemStatus =
 />
       </section>
 
-      <section className="min-h-[150px] rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+      <section className="min-h-[150px] rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
   <div className="mb-6">
     <h2 className="text-2xl font-black text-white">
       Prüfzentrum
@@ -1126,7 +1126,7 @@ const systemStatus =
   )}
 </section>
 
-<section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+<section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
   <button
     type="button"
     onClick={() => setGepruefteOffen(!gepruefteOffen)}
@@ -1232,7 +1232,7 @@ const systemStatus =
         onToggle={() => setAbwesenheitOffen(!abwesenheitOffen)}
       >
 <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+        <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
           <div className="mb-7">
             <h2 className="text-2xl font-black text-white">
               Abwesenheiten diesen Monat
@@ -1253,7 +1253,7 @@ const systemStatus =
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+        <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
           <div className="mb-7">
             <h2 className="text-2xl font-black text-white">Schnellzugriff</h2>
             <p className="mt-1 text-white/55">Wichtige Adminbereiche</p>
@@ -1278,7 +1278,7 @@ const systemStatus =
         onToggle={() => setAuswertungOffen(!auswertungOffen)}
       >
 <section className="grid grid-cols-1 gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+        <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
           <div className="mb-7">
             <h2 className="text-2xl font-black text-white">Top Projekte</h2>
             <p className="mt-1 text-white/55">Stärkste Projektbelastung im aktuellen Monat</p>
@@ -1320,7 +1320,7 @@ const systemStatus =
           )}
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+        <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
           <div className="mb-7">
             <h2 className="text-2xl font-black text-white">Kontrollstatus</h2>
             <p className="mt-1 text-white/55">Was Aufmerksamkeit braucht</p>
@@ -1335,7 +1335,7 @@ const systemStatus =
         </div>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+      <section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
         <div className="mb-7">
           <h2 className="text-2xl font-black text-white">Top Bereiche</h2>
           <p className="mt-1 text-white/55">Werkstatt, Montage, Planung und Logistik sauber im Blick</p>
@@ -1368,7 +1368,7 @@ const systemStatus =
       
       </DropdownPanel>
 
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+      <section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
   <div className="mb-7">
     <h2 className="text-2xl font-black text-white">
       Team Status
@@ -1407,7 +1407,7 @@ const systemStatus =
   </div>
 </section>
 
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+      <section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div>
             <h2 className="text-2xl font-black text-white">
@@ -1536,7 +1536,7 @@ const systemStatus =
         open={projektUebersichtOffen}
         onToggle={() => setProjektUebersichtOffen(!projektUebersichtOffen)}
       >
-<section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+<section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div>
             <h2 className="text-2xl font-black text-white">
@@ -1628,27 +1628,7 @@ function KpiCard({
     : "text-slate-100";
 
   return (
-  <div
-    className="
-      group
-      overflow-hidden
-      rounded-3xl
-      border
-      border-white/10
-      bg-gradient-to-br
-      from-white/[0.08]
-      to-white/[0.03]
-      p-6
-      shadow-2xl
-      shadow-black/30
-      transition-all
-      duration-300
-      hover:-translate-y-1
-      hover:border-sky-300/25
-      hover:shadow-2xl
-      hover:shadow-sky-300/10
-    "
-  >
+  <div className="group rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
       <div className={`text-4xl font-black md:text-5xl ${color}`}>
         {value}
       </div>
@@ -1681,7 +1661,7 @@ function HeroMini({
     : "text-slate-100";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
       <div className={`text-3xl font-black ${color}`}>{value}</div>
       <div className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
         {label}
@@ -1732,14 +1712,11 @@ function DropdownPanel({
   children: ReactNode;
 }) {
   return (
-    <section
-      id={id}
-      className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30"
-    >
+    <section id={id} className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-white/[0.03] lg:flex-row lg:items-center lg:p-7"
+        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-sky-300/5 lg:flex-row lg:items-center lg:p-7"
       >
         <div>
           <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">
@@ -1749,7 +1726,7 @@ function DropdownPanel({
           <p className="mt-1 text-white/55">{description}</p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 transition hover:border-slate-200/50 hover:bg-slate-200/15">
+        <div className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 transition hover:border-sky-300/35 hover:bg-sky-300/10 hover:text-sky-100">
           {open ? "Schließen ▲" : "Öffnen ▼"}
         </div>
       </button>
