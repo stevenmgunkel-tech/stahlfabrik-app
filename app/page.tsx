@@ -345,10 +345,7 @@ export default function DashboardPage() {
 
 
   return (
-    <main className="min-h-screen text-white">
-      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),transparent_30%)]" />
-
-      <div className="relative mx-auto w-full max-w-[1600px] space-y-7 px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
+    <main className="space-y-8 text-slate-100">
         <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
           <div className="pointer-events-none absolute inset-0 opacity-[0.45]">
             <div
@@ -363,7 +360,7 @@ export default function DashboardPage() {
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
 
           <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
-            <div>
+            <div className="xl:max-w-[58%]">
               <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
                 ODZ SILVER
               </div>
@@ -399,7 +396,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-2 rounded-3xl border border-white/10 bg-black/25 p-3 text-center backdrop-blur-xl">
+            <div className="grid w-full grid-cols-4 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl xl:w-[640px] xl:shrink-0">
               <HeroMini
                 label="Überstunden"
                 value={formatStunden(stats.gesamtUeberstunden)}
@@ -612,7 +609,6 @@ export default function DashboardPage() {
             />
           </div>
         </section>
-      </div>
     </main>
   );
 }
@@ -633,15 +629,15 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="flex h-[96px] min-w-[132px] flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="flex h-[104px] min-w-[118px] flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
       <div
-        className={`text-2xl font-black leading-tight ${
+        className={`text-2xl font-black lg:text-3xl ${
           red
             ? "text-red-400"
             : green
             ? "text-green-400"
             : blue
-            ? "text-slate-100"
+            ? "text-sky-200"
             : "text-slate-100"
         }`}
       >
@@ -851,7 +847,7 @@ function MiniLine({
 
 function IconBox({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-slate-300/20 bg-slate-300/10 p-3 text-slate-100">
+    <div className="rounded-2xl border border-sky-300/20 bg-sky-300/10 p-3 text-sky-100">
       {children}
     </div>
   );
