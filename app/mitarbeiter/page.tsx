@@ -270,38 +270,57 @@ export default function MitarbeiterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0b0f14] text-white">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.10),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_30%)]" />
+    <main className="space-y-8 text-slate-100">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
+          <div
+            className="h-full w-full bg-cover bg-[center_20%]"
+            style={{
+              backgroundImage: "url('/berg.png')",
+              filter: "brightness(1.65) contrast(1.05)",
+            }}
+          />
+        </div>
 
-      <div className="relative mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-2xl shadow-black/30 backdrop-blur-xl">
-          <div className="relative p-6 sm:p-8">
-            <div className="absolute inset-0 bg-gradient-to-br from-sky-300/10 via-transparent to-slate-400/5" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
 
-            <div className="relative grid gap-6 lg:grid-cols-[1fr_420px] lg:items-end">
-              <div>
-                <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-sky-100">
-                  ODZ Personal
-                </div>
+        <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
+          <div>
+            <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
+              ODZ SILVER · Personal
+            </div>
 
-                <h1 className="mt-5 text-4xl font-black tracking-tight text-white sm:text-5xl">
-                  Mitarbeiter
-                </h1>
+            <h1 className="mt-5 text-5xl font-black tracking-tight text-white lg:text-7xl">
+              Mitarbeiter
+            </h1>
 
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60 sm:text-base">
-                  Teamübersicht, Rollen, Verträge, Ferien, Probezeit und Stärken in einer sauberen Personal-Zentrale.
-                </p>
-              </div>
+            <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
+              Teamübersicht, Rollen, Verträge, Ferien, Probezeit und Stärken in einer sauberen Personal-Zentrale.
+            </p>
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-2">
-                <HeroKpi label="Team" value={mitarbeiter.length} />
-                <HeroKpi label="Aktiv" value={aktive} tone="green" />
-                <HeroKpi label="Probezeit" value={probezeit} tone="sky" />
-                <HeroKpi label="Woche" value={formatStunden(gesamtWochenstunden)} />
-              </div>
+            <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-xl">
+              <span className="h-3 w-3 rounded-full bg-green-400 shadow-lg shadow-green-400/40" />
+              <span className="text-sm font-black uppercase tracking-widest text-white/70">
+                {aktive} aktive Mitarbeiter
+              </span>
             </div>
           </div>
-        </section>
+
+          <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl md:grid-cols-4">
+            <HeroMini label="Team" value={mitarbeiter.length} />
+            <HeroMini label="Aktiv" value={aktive} green={aktive > 0} />
+            <HeroMini label="Probezeit" value={probezeit} blue={probezeit > 0} />
+            <HeroMini label="Woche" value={formatStunden(gesamtWochenstunden)} />
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <ActionCard href="#team" label="Übersicht" title="👥 Team" onClick={() => setDetailsOffen(true)} />
+        <ActionCard href="#details" label="Details" title="📋 Personalakte" onClick={() => setDetailsOffen(true)} />
+        <ActionCard href="#bearbeiten" label="Verwalten" title="✎ Bearbeiten" onClick={() => selected && formularFuellen(selected)} />
+        <ActionCard href="#staerken" label="Entwicklung" title="🎯 Stärken" onClick={() => setDetailsOffen(true)} />
+      </section>
 
         {meldung && (
           <div className="rounded-2xl border border-sky-300/20 bg-sky-300/10 p-5 text-sm font-bold text-sky-100">
@@ -316,7 +335,7 @@ export default function MitarbeiterPage() {
           <KpiCard label="Admins" value={admins} />
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[420px_1fr]">
+        <section id="team" className="grid gap-6 xl:grid-cols-[420px_1fr]">
           <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
             <div className="border-b border-white/10 p-5 sm:p-6">
               <h2 className="text-xl font-black text-white">Team</h2>
@@ -378,7 +397,7 @@ export default function MitarbeiterPage() {
               </div>
             ) : (
               <>
-                <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
+                <section id="details" className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
                   <div className="border-b border-white/10 p-5 sm:p-6">
                     <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
                       <div>
@@ -425,7 +444,7 @@ export default function MitarbeiterPage() {
                         <InfoCard label="Austritt" value={formatDatum(selected.austrittsdatum)} tone={selected.austrittsdatum ? "red" : undefined} />
                       </div>
 
-                      <div className="rounded-[1.5rem] border border-white/10 bg-black/25 p-5">
+                      <div id="staerken" className="rounded-[1.5rem] border border-white/10 bg-black/25 p-5">
                         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                           <div>
                             <h3 className="text-xl font-black text-white">Mitarbeiter-Stärken</h3>
@@ -448,7 +467,7 @@ export default function MitarbeiterPage() {
                 </section>
 
                 {bearbeitenOffen && (
-                  <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
+                  <section id="bearbeiten" className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
                     <div className="border-b border-white/10 p-5 sm:p-6">
                       <h2 className="text-xl font-black text-white">Mitarbeiter bearbeiten</h2>
                       <p className="mt-1 text-sm text-white/50">Neue Mitarbeiter werden weiterhin im Chef Dashboard erstellt.</p>
@@ -501,18 +520,66 @@ export default function MitarbeiterPage() {
             )}
           </div>
         </section>
-      </div>
     </main>
   );
 }
 
-function HeroKpi({ label, value, tone }: { label: string; value: string | number; tone?: "green" | "sky" }) {
-  const color = tone === "green" ? "text-green-300" : tone === "sky" ? "text-sky-100" : "text-white";
+function HeroMini({
+  label,
+  value,
+  green,
+  blue,
+  red,
+}: {
+  label: string;
+  value: string | number;
+  green?: boolean;
+  blue?: boolean;
+  red?: boolean;
+}) {
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-black/25 p-4 backdrop-blur-xl">
-      <div className={`break-words text-2xl font-black ${color}`}>{value}</div>
-      <div className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">{label}</div>
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+      <div
+        className={`text-2xl font-black md:text-3xl ${
+          red
+            ? "text-red-400"
+            : green
+            ? "text-green-400"
+            : blue
+            ? "text-sky-200"
+            : "text-slate-100"
+        }`}
+      >
+        {value}
+      </div>
+      <div className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
+        {label}
+      </div>
     </div>
+  );
+}
+
+
+function ActionCard({
+  href,
+  label,
+  title,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  title: string;
+  onClick?: () => void;
+}) {
+  return (
+    <a
+      href={href}
+      onClick={onClick}
+      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+    >
+      <div className="text-sm text-white/50">{label}</div>
+      <div className="mt-2 text-lg font-black text-white">{title}</div>
+    </a>
   );
 }
 
