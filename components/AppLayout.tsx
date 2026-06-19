@@ -205,51 +205,99 @@ function Sidebar({
   role: string;
   close?: () => void;
 }) {
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    Betrieb: true,
+    Personal: true,
+    Projekte: true,
+  });
+
+  function toggleGroup(title: string) {
+    setOpenGroups((aktuell) => ({
+      ...aktuell,
+      [title]: !aktuell[title],
+    }));
+  }
+
   return (
     <div className="flex h-full min-h-full w-full flex-col bg-gradient-to-b from-[#f8fafc] via-[#edf2f6] to-[#dfe6ec] px-4 py-5 text-slate-950">
       <div className="mb-5 shrink-0 rounded-[2rem] border border-white/90 bg-gradient-to-br from-white via-[#f4f7fa] to-[#dbe3ea] p-5 shadow-2xl shadow-slate-950/15 ring-1 ring-slate-300/70">
         <BrandLogo />
       </div>
 
-      <nav className="odz-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto pr-2">
-        {navGroups.map((group) => (
-          <div key={group.title}>
-            <div className="mb-3 px-3 text-[11px] font-black uppercase tracking-[0.28em] text-slate-500">
-              {group.title}
+      <nav className="odz-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto pr-2">
+        {navGroups.map((group) => {
+          const groupOpen = openGroups[group.title];
+          const activeInGroup = group.items.some((item) => item.href === pathname);
+
+          return (
+            <div
+              key={group.title}
+              className={`rounded-3xl border transition-all duration-300 ${
+                activeInGroup
+                  ? "border-sky-300/40 bg-sky-50/60 shadow-lg shadow-sky-300/10"
+                  : "border-slate-300/55 bg-white/45 shadow-sm shadow-slate-950/5"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => toggleGroup(group.title)}
+                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+              >
+                <div>
+                  <div className="text-[11px] font-black uppercase tracking-[0.28em] text-slate-500">
+                    {group.title}
+                  </div>
+                  <div className="mt-1 text-xs font-bold text-slate-400">
+                    {group.items.length} Bereiche
+                  </div>
+                </div>
+
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm font-black transition ${
+                    groupOpen
+                      ? "border-sky-300/70 bg-sky-100 text-sky-700"
+                      : "border-slate-300/75 bg-white/70 text-slate-500"
+                  }`}
+                >
+                  {groupOpen ? "▲" : "▼"}
+                </div>
+              </button>
+
+              {groupOpen && (
+                <div className="space-y-2 border-t border-slate-300/55 px-3 pb-3 pt-2">
+                  {group.items.map((item) => {
+                    const active = pathname === item.href;
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={close}
+                        className={`group flex items-center gap-3 rounded-2xl px-3 py-3 text-[15px] font-black transition-all duration-300 ${
+                          active
+                            ? "border border-sky-300/75 bg-gradient-to-r from-sky-100 via-white to-slate-100 text-slate-950 shadow-lg shadow-sky-300/30"
+                            : "border border-transparent text-slate-700 hover:-translate-y-0.5 hover:border-sky-300/55 hover:bg-sky-50 hover:text-slate-950 hover:shadow-lg hover:shadow-sky-300/15"
+                        }`}
+                      >
+                        <span
+                          className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm transition ${
+                            active
+                              ? "border-sky-300/75 bg-sky-100 text-sky-700"
+                              : "border-slate-300/75 bg-white/70 text-slate-500 group-hover:border-sky-300/65 group-hover:text-sky-700"
+                          }`}
+                        >
+                          {item.icon}
+                        </span>
+
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-
-            <div className="space-y-2">
-              {group.items.map((item) => {
-                const active = pathname === item.href;
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={close}
-                    className={`group flex items-center gap-3 rounded-2xl px-4 py-3.5 text-[15px] font-black transition-all duration-300 ${
-                      active
-                        ? "border border-sky-300/75 bg-gradient-to-r from-sky-100 via-white to-slate-100 text-slate-950 shadow-lg shadow-sky-300/30"
-                        : "border border-transparent text-slate-700 hover:-translate-y-0.5 hover:border-sky-300/55 hover:bg-sky-50 hover:text-slate-950 hover:shadow-lg hover:shadow-sky-300/15"
-                    }`}
-                  >
-                    <span
-                      className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm transition ${
-                        active
-                          ? "border-sky-300/75 bg-sky-100 text-sky-700"
-                          : "border-slate-300/75 bg-white/70 text-slate-500 group-hover:border-sky-300/65 group-hover:text-sky-700"
-                      }`}
-                    >
-                      {item.icon}
-                    </span>
-
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
       <div className="mt-5 shrink-0 rounded-3xl border border-white/90 bg-gradient-to-br from-white via-[#f4f7fa] to-[#dbe3ea] p-5 shadow-2xl shadow-slate-950/15 ring-1 ring-slate-300/70">
