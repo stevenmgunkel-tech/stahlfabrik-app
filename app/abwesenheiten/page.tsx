@@ -460,27 +460,24 @@ export default function AbwesenheitenPage() {
   const berechneteStunden = Number(stunden || 0);
 
   return (
-    <main className="min-h-screen bg-[#0b0f14] text-slate-100">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.10),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_30%)]" />
-
-      <div className="relative mx-auto w-full max-w-[1600px] space-y-7 px-4 py-6 sm:px-6 lg:px-10">
-        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] p-7 shadow-2xl shadow-black/30 backdrop-blur-xl lg:p-10">
-          <div className="pointer-events-none absolute inset-0 opacity-[0.42]">
+    <main className="space-y-8 text-slate-100">
+        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
+          <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
             <div
-              className="h-full w-full bg-cover bg-[center_24%]"
+              className="h-full w-full bg-cover bg-[center_20%]"
               style={{
                 backgroundImage: "url('/berg.png')",
-                filter: "brightness(1.55) contrast(1.08)",
+                filter: "brightness(1.65) contrast(1.05)",
               }}
             />
           </div>
 
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
 
           <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
             <div>
-              <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-sky-100">
-                ODZ Abwesenheiten
+              <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
+                ODZ SILVER · Abwesenheiten
               </div>
 
               <h1 className="mt-5 text-5xl font-black tracking-tight text-white lg:text-7xl">
@@ -519,6 +516,13 @@ export default function AbwesenheitenPage() {
               <HeroMini label="Krank" value={konto.kranktage} red={konto.kranktage > 0} />
             </div>
           </div>
+        </section>
+
+        <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <ActionCard href="#formular" label="Beantragen" title="✦ Neue Abwesenheit" onClick={() => setFormularOffen(true)} />
+          <ActionCard href="#uebersicht" label="Status" title="▤ Meine Anträge" onClick={() => setUebersichtOffen(true)} />
+          <ActionCard href="#formular" label="Konto" title="🌿 Urlaubskonto" onClick={() => setFormularOffen(true)} />
+          <ActionCard href="#uebersicht" label="Verlauf" title="📊 Übersicht" onClick={() => setUebersichtOffen(true)} />
         </section>
 
         {meldung && (
@@ -636,19 +640,15 @@ export default function AbwesenheitenPage() {
             </div>
           </div>
 
-          <div className="grid gap-4">
-            <ActionCard
-              href="#formular"
-              label="Beantragen"
-              title="✦ Neue Abwesenheit"
-              onClick={() => setFormularOffen(true)}
-            />
-            <ActionCard
-              href="#uebersicht"
-              label="Status"
-              title="▤ Meine Anträge"
-              onClick={() => setUebersichtOffen(true)}
-            />
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 backdrop-blur-xl sm:p-7">
+            <h2 className="text-2xl font-black text-white">Aktueller Status</h2>
+            <p className="mt-1 text-sm text-white/55">Offene Anträge, Krankheit und Überstundenabbau kompakt zusammengefasst.</p>
+
+            <div className="mt-6 grid gap-4">
+              <InfoBox label="Offene Anträge" value={konto.offeneAntraege} highlight={konto.offeneAntraege > 0 ? "blue" : "green"} />
+              <InfoBox label="Kranktage" value={konto.kranktage} highlight={konto.kranktage > 0 ? "red" : undefined} />
+              <InfoBox label="Überstundenabbau" value={formatStunden(konto.ueberstundenabbauStunden)} />
+            </div>
           </div>
         </section>
 
@@ -865,7 +865,6 @@ export default function AbwesenheitenPage() {
             </div>
           </div>
         </DropdownPanel>
-      </div>
 
       <style jsx global>{`
         .dark-input {
@@ -952,10 +951,10 @@ function ActionCard({
     <a
       href={href}
       onClick={onClick}
-      className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10"
+      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
     >
       <div className="text-sm text-white/50">{label}</div>
-      <div className="mt-2 text-xl font-black text-white">{title}</div>
+      <div className="mt-2 text-lg font-black text-white">{title}</div>
     </a>
   );
 }
@@ -980,7 +979,7 @@ function DropdownPanel({
   return (
     <section
       id={id}
-      className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl"
+      className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30"
     >
       <button
         type="button"
@@ -996,7 +995,7 @@ function DropdownPanel({
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-black text-white transition hover:border-sky-300/25 hover:bg-sky-300/5">
-          {open ? "▲ Schließen" : "▼ Öffnen"}
+          {open ? "Schließen ▲" : "Öffnen ▼"}
         </div>
       </button>
 
@@ -1006,6 +1005,34 @@ function DropdownPanel({
         </div>
       )}
     </section>
+  );
+}
+
+function InfoBox({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string | number;
+  highlight?: "green" | "red" | "blue";
+}) {
+  const color =
+    highlight === "green"
+      ? "text-green-400"
+      : highlight === "red"
+      ? "text-red-400"
+      : highlight === "blue"
+      ? "text-sky-200"
+      : "text-slate-100";
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
+      <div className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
+        {label}
+      </div>
+      <div className={`mt-2 text-2xl font-black ${color}`}>{value}</div>
+    </div>
   );
 }
 
