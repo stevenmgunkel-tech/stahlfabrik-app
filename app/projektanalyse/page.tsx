@@ -234,68 +234,66 @@ export default function ProjektanalysePage() {
   );
 
   return (
-    <main className="min-h-screen bg-[#0b0f14] text-white">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.10),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_30%)]" />
+    <main className="space-y-8 text-slate-100">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.34]">
+          <div
+            className="h-full w-full bg-cover bg-[center_20%]"
+            style={{
+              backgroundImage: "url('/berg.png')",
+              filter: "brightness(1.55) contrast(1.05)",
+            }}
+          />
+        </div>
 
-      <div className="relative mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-2xl shadow-black/30 backdrop-blur-xl">
-          <div className="relative p-6 sm:p-8">
-            <div className="absolute inset-0 bg-gradient-to-br from-sky-300/10 via-transparent to-slate-400/5" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-transparent" />
 
-            <div className="relative grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
-              <div>
-                <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-sky-100">
-                  ODZ Projektanalyse
-                </div>
+        <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
+          <div>
+            <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
+              ODZ SILVER · Projekte
+            </div>
 
-                <h1 className="mt-5 text-4xl font-black tracking-tight text-white sm:text-5xl">
-                  Projektanalyse
-                </h1>
+            <h1 className="mt-5 text-5xl font-black tracking-tight text-white lg:text-7xl">
+              Projektanalyse
+            </h1>
 
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60 sm:text-base">
-                  Statistik und Archiv in einer Kommandozentrale. Zeigt, wo die
-                  Zeit im Unternehmen wirklich hingeht — aktiv und
-                  abgeschlossen.
-                </p>
+            <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
+              Statistik und Archiv in einer Kommandozentrale. Zeigt, wo die Zeit im Unternehmen wirklich hingeht.
+            </p>
 
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <AnsichtButton
-                    active={ansicht === "aktiv"}
-                    label="Aktive Projekte"
-                    count={aktiveProjekte}
-                    onClick={() => setAnsicht("aktiv")}
-                  />
-                  <AnsichtButton
-                    active={ansicht === "archiv"}
-                    label="Archiv"
-                    count={archivProjekte}
-                    onClick={() => setAnsicht("archiv")}
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-[1.5rem] border border-white/10 bg-black/25 p-5 shadow-xl shadow-black/20 backdrop-blur-xl">
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
-                  Aktuelle Ansicht
-                </p>
-                <div className="mt-3 text-3xl font-black text-sky-100">
-                  {ansicht === "aktiv" ? "Aktiv" : "Archiv"}
-                </div>
-                <p className="mt-2 text-sm font-bold text-white/45">
-                  {formatStunden(gesamtStunden)} · {projektDaten.length}{" "}
-                  Projekte
-                </p>
-                <button
-                  onClick={ladeDaten}
-                  disabled={loading}
-                  className="mt-5 w-full rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-black text-white shadow-lg shadow-black/20 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {loading ? "Lädt..." : "Daten aktualisieren"}
-                </button>
-              </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <AnsichtButton
+                active={ansicht === "aktiv"}
+                label="Aktive Projekte"
+                count={aktiveProjekte}
+                onClick={() => setAnsicht("aktiv")}
+              />
+              <AnsichtButton
+                active={ansicht === "archiv"}
+                label="Archiv"
+                count={archivProjekte}
+                onClick={() => setAnsicht("archiv")}
+              />
             </div>
           </div>
-        </section>
+
+          <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl sm:grid-cols-4 xl:grid-cols-2">
+            <HeroMini label="Ansicht" value={ansicht === "aktiv" ? "Aktiv" : "Archiv"} blue />
+            <HeroMini label="Projekte" value={projektDaten.length} />
+            <HeroMini label="Stunden" value={formatStunden(gesamtStunden)} blue />
+            <HeroMini label="Buchungen" value={gesamtBuchungen} green />
+          </div>
+        </div>
+
+        <button
+          onClick={ladeDaten}
+          disabled={loading}
+          className="relative z-10 mt-7 rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/10 hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? "Lädt..." : "Daten aktualisieren"}
+        </button>
+      </section>
 
         {meldung && (
           <div className="rounded-2xl border border-red-400/25 bg-red-500/10 p-5 text-sm font-bold text-red-100">
@@ -324,7 +322,7 @@ export default function ProjektanalysePage() {
           />
         </section>
 
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30 backdrop-blur-xl">
           <button
             type="button"
             onClick={() => setBereichOffen(!bereichOffen)}
@@ -396,7 +394,7 @@ export default function ProjektanalysePage() {
           )}
         </section>
 
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30 backdrop-blur-xl">
           <button
             type="button"
             onClick={() => setProjektOffen(!projektOffen)}
@@ -492,8 +490,30 @@ export default function ProjektanalysePage() {
             </>
           )}
         </section>
-      </div>
     </main>
+  );
+}
+
+function HeroMini({
+  label,
+  value,
+  blue,
+  green,
+}: {
+  label: string;
+  value: string | number;
+  blue?: boolean;
+  green?: boolean;
+}) {
+  const color = blue ? "text-sky-200" : green ? "text-green-400" : "text-slate-100";
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition hover:border-sky-300/25 hover:bg-sky-300/5">
+      <div className={`text-2xl font-black ${color}`}>{value}</div>
+      <div className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
+        {label}
+      </div>
+    </div>
   );
 }
 
@@ -716,12 +736,12 @@ function KpiCard({
   subvalue?: string;
 }) {
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+    <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-6 shadow-2xl shadow-black/30 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
       <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
         {label}
       </div>
 
-      <div className="mt-4 break-words text-3xl font-black leading-tight text-sky-100">
+      <div className="mt-4 break-words text-4xl font-black leading-tight text-slate-100">
         {value}
       </div>
 

@@ -24,10 +24,9 @@ const navGroups = [
   {
     title: "Projekte",
     items: [
-      { href: "/projekte", label: "Projekte", icon: "▣" },
-      { href: "/projektstatistik", label: "Projektstatistik", icon: "▤" },
-      { href: "/projektarchiv", label: "Projektarchiv", icon: "▥" },
-    ],
+  { href: "/projekte", label: "Projekte", icon: "📁" },
+  { href: "/projektanalyse", label: "Projektanalyse", icon: "📊" },
+],
   },
 ];
 
