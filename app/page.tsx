@@ -345,11 +345,11 @@ export default function DashboardPage() {
 
 
   return (
-    <main className="min-h-screen bg-[#0b0f14] text-white">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.10),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_30%)]" />
+    <main className="min-h-screen text-white">
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),transparent_30%)]" />
 
-      <div className="relative mx-auto w-full max-w-[1600px] space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-7">
+      <div className="relative mx-auto w-full max-w-[1600px] space-y-7 px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
+        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
           <div className="pointer-events-none absolute inset-0 opacity-[0.45]">
             <div
               className="h-full w-full bg-cover bg-[center_20%]"
@@ -362,27 +362,27 @@ export default function DashboardPage() {
 
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
 
-          <div className="relative z-10 flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
+          <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
             <div>
               <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
                 ODZ SILVER
               </div>
 
-              <div className="mt-4 text-sm font-bold text-white/60">
+              <div className="mt-5 text-sm font-bold text-white/60">
                 Guten Tag {stats.letzterMitarbeiter} 👋 · {today}
               </div>
 
-              <h1 className="mt-3 text-4xl font-black uppercase tracking-tight text-white lg:text-6xl">
+              <h1 className="mt-3 text-5xl font-black uppercase tracking-tight text-white lg:text-7xl">
                 Dashboard
               </h1>
 
-              <p className="mt-2 max-w-2xl text-base font-medium text-white/65 lg:text-lg">
+              <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
                 Woche, Arbeitszeit, Projekte und offene Punkte auf einen Blick.
               </p>
 
-              <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="mt-6 flex flex-wrap items-center gap-3">
                 <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-xl">
-                  <span className="h-3 w-3 rounded-full bg-sky-300 shadow-lg shadow-sky-300/40" />
+                  <span className="h-3 w-3 rounded-full bg-green-400 shadow-lg shadow-green-400/40" />
                   <span className="text-sm font-black uppercase tracking-widest text-white/70">
                     Alles im Überblick
                   </span>
@@ -633,15 +633,15 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="flex h-[104px] min-w-[112px] flex-col justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="flex h-[96px] min-w-[132px] flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
       <div
-        className={`whitespace-nowrap text-2xl font-black ${
+        className={`text-2xl font-black leading-tight ${
           red
             ? "text-red-400"
             : green
             ? "text-green-400"
             : blue
-            ? "text-sky-200"
+            ? "text-slate-100"
             : "text-slate-100"
         }`}
       >
@@ -851,7 +851,7 @@ function MiniLine({
 
 function IconBox({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-sky-300/20 bg-sky-300/10 p-3 text-sky-100">
+    <div className="rounded-2xl border border-slate-300/20 bg-slate-300/10 p-3 text-slate-100">
       {children}
     </div>
   );
