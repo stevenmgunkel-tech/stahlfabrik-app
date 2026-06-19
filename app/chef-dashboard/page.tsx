@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "../../lib/supabase";
 import { istFeiertagSG } from "../../lib/feiertage";
 
@@ -26,6 +26,9 @@ const [freigabeSeite, setFreigabeSeite] = useState(1);
   ]);
 
   const [verwaltungsModus, setVerwaltungsModus] = useState<"projekt" | "mitarbeiter">("projekt");
+  const [abwesenheitOffen, setAbwesenheitOffen] = useState(false);
+  const [auswertungOffen, setAuswertungOffen] = useState(false);
+  const [projektUebersichtOffen, setProjektUebersichtOffen] = useState(false);
   const [mitarbeiterName, setMitarbeiterName] = useState("");
   const [mitarbeiterEmail, setMitarbeiterEmail] = useState("");
   const [mitarbeiterPasswort, setMitarbeiterPasswort] = useState("");
@@ -703,7 +706,8 @@ const systemStatus =
         </a>
 
         <a
-          href="/urlaub"
+          href="#abwesenheit"
+          onClick={() => setAbwesenheitOffen(true)}
           className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:bg-orange-500/10 hover:shadow-lg hover:shadow-orange-500/10"
         >
           <div className="text-sm text-white/50">Abwesenheit</div>
@@ -713,7 +717,8 @@ const systemStatus =
         </a>
 
         <a
-          href="/projektstatistik"
+          href="#auswertung"
+          onClick={() => setAuswertungOffen(true)}
           className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:bg-orange-500/10 hover:shadow-lg hover:shadow-orange-500/10"
         >
           <div className="text-sm text-white/50">Auswertung</div>
@@ -1218,7 +1223,15 @@ const systemStatus =
   )}
 </section>
 
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <DropdownPanel
+        id="abwesenheit"
+        title="Abwesenheit"
+        eyebrow="Urlaub · Krankheit · Überstundenabbau"
+        description="Alle Abwesenheiten bleiben direkt im Chef Dashboard sichtbar, aber sauber eingeklappt."
+        open={abwesenheitOffen}
+        onToggle={() => setAbwesenheitOffen(!abwesenheitOffen)}
+      >
+<section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
           <div className="mb-7">
             <h2 className="text-2xl font-black text-white">
@@ -1249,12 +1262,24 @@ const systemStatus =
           <div className="space-y-3">
             <QuickLink href="/admin" label="Urlaubsanträge prüfen" />
             <QuickLink href="/monatsansicht" label="Monatsansicht öffnen" />
-            <QuickLink href="#kommandozentrale" label="Projekt / Mitarbeiter erstellen" orange />
+            <QuickLink href="#auswertung" label="Auswertung öffnen" orange onClick={() => setAuswertungOffen(true)} />
+            <QuickLink href="#projektuebersicht" label="Projektübersicht öffnen" orange onClick={() => setProjektUebersichtOffen(true)} />
           </div>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+      
+      </DropdownPanel>
+
+      <DropdownPanel
+        id="auswertung"
+        title="Auswertung"
+        eyebrow="Top Projekte · Kontrollstatus · Top Bereiche"
+        description="Die wichtigsten Chef-Auswertungen direkt im Dashboard, ohne eigene Seite öffnen zu müssen."
+        open={auswertungOffen}
+        onToggle={() => setAuswertungOffen(!auswertungOffen)}
+      >
+<section className="grid grid-cols-1 gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
           <div className="mb-7">
             <h2 className="text-2xl font-black text-white">Top Projekte</h2>
@@ -1341,6 +1366,9 @@ const systemStatus =
           </div>
         )}
       </section>
+
+      
+      </DropdownPanel>
 
       <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
   <div className="mb-7">
@@ -1502,7 +1530,15 @@ const systemStatus =
         </div>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+      <DropdownPanel
+        id="projektuebersicht"
+        title="Projektübersicht"
+        eyebrow="Projektliste · Kunde · Stunden"
+        description="Die Projektübersicht ist jetzt als Dropdown im Chef Dashboard und bleibt sauber eingeklappt."
+        open={projektUebersichtOffen}
+        onToggle={() => setProjektUebersichtOffen(!projektUebersichtOffen)}
+      >
+<section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div>
             <h2 className="text-2xl font-black text-white">
@@ -1567,6 +1603,7 @@ const systemStatus =
           </div>
         </div>
       </section>
+      </DropdownPanel>
     </main>
   );
 }
@@ -1678,10 +1715,57 @@ function MiniCard({
   );
 }
 
-function QuickLink({ href, label, orange }: { href: string; label: string; orange?: boolean }) {
+
+function DropdownPanel({
+  id,
+  title,
+  eyebrow,
+  description,
+  open,
+  onToggle,
+  children,
+}: {
+  id: string;
+  title: string;
+  eyebrow: string;
+  description: string;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      id={id}
+      className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30"
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-orange-500/5 lg:flex-row lg:items-center lg:p-7"
+      >
+        <div>
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-orange-400">
+            {eyebrow}
+          </div>
+          <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
+          <p className="mt-1 text-white/55">{description}</p>
+        </div>
+
+        <div className="rounded-2xl border border-orange-500/30 bg-orange-500/10 px-5 py-3 text-sm font-black text-orange-300 transition hover:border-orange-500/50 hover:bg-orange-500/15">
+          {open ? "Schließen ▲" : "Öffnen ▼"}
+        </div>
+      </button>
+
+      {open && <div className="space-y-6 border-t border-white/10 p-6 lg:p-7">{children}</div>}
+    </section>
+  );
+}
+
+function QuickLink({ href, label, orange, onClick }: { href: string; label: string; orange?: boolean; onClick?: () => void }) {
   return (
     <a
       href={href}
+      onClick={onClick}
       className={`block rounded-xl border p-4 font-black transition-all duration-300 hover:-translate-y-1 ${
         orange
           ? "border-orange-500/25 bg-orange-500/10 text-orange-300 hover:border-orange-500/45 hover:bg-orange-500/15"
