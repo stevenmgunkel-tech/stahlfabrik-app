@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 type BereichStat = {
@@ -14,10 +14,37 @@ type ProjektStat = {
   bereiche: BereichStat[];
 };
 
+type ArbeitszeitEintrag = {
+  projekt: string | null;
+  bereich: string | null;
+  stunden: number | string | null;
+};
+
+function formatStunden(value: number) {
+  const totalMinuten = Math.round(value * 60);
+  const stunden = Math.floor(totalMinuten / 60);
+  const minuten = totalMinuten % 60;
+
+  if (stunden <= 0) return `${minuten} min`;
+  if (minuten === 0) return `${stunden} h`;
+
+  return `${stunden} h ${minuten} min`;
+}
+
+function formatDezimal(value: number) {
+  return `${value.toFixed(2)} h`;
+}
+
+function prozent(wert: number, total: number) {
+  if (!total || total <= 0) return 0;
+  return Math.min((wert / total) * 100, 100);
+}
+
 export default function ProjektstatistikPage() {
   const [daten, setDaten] = useState<ProjektStat[]>([]);
   const [bereichDaten, setBereichDaten] = useState<BereichStat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fehler, setFehler] = useState<string | null>(null);
 
   useEffect(() => {
     ladeDaten();
@@ -25,6 +52,7 @@ export default function ProjektstatistikPage() {
 
   async function ladeDaten() {
     setLoading(true);
+    setFehler(null);
 
     const { data, error } = await supabase
       .from("arbeitszeiten")
@@ -32,6 +60,7 @@ export default function ProjektstatistikPage() {
 
     if (error) {
       console.error(error);
+      setFehler("Projektstatistik konnte nicht geladen werden.");
       setLoading(false);
       return;
     }
@@ -46,10 +75,12 @@ export default function ProjektstatistikPage() {
 
     const bereichMap: Record<string, number> = {};
 
-    data?.forEach((eintrag) => {
-      const projekt = eintrag.projekt || "Unbekannt";
-      const bereich = eintrag.bereich || "Ohne Bereich";
+    (data as ArbeitszeitEintrag[] | null)?.forEach((eintrag) => {
+      const projekt = eintrag.projekt?.trim() || "Unbekannt";
+      const bereich = eintrag.bereich?.trim() || "Ohne Bereich";
       const stunden = Number(eintrag.stunden || 0);
+
+      if (!Number.isFinite(stunden) || stunden <= 0) return;
 
       if (!projektMap[projekt]) {
         projektMap[projekt] = {
@@ -90,168 +121,231 @@ export default function ProjektstatistikPage() {
     setLoading(false);
   }
 
-  const gesamtStunden = daten.reduce(
-    (sum, p) => sum + p.stunden,
-    0
+  const gesamtStunden = useMemo(
+    () => daten.reduce((sum, projekt) => sum + projekt.stunden, 0),
+    [daten]
   );
 
   const topProjekt = daten[0];
   const topBereich = bereichDaten[0];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-4xl font-black text-white">
-          Projektstatistik
-        </h1>
+    <main className="min-h-screen bg-[#0b0f14] text-white">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.10),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_30%)]" />
 
-        <p className="mt-2 text-white/60">
-          Stunden nach Projekt und Bereich ausgewertet
-        </p>
-      </div>
+      <div className="relative mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-2xl shadow-black/30 backdrop-blur-xl">
+          <div className="relative p-6 sm:p-8">
+            <div className="absolute inset-0 bg-gradient-to-br from-sky-300/10 via-transparent to-slate-400/5" />
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <KpiCard
-          label="Projekte"
-          value={daten.length}
-        />
-
-        <KpiCard
-          label="Gebuchte Stunden"
-          value={`${gesamtStunden.toFixed(2)}h`}
-        />
-
-        <KpiCard
-          label="Top Projekt"
-          value={topProjekt?.projekt || "-"}
-          subvalue={`${topProjekt?.stunden?.toFixed(2) || "0.00"}h`}
-        />
-
-        <KpiCard
-          label="Top Bereich"
-          value={topBereich?.bereich || "-"}
-          subvalue={`${topBereich?.stunden?.toFixed(2) || "0.00"}h`}
-        />
-      </div>
-
-      <div className="rounded-2xl border border-white/10 bg-white/5">
-        <div className="border-b border-white/10 px-6 py-4">
-          <div className="font-bold text-white">
-            Bereichsauswertung Gesamt
-          </div>
-          <div className="mt-1 text-sm text-white/50">
-            Alle gebuchten Stunden nach Bereich
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="p-6 text-white/60">
-            Lade Daten...
-          </div>
-        ) : bereichDaten.length === 0 ? (
-          <div className="p-6 text-white/60">
-            Noch keine Bereichsdaten vorhanden.
-          </div>
-        ) : (
-          <div className="grid gap-3 p-6 md:grid-cols-2 xl:grid-cols-4">
-            {bereichDaten.map((bereich) => (
-              <div
-                key={bereich.bereich}
-                className="rounded-xl border border-white/10 bg-black/25 p-5"
-              >
-                <div className="font-black text-white">
-                  {bereich.bereich}
+            <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+              <div>
+                <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-sky-100">
+                  ODZ Analyse
                 </div>
 
-                <div className="mt-3 text-3xl font-black text-orange-400">
-                  {bereich.stunden.toFixed(2)}h
-                </div>
+                <h1 className="mt-5 text-4xl font-black tracking-tight text-white sm:text-5xl">
+                  Projektstatistik
+                </h1>
 
-                <div className="mt-3 overflow-hidden rounded-full bg-black/40">
-                  <div
-                    className="h-2 rounded-full bg-orange-500"
-                    style={{
-                      width: `${
-                        gesamtStunden > 0
-                          ? Math.min(
-                              (bereich.stunden / gesamtStunden) * 100,
-                              100
-                            )
-                          : 0
-                      }%`,
-                    }}
-                  />
-                </div>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60 sm:text-base">
+                  Zeigt, wo die Zeit im Unternehmen wirklich hingeht: Projekte,
+                  Bereiche und gebuchte Stunden sauber ausgewertet.
+                </p>
               </div>
-            ))}
+
+              <button
+                onClick={ladeDaten}
+                disabled={loading}
+                className="rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-black text-white shadow-lg shadow-black/20 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loading ? "Lädt..." : "Daten aktualisieren"}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {fehler && (
+          <div className="rounded-2xl border border-red-400/25 bg-red-500/10 p-5 text-sm font-bold text-red-100">
+            {fehler}
           </div>
         )}
-      </div>
 
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-        <div className="border-b border-white/10 px-6 py-4">
-          <div className="font-bold text-white">
-            Projektstunden nach Bereich
-          </div>
-          <div className="mt-1 text-sm text-white/50">
-            Jedes Projekt mit Werkstatt, Montage, Logistik, Planung usw.
-          </div>
-        </div>
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <KpiCard label="Projekte" value={daten.length} subvalue="mit Buchungen" />
+          <KpiCard
+            label="Gebuchte Stunden"
+            value={formatStunden(gesamtStunden)}
+            subvalue={formatDezimal(gesamtStunden)}
+          />
+          <KpiCard
+            label="Top Projekt"
+            value={topProjekt?.projekt || "-"}
+            subvalue={topProjekt ? formatStunden(topProjekt.stunden) : "0 h"}
+          />
+          <KpiCard
+            label="Top Bereich"
+            value={topBereich?.bereich || "-"}
+            subvalue={topBereich ? formatStunden(topBereich.stunden) : "0 h"}
+          />
+        </section>
 
-        {loading ? (
-          <div className="p-6 text-white/60">
-            Lade Daten...
-          </div>
-        ) : daten.length === 0 ? (
-          <div className="p-6 text-white/60">
-            Noch keine Arbeitszeiten vorhanden.
-          </div>
-        ) : (
-          <div className="divide-y divide-white/10">
-            {daten.map((projekt) => (
-              <div
-                key={projekt.projekt}
-                className="px-6 py-5"
-              >
-                <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                  <div>
-                    <div className="text-xl font-black text-white">
-                      {projekt.projekt}
-                    </div>
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
+          <SectionHeader
+            title="Bereichsauswertung Gesamt"
+            description="Alle gebuchten Stunden nach Werkstatt, Montage, Planung, Logistik und weiteren Bereichen."
+          />
 
-                    <div className="mt-1 text-sm text-white/50">
-                      {projekt.bereiche.length} Bereiche
-                    </div>
-                  </div>
-
-                  <div className="text-3xl font-black text-orange-400">
-                    {projekt.stunden.toFixed(2)}h
-                  </div>
-                </div>
-
-                <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  {projekt.bereiche.map((bereich) => (
-                    <div
-                      key={`${projekt.projekt}-${bereich.bereich}`}
-                      className="rounded-xl border border-white/10 bg-black/25 p-4"
-                    >
-                      <div className="text-sm font-bold uppercase tracking-widest text-white/45">
+          {loading ? (
+            <EmptyState text="Lade Bereichsdaten..." />
+          ) : bereichDaten.length === 0 ? (
+            <EmptyState text="Noch keine Bereichsdaten vorhanden." />
+          ) : (
+            <div className="grid gap-4 p-5 sm:p-6 md:grid-cols-2 xl:grid-cols-4">
+              {bereichDaten.map((bereich, index) => (
+                <div
+                  key={bereich.bereich}
+                  className="rounded-3xl border border-white/10 bg-black/25 p-5 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-lg font-black text-white">
                         {bereich.bereich}
+                      </p>
+                      <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-white/35">
+                        Rang {index + 1}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200">
+                      {prozent(bereich.stunden, gesamtStunden).toFixed(0)}%
+                    </div>
+                  </div>
+
+                  <div className="mt-5 text-3xl font-black text-sky-100">
+                    {formatStunden(bereich.stunden)}
+                  </div>
+
+                  <div className="mt-2 text-sm font-bold text-white/40">
+                    {formatDezimal(bereich.stunden)}
+                  </div>
+
+                  <div className="mt-5 overflow-hidden rounded-full bg-black/40">
+                    <div
+                      className="h-2 rounded-full bg-gradient-to-r from-sky-200 to-emerald-300"
+                      style={{
+                        width: `${prozent(bereich.stunden, gesamtStunden)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
+          <SectionHeader
+            title="Projektstunden nach Bereich"
+            description="Jedes Projekt wird nach seinen gebuchten Bereichen aufgeschlüsselt."
+          />
+
+          {loading ? (
+            <EmptyState text="Lade Projektstunden..." />
+          ) : daten.length === 0 ? (
+            <EmptyState text="Noch keine Arbeitszeiten vorhanden." />
+          ) : (
+            <div className="divide-y divide-white/10">
+              {daten.map((projekt, index) => (
+                <article
+                  key={projekt.projekt}
+                  className="p-5 transition hover:bg-sky-300/[0.03] sm:p-6"
+                >
+                  <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-black text-white/60">
+                          #{index + 1}
+                        </div>
+
+                        <h2 className="truncate text-2xl font-black text-white">
+                          {projekt.projekt}
+                        </h2>
                       </div>
 
-                      <div className="mt-2 text-2xl font-black text-white">
-                        {bereich.stunden.toFixed(2)}h
+                      <p className="mt-3 text-sm text-white/45">
+                        {projekt.bereiche.length} Bereiche ·{" "}
+                        {prozent(projekt.stunden, gesamtStunden).toFixed(0)}%
+                        der Gesamtzeit
+                      </p>
+                    </div>
+
+                    <div className="lg:text-right">
+                      <div className="text-3xl font-black text-sky-100">
+                        {formatStunden(projekt.stunden)}
+                      </div>
+                      <div className="mt-1 text-sm font-bold text-white/40">
+                        {formatDezimal(projekt.stunden)}
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+                  </div>
+
+                  <div className="mt-5 overflow-hidden rounded-full bg-black/40">
+                    <div
+                      className="h-2 rounded-full bg-gradient-to-r from-sky-200 to-emerald-300"
+                      style={{
+                        width: `${prozent(projekt.stunden, gesamtStunden)}%`,
+                      }}
+                    />
+                  </div>
+
+                  <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    {projekt.bereiche.map((bereich) => (
+                      <div
+                        key={`${projekt.projekt}-${bereich.bereich}`}
+                        className="rounded-2xl border border-white/10 bg-black/25 p-4 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+                      >
+                        <div className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
+                          {bereich.bereich}
+                        </div>
+
+                        <div className="mt-3 text-2xl font-black text-white">
+                          {formatStunden(bereich.stunden)}
+                        </div>
+
+                        <div className="mt-1 text-sm font-bold text-white/40">
+                          {formatDezimal(bereich.stunden)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
+    </main>
+  );
+}
+
+function SectionHeader({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="border-b border-white/10 px-5 py-5 sm:px-6">
+      <h2 className="text-xl font-black text-white">{title}</h2>
+      <p className="mt-1 text-sm leading-6 text-white/50">{description}</p>
     </div>
   );
+}
+
+function EmptyState({ text }: { text: string }) {
+  return <div className="p-6 text-sm font-bold text-white/55">{text}</div>;
 }
 
 function KpiCard({
@@ -264,17 +358,17 @@ function KpiCard({
   subvalue?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-      <div className="text-white/60">
+    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+      <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
         {label}
       </div>
 
-      <div className="mt-2 break-words text-3xl font-black text-orange-400">
+      <div className="mt-4 break-words text-3xl font-black leading-tight text-sky-100">
         {value}
       </div>
 
       {subvalue && (
-        <div className="mt-2 text-xl font-black text-white">
+        <div className="mt-2 break-words text-sm font-bold text-white/45">
           {subvalue}
         </div>
       )}
