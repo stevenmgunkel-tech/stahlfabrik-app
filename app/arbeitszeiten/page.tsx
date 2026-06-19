@@ -980,25 +980,17 @@ setBisZeit("");
           </Field>
 
           <button
-  type="button"
-  onClick={stopArbeitstag}
-  className="
-    rounded-2xl
-    border border-red-500/30
-    bg-red-500/10
-    px-5 py-4
-    font-black
-    text-red-300
-    shadow-lg shadow-red-500/10
-    transition-all duration-300
-    hover:-translate-y-1
-    hover:border-red-500/50
-    hover:bg-red-500/15
-    hover:shadow-red-500/20
-  "
->
-  ■ Arbeitstag stoppen
-</button>
+            type="button"
+            onClick={stopArbeitstag}
+            disabled={!offenerArbeitstag}
+            className={`rounded-2xl border px-5 py-4 font-black shadow-lg transition-all duration-300 ${
+              offenerArbeitstag
+                ? "border-red-500/40 bg-red-500/15 text-red-300 shadow-red-500/10 hover:-translate-y-1 hover:border-red-500/60 hover:bg-red-500/20 hover:shadow-red-500/20"
+                : "cursor-not-allowed border-red-500/15 bg-red-500/5 text-red-300/40 shadow-none"
+            }`}
+          >
+            ■ Arbeitstag stoppen
+          </button>
         </div>
       </DropdownPanel>
 
