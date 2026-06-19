@@ -45,6 +45,9 @@ export default function ProjektstatistikPage() {
   const [bereichDaten, setBereichDaten] = useState<BereichStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [fehler, setFehler] = useState<string | null>(null);
+  const [projektSeite, setProjektSeite] = useState(1);
+
+  const PROJEKTE_PRO_SEITE = 10;
 
   useEffect(() => {
     ladeDaten();
@@ -118,6 +121,7 @@ export default function ProjektstatistikPage() {
 
     setDaten(projektResult);
     setBereichDaten(bereichResult);
+    setProjektSeite(1);
     setLoading(false);
   }
 
@@ -128,6 +132,24 @@ export default function ProjektstatistikPage() {
 
   const topProjekt = daten[0];
   const topBereich = bereichDaten[0];
+
+  const gesamtProjektSeiten = Math.max(
+    1,
+    Math.ceil(daten.length / PROJEKTE_PRO_SEITE)
+  );
+
+  const sichtbareProjekte = useMemo(() => {
+    const start = (projektSeite - 1) * PROJEKTE_PRO_SEITE;
+    return daten.slice(start, start + PROJEKTE_PRO_SEITE);
+  }, [daten, projektSeite]);
+
+  const ersterProjektIndex =
+    daten.length === 0 ? 0 : (projektSeite - 1) * PROJEKTE_PRO_SEITE + 1;
+
+  const letzterProjektIndex = Math.min(
+    projektSeite * PROJEKTE_PRO_SEITE,
+    daten.length
+  );
 
   return (
     <main className="min-h-screen bg-[#0b0f14] text-white">
@@ -245,10 +267,55 @@ export default function ProjektstatistikPage() {
         </section>
 
         <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
-          <SectionHeader
-            title="Projektstunden nach Bereich"
-            description="Jedes Projekt wird nach seinen gebuchten Bereichen aufgeschlüsselt."
-          />
+          <div className="flex flex-col gap-4 border-b border-white/10 px-5 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-xl font-black text-white">
+                Projektstunden nach Bereich
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-white/50">
+                Maximal 10 Projekte pro Seite, damit die Auswertung sauber und
+                übersichtlich bleibt.
+              </p>
+            </div>
+
+            {!loading && daten.length > 0 && (
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-2 text-xs font-black text-white/55">
+                  {ersterProjektIndex}–{letzterProjektIndex} von {daten.length}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() =>
+                      setProjektSeite((seite) => Math.max(1, seite - 1))
+                    }
+                    disabled={projektSeite === 1}
+                    className="grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/10 text-lg font-black text-white transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-30"
+                    aria-label="Vorherige Seite"
+                  >
+                    ‹
+                  </button>
+
+                  <div className="rounded-2xl border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-xs font-black text-sky-100">
+                    Seite {projektSeite} / {gesamtProjektSeiten}
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      setProjektSeite((seite) =>
+                        Math.min(gesamtProjektSeiten, seite + 1)
+                      )
+                    }
+                    disabled={projektSeite === gesamtProjektSeiten}
+                    className="grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/10 text-lg font-black text-white transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-30"
+                    aria-label="Nächste Seite"
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {loading ? (
             <EmptyState text="Lade Projektstunden..." />
@@ -256,7 +323,7 @@ export default function ProjektstatistikPage() {
             <EmptyState text="Noch keine Arbeitszeiten vorhanden." />
           ) : (
             <div className="divide-y divide-white/10">
-              {daten.map((projekt, index) => (
+              {sichtbareProjekte.map((projekt, index) => (
                 <article
                   key={projekt.projekt}
                   className="p-5 transition hover:bg-sky-300/[0.03] sm:p-6"
@@ -265,7 +332,7 @@ export default function ProjektstatistikPage() {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-3">
                         <div className="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-black text-white/60">
-                          #{index + 1}
+                          #{(projektSeite - 1) * PROJEKTE_PRO_SEITE + index + 1}
                         </div>
 
                         <h2 className="truncate text-2xl font-black text-white">
