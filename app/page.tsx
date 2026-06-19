@@ -346,7 +346,7 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-[#0b0f14] text-white">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.06),transparent_34%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.08),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.035),transparent_30%)]" />
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.045),transparent_34%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.08),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.035),transparent_30%)]" />
 
       <div className="relative mx-auto w-full max-w-[1600px] space-y-7 px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
         <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-7">
@@ -363,7 +363,7 @@ export default function DashboardPage() {
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
 
           <div className="relative z-10 flex flex-col justify-between gap-4 xl:flex-row xl:items-end xl:justify-between">
-            <div>
+            <div className="xl:max-w-[58%]">
               <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
                 ODZ SILVER
               </div>
@@ -399,7 +399,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="grid w-full grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl sm:grid-cols-4 xl:w-[720px]">
+            <div className="grid w-full grid-cols-4 gap-3 rounded-3xl border border-white/10 bg-black/25 p-3 text-center backdrop-blur-xl xl:w-[760px]">
               <HeroMini
                 label="Überstunden"
                 value={formatStunden(stats.gesamtUeberstunden)}
@@ -431,7 +431,7 @@ export default function DashboardPage() {
 
         <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
           <div className="flex flex-col justify-between gap-4 border-b border-white/10 px-5 py-5 sm:px-6 lg:flex-row lg:items-center">
-            <div>
+            <div className="xl:max-w-[58%]">
               <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-sky-100">
                 Wochenplan
               </div>
@@ -485,7 +485,7 @@ export default function DashboardPage() {
 
         <details className="group overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 transition hover:bg-sky-300/[0.03] sm:px-6">
-            <div>
+            <div className="xl:max-w-[58%]">
               <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-sky-100">
                 Kennzahlen
               </div>
@@ -633,9 +633,9 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="flex h-[110px] min-w-[0] flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="flex h-[96px] min-w-0 flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-white/20 hover:bg-white/[0.06]">
       <div
-        className={`text-2xl font-black leading-tight ${
+        className={`whitespace-nowrap text-2xl font-black ${
           red
             ? "text-red-400"
             : green
