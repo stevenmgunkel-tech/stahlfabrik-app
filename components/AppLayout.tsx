@@ -15,18 +15,18 @@ const navGroups = [
     ],
   },
   {
-  title: "Personal",
-  items: [
-    { href: "/abwesenheiten", label: "Abwesenheiten", icon: "◈" },
-    { href: "/mitarbeiter", label: "Mitarbeiter", icon: "◈" },
-  ],
-},
+    title: "Personal",
+    items: [
+      { href: "/abwesenheiten", label: "Abwesenheiten", icon: "◈" },
+      { href: "/mitarbeiter", label: "Mitarbeiter", icon: "◈" },
+    ],
+  },
   {
     title: "Projekte",
     items: [
-  { href: "/projekte", label: "Projekte", icon: "📁" },
-  { href: "/projektanalyse", label: "Projektanalyse", icon: "📊" },
-],
+      { href: "/projekte", label: "Projekte", icon: "▣" },
+      { href: "/projektanalyse", label: "Projektanalyse", icon: "◫" },
+    ],
   },
 ];
 
@@ -72,16 +72,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (isLogin) return <>{children}</>;
 
   return (
-    <div className="min-h-screen bg-[#050607] text-white">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.16),_transparent_32%),radial-gradient(circle_at_bottom_right,_rgba(148,163,184,0.08),_transparent_35%),linear-gradient(135deg,_#050607,_#0b0f12_45%,_#030405)]" />
-      <div className="pointer-events-none fixed inset-0 opacity-[0.045] [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:42px_42px]" />
+    <div className="min-h-screen bg-[#0c0f12] text-slate-100">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.075),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(148,163,184,0.13),transparent_38%),linear-gradient(135deg,#11161a,#0d1115_45%,#07090b)]" />
+      <div className="pointer-events-none fixed inset-0 opacity-[0.055] [background-image:linear-gradient(rgba(255,255,255,.65)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.65)_1px,transparent_1px)] [background-size:42px_42px]" />
 
-      <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-[#07090b]/95 px-5 backdrop-blur-xl lg:hidden">
+      <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/15 bg-[#101418]/90 px-5 shadow-xl shadow-black/30 backdrop-blur-xl lg:hidden">
         <BrandLogo small />
 
         <button
           onClick={() => setOpen(true)}
-          className="rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-2 text-sm font-black text-orange-400"
+          className="rounded-xl border border-slate-300/25 bg-white/[0.07] px-4 py-2 text-sm font-black text-slate-100 transition hover:border-sky-300/30 hover:bg-sky-300/5"
         >
           Menü
         </button>
@@ -91,7 +91,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/80" onClick={() => setOpen(false)} />
 
-          <aside className="absolute left-0 top-0 h-full w-[320px] border-r border-orange-500/20 bg-[#07090b]">
+          <aside className="absolute left-0 top-0 h-full w-[320px] border-r border-white/15 bg-[#101418]">
             <Sidebar
               pathname={pathname}
               logout={logout}
@@ -103,7 +103,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <aside className="fixed left-0 top-0 z-30 hidden h-screen w-[320px] border-r border-orange-500/15 bg-[#07090b]/95 shadow-2xl shadow-black/60 backdrop-blur-xl lg:block">
+      <aside className="fixed left-0 top-0 z-30 hidden h-screen w-[320px] border-r border-white/15 bg-[#101418]/92 shadow-2xl shadow-black/60 backdrop-blur-xl lg:block">
         <Sidebar pathname={pathname} logout={logout} userName={userName} role={role} />
       </aside>
 
@@ -131,14 +131,14 @@ function Sidebar({
 }) {
   return (
     <div className="flex h-full flex-col px-5 py-7">
-      <div className="mb-8 rounded-3xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-white/[0.03] p-5 shadow-2xl shadow-orange-500/5">
+      <div className="mb-8 rounded-3xl border border-white/15 bg-gradient-to-br from-white/[0.13] via-white/[0.07] to-black/20 p-5 shadow-2xl shadow-black/35">
         <BrandLogo />
       </div>
 
       <nav className="flex-1 space-y-7 overflow-y-auto pr-1">
         {navGroups.map((group) => (
           <div key={group.title}>
-            <div className="mb-3 px-3 text-[11px] font-black uppercase tracking-[0.28em] text-white/35">
+            <div className="mb-3 px-3 text-[11px] font-black uppercase tracking-[0.28em] text-slate-300/60">
               {group.title}
             </div>
 
@@ -151,17 +151,17 @@ function Sidebar({
                     key={item.href}
                     href={item.href}
                     onClick={close}
-                    className={`group flex items-center gap-3 rounded-2xl px-4 py-3.5 text-[15px] font-black transition-all ${
+                    className={`group flex items-center gap-3 rounded-2xl px-4 py-3.5 text-[15px] font-black transition-all duration-300 ${
                       active
-                        ? "border border-orange-500/45 bg-gradient-to-r from-orange-500/30 to-white/[0.04] text-orange-400 shadow-lg shadow-orange-500/10"
-                        : "border border-transparent text-white/75 hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
+                        ? "border border-slate-200/35 bg-gradient-to-r from-white/[0.16] via-white/[0.08] to-white/[0.035] text-white shadow-lg shadow-white/5"
+                        : "border border-transparent text-slate-200/75 hover:-translate-y-0.5 hover:border-sky-300/25 hover:bg-sky-300/5 hover:text-white hover:shadow-lg hover:shadow-sky-300/10"
                     }`}
                   >
                     <span
-                      className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm ${
+                      className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm transition ${
                         active
-                          ? "border-orange-500/40 bg-orange-500/15 text-orange-400"
-                          : "border-white/10 bg-black/25 text-white/45 group-hover:text-orange-400"
+                          ? "border-slate-200/35 bg-white/[0.12] text-slate-50"
+                          : "border-white/10 bg-black/20 text-slate-300/55 group-hover:border-sky-300/25 group-hover:text-sky-100"
                       }`}
                     >
                       {item.icon}
@@ -176,13 +176,13 @@ function Sidebar({
         ))}
       </nav>
 
-      <div className="mt-7 rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-5 shadow-2xl shadow-black/30">
-        <div className="text-xs font-black uppercase tracking-[0.24em] text-white/35">
+      <div className="mt-7 rounded-3xl border border-white/15 bg-gradient-to-br from-white/[0.11] via-white/[0.055] to-black/20 p-5 shadow-2xl shadow-black/35">
+        <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-300/55">
           Angemeldet
         </div>
 
         <div className="mt-3 text-lg font-black text-white">{userName}</div>
-        <div className="mt-1 inline-flex rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1 text-xs font-black uppercase tracking-widest text-orange-400">
+        <div className="mt-2 inline-flex rounded-full border border-slate-200/25 bg-white/[0.08] px-3 py-1 text-xs font-black uppercase tracking-widest text-slate-100">
           {role}
         </div>
 
@@ -190,7 +190,7 @@ function Sidebar({
 
         <button
           onClick={logout}
-          className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-left text-sm font-black text-white/70 transition hover:border-orange-500/40 hover:text-orange-400"
+          className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-left text-sm font-black text-slate-200/75 transition hover:-translate-y-0.5 hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-200"
         >
           Logout
         </button>
@@ -208,22 +208,24 @@ function BrandLogo({ small = false }: { small?: boolean }) {
         }`}
       >
         <span className="text-white">Stahl</span>
-        <span className="text-orange-500">Fabrik</span>
+        <span className="bg-gradient-to-b from-slate-100 via-slate-300 to-slate-500 bg-clip-text text-transparent">
+          Fabrik
+        </span>
       </div>
 
       <div className="mt-2 flex items-center justify-center gap-3">
-        {!small && <div className="h-[2px] w-8 rounded-full bg-orange-500/70" />}
+        {!small && <div className="h-[2px] w-8 rounded-full bg-slate-200/60" />}
 
         <div
           className={`whitespace-nowrap font-bold uppercase ${
             small ? "text-[8px] tracking-[0.2em]" : "text-[11px] tracking-[0.24em]"
           }`}
         >
-          <span className="text-orange-500">Swiss</span>{" "}
+          <span className="text-slate-200">Swiss</span>{" "}
           <span className="text-white/90">ERP System</span>
         </div>
 
-        {!small && <div className="h-[2px] w-8 rounded-full bg-orange-500/70" />}
+        {!small && <div className="h-[2px] w-8 rounded-full bg-slate-200/60" />}
       </div>
     </div>
   );
