@@ -331,11 +331,12 @@ hover:shadow-sky-300/10
           <p className="mb-2 font-semibold text-white/50">Monat</p>
 
           <input
-            type="month"
-            value={monat}
-            onChange={(e) => setMonat(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-white outline-none"
-          />
+  type="month"
+  value={monat}
+  onChange={(e) => setMonat(e.target.value)}
+  style={{ colorScheme: "dark" }}
+  className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-white"
+/>
         </div>
 
         <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-6 backdrop-blur-xl">
