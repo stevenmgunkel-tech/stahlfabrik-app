@@ -348,34 +348,35 @@ export default function DashboardPage() {
   const month = new Date().toISOString().slice(0, 7);
 
   return (
-    <main className="min-h-screen bg-[#0b0f14] text-white">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.10),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_30%)]" />
+    <main className="space-y-8 text-slate-100">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.45]">
+          <div
+            className="h-full w-full bg-cover bg-[center_20%]"
+            style={{
+              backgroundImage: "url('/berg.png')",
+              filter: "brightness(1.8) contrast(1.05)",
+            }}
+          />
+        </div>
 
-      <div className="relative mx-auto w-full max-w-[1600px] space-y-7 px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
-        <section className="relative min-h-[430px] overflow-hidden rounded-[2.25rem] border border-white/10 bg-white/[0.06] p-7 shadow-2xl shadow-black/40 backdrop-blur-xl lg:p-10 xl:p-12">
-          <div className="pointer-events-none absolute inset-0 opacity-[0.42]">
-            <div
-              className="h-full w-full bg-cover bg-[center_28%]"
-              style={{
-                backgroundImage: "url('/berg.png')",
-                filter: "brightness(1.55) contrast(1.08)",
-              }}
-            />
-          </div>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
 
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
-
-          <div className="relative z-10 flex min-h-[330px] flex-col justify-between gap-10 xl:flex-row xl:items-end">
+        <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
             <div>
-              <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-sky-100">
-                ODZ Kommandozentrale
+              <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
+                ODZ SILVER
               </div>
 
-              <h1 className="mt-6 text-6xl font-black tracking-tight text-white lg:text-8xl">
-                Dashboard
+              <div className="mt-5 text-sm font-bold text-white/60">
+                Guten Tag {stats.letzterMitarbeiter} 👋 · {today}
+              </div>
+
+              <h1 className="mt-3 text-5xl font-black tracking-tight text-white lg:text-7xl">
+                DASHBOARD
               </h1>
 
-              <p className="mt-5 max-w-3xl text-lg font-medium leading-8 text-white/68 lg:text-xl">
+              <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
                 Willkommen zurück,{" "}
                 <span className="font-black text-sky-100">
                   {stats.letzterMitarbeiter}
@@ -393,13 +394,24 @@ export default function DashboardPage() {
                   {loading ? "Lädt..." : "Aktualisieren"}
                 </button>
 
-                <div className="rounded-2xl border border-white/10 bg-black/25 px-5 py-3 text-sm font-black text-white/80 shadow-lg shadow-black/20 backdrop-blur-xl">
-                  {today}
+                <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
+                  <span
+                    className={`h-3 w-3 rounded-full ${
+                      stats.offeneAntraege > 0 || stats.heuteDifferenz < 0
+                        ? "bg-sky-300 shadow-lg shadow-sky-300/40"
+                        : "bg-green-400 shadow-lg shadow-green-400/40"
+                    }`}
+                  />
+                  <span className="text-sm font-black uppercase tracking-widest text-white/70">
+                    {stats.offeneAntraege > 0
+                      ? `${stats.offeneAntraege} Antrag offen`
+                      : "Alles im Überblick"}
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="grid w-full grid-cols-2 gap-3 rounded-[2rem] border border-white/10 bg-black/30 p-4 text-center shadow-2xl shadow-black/30 backdrop-blur-xl md:grid-cols-4 xl:max-w-[720px] xl:p-5">
+            <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl md:grid-cols-4">
               <HeroMini
                 label="Überstunden"
                 value={formatStunden(stats.gesamtUeberstunden)}
@@ -643,7 +655,6 @@ export default function DashboardPage() {
             />
           </div>
         </section>
-      </div>
     </main>
   );
 }
@@ -666,7 +677,7 @@ function ActionCard({
   return (
     <a
       href={href}
-      className="group rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10"
+      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-white transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
     >
       <div className="mb-5 flex items-center justify-between gap-4">
         <IconBox>{icon}</IconBox>
