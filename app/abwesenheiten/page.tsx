@@ -463,14 +463,14 @@ export default function AbwesenheitenPage() {
     <main className="min-h-screen bg-[#0b0f14] text-slate-100">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.10),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_30%)]" />
 
-      <div className="relative mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="relative mx-auto w-full max-w-[1600px] space-y-7 px-4 py-6 sm:px-6 lg:px-10">
         <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] p-7 shadow-2xl shadow-black/30 backdrop-blur-xl lg:p-10">
-          <div className="pointer-events-none absolute inset-0 opacity-[0.35]">
+          <div className="pointer-events-none absolute inset-0 opacity-[0.42]">
             <div
-              className="h-full w-full bg-cover bg-[center_20%]"
+              className="h-full w-full bg-cover bg-[center_24%]"
               style={{
                 backgroundImage: "url('/berg.png')",
-                filter: "brightness(1.45) contrast(1.05)",
+                filter: "brightness(1.55) contrast(1.08)",
               }}
             />
           </div>
@@ -996,7 +996,7 @@ function DropdownPanel({
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-black text-white transition hover:border-sky-300/25 hover:bg-sky-300/5">
-          {open ? "Schließen ▲" : "Öffnen ▼"}
+          {open ? "▲ Schließen" : "▼ Öffnen"}
         </div>
       </button>
 
