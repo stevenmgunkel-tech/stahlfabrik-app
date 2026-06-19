@@ -291,21 +291,32 @@ const gesamtUeberstunden =
   }
 
   return (
-    <main>
+    <main className="min-h-screen bg-[#0b0f14] p-6 text-white">
       <div className="mb-6 flex justify-end">
   <button
     onClick={exportPdf}
-    className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-bold text-white hover:bg-orange-500"
+    className="
+rounded-2xl
+border border-white/10
+bg-white/10
+px-4 py-2
+text-sm font-bold text-white
+transition
+hover:-translate-y-1
+hover:border-sky-300/25
+hover:bg-sky-300/5
+hover:shadow-sky-300/10
+"
   >
     📄 PDF
   </button>
 </div>
 
-      <h1 className="mb-3 text-5xl font-extrabold text-zinc-900">
+      <h1 className="mb-3 text-5xl font-extrabold text-white">
         Monatsansicht
       </h1>
 
-      <p className="mb-10 text-lg font-medium text-zinc-700">
+      <p className="mb-10 text-lg font-medium text-white/60">
         Eigene Monatsübersicht mit Feiertagen SG, Sollstunden und Überstunden
       </p>
 
@@ -374,7 +385,7 @@ const gesamtUeberstunden =
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-6">
-        <div className="rounded-2xl bg-zinc-900 p-6 text-white shadow-sm">
+        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-6 backdrop-blur-xl">
           <p className="mb-2 font-semibold text-zinc-300">
             Gesamt Überstunden
           </p>
@@ -385,7 +396,7 @@ const gesamtUeberstunden =
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="mb-2 font-semibold text-zinc-600">Wochenstunden</p>
+          <p className="mb-2 font-semibold text-white/50">Wochenstunden</p>
 
           <p className="text-4xl font-extrabold text-zinc-900">
             {loading ? "..." : `${wochenstunden}h`}
@@ -393,7 +404,7 @@ const gesamtUeberstunden =
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="mb-2 font-semibold text-zinc-600">Arbeitstage</p>
+          <p className="mb-2 font-semibold text-white/50">Arbeitstage</p>
 
           <p className="text-4xl font-extrabold text-zinc-900">
             {loading ? "..." : arbeitstage}
@@ -401,23 +412,23 @@ const gesamtUeberstunden =
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="mb-2 font-semibold text-zinc-600">Feiertage SG</p>
+          <p className="mb-2 font-semibold text-white/50">Feiertage SG</p>
 
-          <p className="text-4xl font-extrabold text-zinc-900">
+          <p className="text-4xl font-extrabold text-white">
             {loading ? "..." : feiertage.length}
           </p>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="mb-2 font-semibold text-zinc-600">Urlaub</p>
+          <p className="mb-2 font-semibold text-white/50">Urlaub</p>
 
-          <p className="text-4xl font-extrabold text-zinc-900">
+          <p className="text-4xl font-extrabold text-white">
             {urlaubstage}
           </p>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="mb-2 font-semibold text-zinc-600">
+          <p className="mb-2 font-semibold text-white/50">
             Überstundenabbau
           </p>
 
