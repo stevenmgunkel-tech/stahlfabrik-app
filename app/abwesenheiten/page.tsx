@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
+import { istFeiertagSG } from "@/lib/feiertage";
 
 type Abwesenheit = {
   id: number;
@@ -21,7 +22,45 @@ type Konto = {
   kranktage: number;
   offeneAntraege: number;
   ueberstundenabbauStunden: number;
+  ueberstundenAktuell: number;
 };
+
+
+function formatDateLocal(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function getErsterTagDieserMonat() {
+  const heute = new Date();
+  return new Date(heute.getFullYear(), heute.getMonth(), 1);
+}
+
+function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
+  let tage = 0;
+  const aktuell = new Date(startDatum);
+  aktuell.setHours(0, 0, 0, 0);
+
+  const ende = new Date(endDatum);
+  ende.setHours(0, 0, 0, 0);
+
+  while (aktuell <= ende) {
+    const wochentag = aktuell.getDay();
+    const istWochenende = wochentag === 0 || wochentag === 6;
+    const istFeiertag = istFeiertagSG(aktuell);
+
+    if (!istWochenende && !istFeiertag) {
+      tage++;
+    }
+
+    aktuell.setDate(aktuell.getDate() + 1);
+  }
+
+  return tage;
+}
 
 export default function AbwesenheitenPage() {
   const [abwesenheiten, setAbwesenheiten] = useState<Abwesenheit[]>([]);
@@ -31,6 +70,7 @@ export default function AbwesenheitenPage() {
     kranktage: 0,
     offeneAntraege: 0,
     ueberstundenabbauStunden: 0,
+    ueberstundenAktuell: 0,
   });
 
   const [typ, setTyp] = useState("Urlaub");
@@ -76,6 +116,16 @@ export default function AbwesenheitenPage() {
       .eq("user_id", user.id)
       .order("id", { ascending: false });
 
+    const { data: arbeitszeiten, error: zeitenError } = await supabase
+      .from("arbeitszeiten")
+      .select("*")
+      .eq("user_id", user.id);
+
+    const { data: tagespausen, error: pausenError } = await supabase
+      .from("tagespausen")
+      .select("*")
+      .eq("user_id", user.id);
+
     if (error) {
       setMeldung(error.message);
       console.log(error);
@@ -83,9 +133,22 @@ export default function AbwesenheitenPage() {
       return;
     }
 
+    if (zeitenError) {
+      setMeldung(zeitenError.message);
+      console.log(zeitenError);
+    }
+
+    if (pausenError) {
+      setMeldung(pausenError.message);
+      console.log(pausenError);
+    }
+
     const eintraege = (data || []) as Abwesenheit[];
 
     const jahresurlaub = Number(mitarbeiter?.urlaubstage || 0);
+    const ueberstundenStart = Number(mitarbeiter?.ueberstunden_start || 0);
+    const wochenstunden = Number(mitarbeiter?.wochenstunden || 42.5);
+    const tagesSoll = wochenstunden / 5;
 
     const genommenerUrlaub = eintraege
       .filter(
@@ -106,6 +169,67 @@ export default function AbwesenheitenPage() {
       )
       .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
 
+    const heuteDate = new Date();
+    const heute = formatDateLocal(heuteDate);
+    const monatsStartDate = getErsterTagDieserMonat();
+    const monatsStart = formatDateLocal(monatsStartDate);
+
+    const arbeitszeitenMonat =
+      arbeitszeiten?.filter(
+        (item) => item.datum >= monatsStart && item.datum <= heute
+      ) || [];
+
+    const monatBrutto = arbeitszeitenMonat.reduce(
+      (sum, item) => sum + Number(item.stunden || 0),
+      0
+    );
+
+    const pausenMonat =
+      tagespausen
+        ?.filter((pause) => pause.datum >= monatsStart && pause.datum <= heute)
+        .reduce((sum, pause) => sum + Number(pause.pause || 0) / 60, 0) || 0;
+
+    const monatIst = monatBrutto - pausenMonat;
+    const monatTage = zaehleArbeitstage(monatsStartDate, heuteDate);
+    const monatSoll = tagesSoll * monatTage;
+
+    const urlaubstageMonat = eintraege
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Urlaub" &&
+          eintrag.status === "Genehmigt" &&
+          eintrag.von >= monatsStart &&
+          eintrag.bis <= heute
+      )
+      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+
+    const kranktageMonat = eintraege
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Krank" &&
+          eintrag.von >= monatsStart &&
+          eintrag.bis <= heute
+      )
+      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+
+    const ueberstundenabbauStundenMonat = eintraege
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Überstundenabbau" &&
+          eintrag.status === "Genehmigt" &&
+          eintrag.von >= monatsStart &&
+          eintrag.bis <= heute
+      )
+      .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
+
+    const abwesenheitsstundenMonat =
+      (urlaubstageMonat + kranktageMonat) * tagesSoll;
+
+    const angerechneteStundenMonat = monatIst + abwesenheitsstundenMonat;
+    const monatDifferenz = angerechneteStundenMonat - monatSoll;
+    const ueberstundenAktuell =
+      ueberstundenStart + monatDifferenz - ueberstundenabbauStundenMonat;
+
     const offeneAntraege = eintraege.filter(
       (eintrag) => eintrag.status === "Beantragt"
     ).length;
@@ -117,6 +241,7 @@ export default function AbwesenheitenPage() {
       kranktage,
       offeneAntraege,
       ueberstundenabbauStunden,
+      ueberstundenAktuell,
     });
 
     setLoading(false);
@@ -334,10 +459,6 @@ export default function AbwesenheitenPage() {
   const berechneteTage = berechneTage();
   const berechneteStunden = Number(stunden || 0);
 
-  const genehmigt = abwesenheiten.filter(
-    (eintrag) => eintrag.status === "Genehmigt"
-  ).length;
-
   return (
     <main className="min-h-screen bg-[#0b0f14] text-slate-100">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.10),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_30%)]" />
@@ -387,10 +508,15 @@ export default function AbwesenheitenPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl md:grid-cols-4">
-              <HeroMini label="Einträge" value={abwesenheiten.length} />
+              <HeroMini label="Resturlaub" value={resturlaub} green={resturlaub >= 0} red={resturlaub < 0} />
+              <HeroMini
+                label="Überstunden"
+                value={formatStunden(konto.ueberstundenAktuell, true)}
+                green={konto.ueberstundenAktuell >= 0}
+                red={konto.ueberstundenAktuell < 0}
+              />
               <HeroMini label="Offen" value={konto.offeneAntraege} blue={konto.offeneAntraege > 0} />
-              <HeroMini label="Genehmigt" value={genehmigt} green={genehmigt > 0} />
-              <HeroMini label="Rest" value={resturlaub} green={resturlaub >= 0} red={resturlaub < 0} />
+              <HeroMini label="Krank" value={konto.kranktage} red={konto.kranktage > 0} />
             </div>
           </div>
         </section>
@@ -401,7 +527,7 @@ export default function AbwesenheitenPage() {
           </div>
         )}
 
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
           <KpiCard
             label="Jahresurlaub"
             value={loading ? "..." : konto.jahresurlaub}
@@ -426,6 +552,17 @@ export default function AbwesenheitenPage() {
             value={loading ? "..." : konto.kranktage}
             subtext="Erfasste Kranktage"
             highlight={konto.kranktage > 0 ? "red" : undefined}
+          />
+
+          <KpiCard
+            label="Überstunden"
+            value={
+              loading
+                ? "..."
+                : formatStunden(Number(konto.ueberstundenAktuell || 0), true)
+            }
+            subtext="Aktueller Stand"
+            highlight={konto.ueberstundenAktuell >= 0 ? "green" : "red"}
           />
 
           <KpiCard
