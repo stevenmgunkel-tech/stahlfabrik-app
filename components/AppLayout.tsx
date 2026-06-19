@@ -94,7 +94,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             onClick={() => setOpen(false)}
           />
 
-          <aside className="absolute left-0 top-0 h-full w-[320px] border-r border-slate-300/60 bg-[#edf2f6]">
+          <aside className="absolute bottom-0 left-0 top-0 h-dvh w-[320px] border-r border-slate-300/60 bg-[#edf2f6]">
             <Sidebar
               pathname={pathname}
               logout={logout}
@@ -106,7 +106,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <aside className="fixed left-0 top-0 z-30 hidden h-screen w-[320px] overflow-hidden border-r border-slate-300/50 bg-[#edf2f6] shadow-2xl shadow-black/50 lg:block">
+      <aside className="fixed bottom-0 left-0 top-0 z-30 hidden h-dvh w-[320px] overflow-hidden border-r border-slate-300/50 bg-[#edf2f6] shadow-2xl shadow-black/50 lg:block">
         <Sidebar
           pathname={pathname}
           logout={logout}
@@ -124,6 +124,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <style jsx global>{`
         html,
         body {
+          min-height: 100%;
           scrollbar-width: thin;
           scrollbar-color: rgba(56, 189, 248, 0.85) rgba(7, 10, 13, 0.95);
           background: #070a0d;
@@ -205,8 +206,8 @@ function Sidebar({
   close?: () => void;
 }) {
   return (
-    <div className="flex h-screen flex-col bg-gradient-to-b from-[#f8fafc] via-[#edf2f6] to-[#dfe6ec] px-4 py-5 text-slate-950">
-      <div className="mb-5 rounded-[2rem] border border-white/90 bg-gradient-to-br from-white via-[#f4f7fa] to-[#dbe3ea] p-5 shadow-2xl shadow-slate-950/15 ring-1 ring-slate-300/70">
+    <div className="flex h-full min-h-dvh flex-col bg-gradient-to-b from-[#f8fafc] via-[#edf2f6] to-[#dfe6ec] px-4 py-5 text-slate-950">
+      <div className="mb-5 shrink-0 rounded-[2rem] border border-white/90 bg-gradient-to-br from-white via-[#f4f7fa] to-[#dbe3ea] p-5 shadow-2xl shadow-slate-950/15 ring-1 ring-slate-300/70">
         <BrandLogo />
       </div>
 
