@@ -2,93 +2,143 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import {
-  Clock3,
   Activity,
   Briefcase,
   CalendarDays,
+  Clock3,
+  TrendingUp,
   UserRound,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { istFeiertagSG } from "@/lib/feiertage";
 
+type DashboardStats = {
+  projekte: number;
+  letzterMitarbeiter: string;
+  letzteZeit: string;
+  letzteStunden: number;
+
+  heuteSoll: number;
+  heuteIst: number;
+  heuteDifferenz: number;
+
+  wocheSoll: number;
+  wocheIst: number;
+  wocheDifferenz: number;
+  wocheTage: number;
+
+  monatSoll: number;
+  monatIst: number;
+  monatDifferenz: number;
+  monatTage: number;
+
+  gesamtUeberstunden: number;
+  ueberstundenStart: number;
+  ueberstundenAbbau: number;
+};
+
+const initialStats: DashboardStats = {
+  projekte: 0,
+  letzterMitarbeiter: "Keine Daten",
+  letzteZeit: "Werkstatt",
+  letzteStunden: 0,
+
+  heuteSoll: 0,
+  heuteIst: 0,
+  heuteDifferenz: 0,
+
+  wocheSoll: 0,
+  wocheIst: 0,
+  wocheDifferenz: 0,
+  wocheTage: 0,
+
+  monatSoll: 0,
+  monatIst: 0,
+  monatDifferenz: 0,
+  monatTage: 0,
+
+  gesamtUeberstunden: 0,
+  ueberstundenStart: 0,
+  ueberstundenAbbau: 0,
+};
+
+function formatDateLocal(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function formatStunden(value: number) {
+  const totalMinuten = Math.round(value * 60);
+  const stunden = Math.floor(Math.abs(totalMinuten) / 60);
+  const minuten = Math.abs(totalMinuten) % 60;
+  const prefix = totalMinuten < 0 ? "-" : "";
+
+  if (stunden <= 0) return `${prefix}${minuten} min`;
+  if (minuten === 0) return `${prefix}${stunden} h`;
+
+  return `${prefix}${stunden} h ${minuten} min`;
+}
+
+function formatKurz(value: number) {
+  return `${value >= 0 ? "+" : ""}${value.toFixed(2)} h`;
+}
+
+function getMontagDieserWoche() {
+  const heute = new Date();
+  const tag = heute.getDay();
+  const diff = tag === 0 ? -6 : 1 - tag;
+
+  const montag = new Date(heute);
+  montag.setDate(heute.getDate() + diff);
+  montag.setHours(0, 0, 0, 0);
+
+  return montag;
+}
+
+function getErsterTagDieserMonat() {
+  const heute = new Date();
+  return new Date(heute.getFullYear(), heute.getMonth(), 1);
+}
+
+function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
+  let tage = 0;
+  const aktuell = new Date(startDatum);
+  aktuell.setHours(0, 0, 0, 0);
+
+  const ende = new Date(endDatum);
+  ende.setHours(0, 0, 0, 0);
+
+  while (aktuell <= ende) {
+    const wochentag = aktuell.getDay();
+    const istWochenende = wochentag === 0 || wochentag === 6;
+    const istFeiertag = istFeiertagSG(aktuell);
+
+    if (!istWochenende && !istFeiertag) {
+      tage++;
+    }
+
+    aktuell.setDate(aktuell.getDate() + 1);
+  }
+
+  return tage;
+}
+
 export default function DashboardPage() {
-  const [stats, setStats] = useState({
-    projekte: 0,
-    letzterMitarbeiter: "Keine Daten",
-    letzteZeit: "Werkstatt",
-    letzteStunden: 0,
-
-    heuteSoll: 0,
-    heuteIst: 0,
-    heuteDifferenz: 0,
-
-    wocheSoll: 0,
-    wocheIst: 0,
-    wocheDifferenz: 0,
-    wocheTage: 0,
-
-    monatSoll: 0,
-    monatIst: 0,
-    monatDifferenz: 0,
-    monatTage: 0,
-
-    gesamtUeberstunden: 0,
-    ueberstundenStart: 0,
-    ueberstundenAbbau: 0,
-  });
+  const [stats, setStats] = useState<DashboardStats>(initialStats);
+  const [loading, setLoading] = useState(true);
+  const [meldung, setMeldung] = useState("");
 
   useEffect(() => {
     loadDashboard();
   }, []);
 
-  function formatDateLocal(date: Date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
-
-  function getMontagDieserWoche() {
-    const heute = new Date();
-    const tag = heute.getDay();
-    const diff = tag === 0 ? -6 : 1 - tag;
-
-    const montag = new Date(heute);
-    montag.setDate(heute.getDate() + diff);
-    montag.setHours(0, 0, 0, 0);
-
-    return montag;
-  }
-
-  function getErsterTagDieserMonat() {
-    const heute = new Date();
-    return new Date(heute.getFullYear(), heute.getMonth(), 1);
-  }
-
-  function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
-    let tage = 0;
-    const aktuell = new Date(startDatum);
-    aktuell.setHours(0, 0, 0, 0);
-
-    const ende = new Date(endDatum);
-    ende.setHours(0, 0, 0, 0);
-
-    while (aktuell <= ende) {
-      const wochentag = aktuell.getDay();
-      const istWochenende = wochentag === 0 || wochentag === 6;
-      const istFeiertag = istFeiertagSG(aktuell);
-
-      if (!istWochenende && !istFeiertag) {
-        tage++;
-      }
-
-      aktuell.setDate(aktuell.getDate() + 1);
-    }
-
-    return tage;
-  }
-
   async function loadDashboard() {
+    setLoading(true);
+    setMeldung("");
+
     const userData = await supabase.auth.getUser();
     const user = userData.data.user;
 
@@ -97,17 +147,40 @@ export default function DashboardPage() {
       return;
     }
 
-    const { data: arbeitszeiten } = await supabase
+    const { data: arbeitszeiten, error: zeitenError } = await supabase
       .from("arbeitszeiten")
       .select("*");
 
-    const { data: tagespausen } = await supabase
+    const { data: tagespausen, error: pausenError } = await supabase
       .from("tagespausen")
       .select("*")
       .eq("user_id", user.id);
 
-    const { data: urlaub } = await supabase.from("urlaub").select("*");
-    const { data: projekte } = await supabase.from("projekte").select("*");
+    const { data: urlaub, error: urlaubError } = await supabase
+      .from("urlaub")
+      .select("*");
+
+    const { data: projekte, error: projekteError } = await supabase
+      .from("projekte")
+      .select("*");
+
+    const { data: eigenerMitarbeiter, error: mitarbeiterError } =
+      await supabase
+        .from("mitarbeiter")
+        .select("wochenstunden, name, ueberstunden_start, eintrittsdatum")
+        .eq("user_id", user.id)
+        .single();
+
+    const error =
+      zeitenError ||
+      pausenError ||
+      urlaubError ||
+      projekteError ||
+      mitarbeiterError;
+
+    if (error) {
+      setMeldung(error.message);
+    }
 
     const heuteDate = new Date();
     const heute = formatDateLocal(heuteDate);
@@ -117,12 +190,6 @@ export default function DashboardPage() {
 
     const monatsStartDate = getErsterTagDieserMonat();
     const monatsStart = formatDateLocal(monatsStartDate);
-
-    const { data: eigenerMitarbeiter } = await supabase
-      .from("mitarbeiter")
-      .select("wochenstunden, name, ueberstunden_start, eintrittsdatum")
-      .eq("user_id", user.id)
-      .single();
 
     const wochenstunden = Number(eigenerMitarbeiter?.wochenstunden || 42.5);
     const ueberstundenStart = Number(
@@ -160,19 +227,11 @@ export default function DashboardPage() {
 
     const heuteIst = heuteBrutto - pauseFuerDatum(heute);
 
-const heuteWochentag = heuteDate.getDay();
-
-const istWochenende =
-  heuteWochentag === 0 || heuteWochentag === 6;
-
-const heuteIstFeiertag = istFeiertagSG(heuteDate);
-
-const heuteSoll =
-  istWochenende || heuteIstFeiertag
-    ? 0
-    : tagesSoll;
-
-const heuteDifferenz = heuteIst - heuteSoll;
+    const heuteWochentag = heuteDate.getDay();
+    const istWochenende = heuteWochentag === 0 || heuteWochentag === 6;
+    const heuteIstFeiertag = istFeiertagSG(heuteDate);
+    const heuteSoll = istWochenende || heuteIstFeiertag ? 0 : tagesSoll;
+    const heuteDifferenz = heuteIst - heuteSoll;
 
     const eigeneZeitenWoche = eigeneArbeitszeiten.filter(
       (item) => item.datum >= montag && item.datum <= heute
@@ -220,27 +279,21 @@ const heuteDifferenz = heuteIst - heuteSoll;
       )
       .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
-const ueberstundenAbbauStundenMonat = eigeneAbwesenheiten
-  .filter(
-    (eintrag) =>
-      eintrag.typ === "Überstundenabbau" &&
-      eintrag.status === "Genehmigt" &&
-      eintrag.von >= monatsStart &&
-      eintrag.bis <= heute
-  )
-  .reduce(
-    (sum, eintrag) => sum + Number(eintrag.stunden || 0),
-    0
-  );
+    const ueberstundenAbbauStundenMonat = eigeneAbwesenheiten
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Überstundenabbau" &&
+          eintrag.status === "Genehmigt" &&
+          eintrag.von >= monatsStart &&
+          eintrag.bis <= heute
+      )
+      .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
 
-const abwesenheitsstundenMonat =
-  (urlaubstageMonat + kranktageMonat) * tagesSoll;
+    const abwesenheitsstundenMonat =
+      (urlaubstageMonat + kranktageMonat) * tagesSoll;
 
-const angerechneteStundenMonat =
-  monatIst + abwesenheitsstundenMonat;
-
-const monatDifferenz =
-  angerechneteStundenMonat - monatSoll;
+    const angerechneteStundenMonat = monatIst + abwesenheitsstundenMonat;
+    const monatDifferenz = angerechneteStundenMonat - monatSoll;
 
     const gesamtUeberstunden =
       ueberstundenStart + monatDifferenz - ueberstundenAbbauStundenMonat;
@@ -263,14 +316,16 @@ const monatDifferenz =
       wocheTage,
 
       monatSoll,
-monatIst: angerechneteStundenMonat,
-monatDifferenz,
-monatTage,
+      monatIst: angerechneteStundenMonat,
+      monatDifferenz,
+      monatTage,
 
-gesamtUeberstunden,
-ueberstundenStart,
-ueberstundenAbbau: ueberstundenAbbauStundenMonat,
+      gesamtUeberstunden,
+      ueberstundenStart,
+      ueberstundenAbbau: ueberstundenAbbauStundenMonat,
     });
+
+    setLoading(false);
   }
 
   const today = new Date().toLocaleDateString("de-CH", {
@@ -282,121 +337,216 @@ ueberstundenAbbau: ueberstundenAbbauStundenMonat,
   const month = new Date().toISOString().slice(0, 7);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
-        <div>
-          <div className="mb-4 text-sm font-medium uppercase tracking-widest text-white/70">
-            Willkommen zurück,{" "}
-            <span className="font-black text-orange-500">
-              {stats.letzterMitarbeiter}
-            </span>{" "}
-            👋
-          </div>
+    <main className="min-h-screen bg-[#0b0f14] text-white">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.10),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_30%)]" />
 
-          <h1 className="text-5xl font-black tracking-tight text-white lg:text-6xl">
-            Dashboard
-          </h1>
-        </div>
+      <div className="relative mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-2xl shadow-black/30 backdrop-blur-xl">
+          <div className="relative p-6 sm:p-8">
+            <div className="absolute inset-0 bg-gradient-to-br from-sky-300/10 via-transparent to-slate-400/5" />
 
-        <div className="rounded-xl border border-white/10 bg-white/[0.04] px-5 py-4 text-sm font-bold text-white shadow-xl shadow-black/30">
-          {today}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
-        <WorkTimeCard
-          eyebrow="Heute"
-          title="Tagesarbeitszeit"
-          description="Persönliche Tagesübersicht"
-          soll={stats.heuteSoll}
-          ist={stats.heuteIst}
-          differenz={stats.heuteDifferenz}
-        />
-
-        <WorkTimeCard
-          eyebrow="Diese Woche"
-          title="Wochenarbeitszeit"
-          description={`Montag bis ${
-  [0, 6].includes(new Date().getDay())
-    ? "Freitag"
-    : "heute"
-} · ${stats.wocheTage} Arbeitstage`}
-          soll={stats.wocheSoll}
-          ist={stats.wocheIst}
-          differenz={stats.wocheDifferenz}
-        />
-
-        <WorkTimeCard
-          eyebrow="Dieser Monat"
-          title="Monatsarbeitszeit"
-          description={`1. bis heute · ${stats.monatTage} Arbeitstage`}
-          soll={stats.monatSoll}
-          ist={stats.monatIst}
-          differenz={stats.monatDifferenz}
-        />
-
-        <OvertimeCard
-  value={stats.gesamtUeberstunden}
-  startwert={stats.ueberstundenStart}
-  monat={stats.monatDifferenz}
-  abbau={stats.ueberstundenAbbau}
-/>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.95fr]">
-        <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
-          <div className="mb-8 flex items-center gap-4">
-            <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-3 text-orange-500">
-              <Activity size={26} />
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-black">Letzte Aktivitäten</h2>
-              <p className="text-white/60">Aktuelle Übersicht</p>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-black/25 p-6 transition hover:border-orange-500/30">
-            <div className="mb-4 text-sm font-black uppercase tracking-widest text-orange-500">
-              Arbeitszeit
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
+            <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
               <div>
-                <div className="text-xl font-black">{stats.letzteZeit}</div>
-                <div className="mt-2 text-white/60">Letzter Eintrag</div>
+                <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-sky-100">
+                  ODZ Kommandozentrale
+                </div>
+
+                <h1 className="mt-5 text-4xl font-black tracking-tight text-white sm:text-5xl">
+                  Dashboard
+                </h1>
+
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60 sm:text-base">
+                  Willkommen zurück,{" "}
+                  <span className="font-black text-sky-100">
+                    {stats.letzterMitarbeiter}
+                  </span>
+                  . Heute, Woche und Monat auf einen Blick.
+                </p>
               </div>
 
-              <div className="rounded-lg bg-orange-600 px-4 py-2 font-black text-white shadow-lg shadow-orange-600/25">
-                {stats.letzteStunden.toFixed(2)}h
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <button
+                  type="button"
+                  onClick={loadDashboard}
+                  disabled={loading}
+                  className="rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-black text-white shadow-lg shadow-black/20 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {loading ? "Lädt..." : "Aktualisieren"}
+                </button>
+
+                <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-3 text-sm font-black text-white/80 shadow-lg shadow-black/20">
+                  {today}
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
-          <div className="mb-8">
-            <h2 className="text-2xl font-black">Schnellübersicht</h2>
-            <p className="text-white/60">Live Infos</p>
+        {meldung && (
+          <div className="rounded-2xl border border-red-400/25 bg-red-500/10 p-5 text-sm font-bold text-red-100">
+            {meldung}
           </div>
+        )}
 
-          <InfoRow
-            label="Projekte"
-            value={stats.projekte}
-            icon={<Briefcase size={24} />}
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <WorkTimeCard
+            eyebrow="Heute"
+            title="Tageszeit"
+            description="Persönliche Tagesübersicht"
+            soll={stats.heuteSoll}
+            ist={stats.heuteIst}
+            differenz={stats.heuteDifferenz}
           />
 
-          <InfoRow label="Monat" value={month} icon={<CalendarDays size={24} />} />
+          <WorkTimeCard
+            eyebrow="Diese Woche"
+            title="Wochenzeit"
+            description={`Montag bis ${
+              [0, 6].includes(new Date().getDay()) ? "Freitag" : "heute"
+            } · ${stats.wocheTage} Arbeitstage`}
+            soll={stats.wocheSoll}
+            ist={stats.wocheIst}
+            differenz={stats.wocheDifferenz}
+          />
 
-          <InfoRow
-            label="Mitarbeiter"
-            value={stats.letzterMitarbeiter}
-            orange
-            icon={<UserRound size={24} />}
+          <WorkTimeCard
+            eyebrow="Dieser Monat"
+            title="Monatszeit"
+            description={`1. bis heute · ${stats.monatTage} Arbeitstage`}
+            soll={stats.monatSoll}
+            ist={stats.monatIst}
+            differenz={stats.monatDifferenz}
+          />
+
+          <OvertimeCard
+            value={stats.gesamtUeberstunden}
+            startwert={stats.ueberstundenStart}
+            monat={stats.monatDifferenz}
+            abbau={stats.ueberstundenAbbau}
           />
         </section>
+
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
+          <div className="flex flex-col justify-between gap-4 border-b border-white/10 px-5 py-5 sm:px-6 lg:flex-row lg:items-center">
+            <div>
+              <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-sky-100">
+                Kalender vorbereitet
+              </div>
+              <h2 className="mt-3 text-2xl font-black text-white">
+                Wochenübersicht
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-white/50">
+                Dieser Bereich ist bewusst vorbereitet für den nächsten Schritt:
+                Mo–So Kalender direkt im Dashboard.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-black text-white/70">
+              Montag – Sonntag
+            </div>
+          </div>
+
+          <div className="grid gap-3 p-5 sm:p-6 md:grid-cols-7">
+            {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((tag, index) => {
+              const istHeute = index === ((new Date().getDay() + 6) % 7);
+
+              return (
+                <div
+                  key={tag}
+                  className={`min-h-[120px] rounded-3xl border p-4 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10 ${
+                    istHeute
+                      ? "border-sky-300/25 bg-sky-300/10"
+                      : "border-white/10 bg-black/20"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-black uppercase tracking-[0.18em] text-white/55">
+                      {tag}
+                    </div>
+
+                    {istHeute && (
+                      <span className="rounded-full border border-sky-300/20 bg-sky-300/10 px-2 py-1 text-[10px] font-black text-sky-100">
+                        Heute
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-xs font-bold text-white/45">
+                    Kalenderdaten folgen
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.95fr]">
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 backdrop-blur-xl sm:p-7">
+            <div className="mb-6 flex items-center gap-4">
+              <IconBox>
+                <Activity size={24} />
+              </IconBox>
+
+              <div>
+                <h2 className="text-2xl font-black text-white">
+                  Letzte Aktivitäten
+                </h2>
+                <p className="text-sm text-white/50">Aktuelle Übersicht</p>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-black/25 p-5 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
+              <div className="mb-4 text-xs font-black uppercase tracking-[0.22em] text-sky-100">
+                Arbeitszeit
+              </div>
+
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div>
+                  <div className="text-xl font-black text-white">
+                    {stats.letzteZeit}
+                  </div>
+                  <div className="mt-2 text-sm text-white/50">
+                    Letzter Eintrag
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-sky-300/20 bg-sky-300/10 px-4 py-3 text-xl font-black text-sky-100">
+                  {formatStunden(stats.letzteStunden)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 backdrop-blur-xl sm:p-7">
+            <div className="mb-6">
+              <h2 className="text-2xl font-black text-white">
+                Schnellübersicht
+              </h2>
+              <p className="text-sm text-white/50">Live Infos</p>
+            </div>
+
+            <InfoRow
+              label="Projekte"
+              value={stats.projekte}
+              icon={<Briefcase size={22} />}
+            />
+
+            <InfoRow
+              label="Monat"
+              value={month}
+              icon={<CalendarDays size={22} />}
+            />
+
+            <InfoRow
+              label="Mitarbeiter"
+              value={stats.letzterMitarbeiter}
+              highlight
+              icon={<UserRound size={22} />}
+            />
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -416,29 +566,29 @@ function WorkTimeCard({
   differenz: number;
 }) {
   return (
-    <section className="rounded-2xl border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-white/[0.025] p-6 shadow-2xl shadow-orange-500/10">
-      <div className="mb-6 flex flex-col justify-between gap-5">
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+      <div className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <div className="text-sm font-black uppercase tracking-widest text-orange-500">
+          <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
             {eyebrow}
           </div>
 
           <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
 
-          <p className="mt-1 text-sm text-white/55">{description}</p>
+          <p className="mt-1 text-sm text-white/50">{description}</p>
         </div>
 
-        <div className="w-fit rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-orange-500">
-          <Clock3 size={30} />
-        </div>
+        <IconBox>
+          <Clock3 size={22} />
+        </IconBox>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        <ValueBox label="Sollzeit" value={`${soll.toFixed(1)}h`} />
-        <ValueBox label="Gebucht" value={`${ist.toFixed(1)}h`} orange />
+      <div className="grid gap-3">
+        <ValueBox label="Sollzeit" value={formatStunden(soll)} />
+        <ValueBox label="Gebucht" value={formatStunden(ist)} highlight />
         <ValueBox
           label="Differenz"
-          value={`${differenz >= 0 ? "+" : ""}${differenz.toFixed(1)}h`}
+          value={formatKurz(differenz)}
           green={differenz >= 0}
           red={differenz < 0}
         />
@@ -459,22 +609,28 @@ function OvertimeCard({
   abbau: number;
 }) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.025] p-6 shadow-2xl shadow-black/30">
-      <div className="mb-6">
-        <div className="text-sm font-black uppercase tracking-widest text-orange-500">
-          Gesamt
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
+            Gesamt
+          </div>
+
+          <h2 className="mt-2 text-2xl font-black text-white">
+            Überstunden
+          </h2>
+
+          <p className="mt-1 text-sm text-white/50">
+            Startwert + Monat - Abbau
+          </p>
         </div>
 
-        <h2 className="mt-2 text-2xl font-black text-white">
-          Überstunden
-        </h2>
-
-        <p className="mt-1 text-sm text-white/55">
-          Startwert + Monatsstand - Abbau
-        </p>
+        <IconBox>
+          <TrendingUp size={22} />
+        </IconBox>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-black/25 p-5">
+      <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
         <div className="text-sm font-bold text-white/50">
           Gesamtüberstunden
         </div>
@@ -484,31 +640,18 @@ function OvertimeCard({
             value >= 0 ? "text-green-400" : "text-red-400"
           }`}
         >
-          {value >= 0 ? "+" : ""}
-          {value.toFixed(2)}h
+          {formatKurz(value)}
         </div>
 
-        <div className="mt-5 border-t border-white/10 pt-4 space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-white/60">Startwert</span>
-            <span className="font-bold text-white">
-              +{startwert.toFixed(2)}h
-            </span>
-          </div>
-
-          <div className="flex justify-between text-sm">
-            <span className="text-white/60">Monat</span>
-            <span className="font-bold text-green-400">
-              +{monat.toFixed(2)}h
-            </span>
-          </div>
-
-          <div className="flex justify-between text-sm">
-            <span className="text-white/60">Abbau</span>
-            <span className="font-bold text-orange-400">
-              -{abbau.toFixed(2)}h
-            </span>
-          </div>
+        <div className="mt-5 space-y-2 border-t border-white/10 pt-4">
+          <MiniLine label="Startwert" value={formatKurz(startwert)} />
+          <MiniLine
+            label="Monat"
+            value={formatKurz(monat)}
+            green={monat >= 0}
+            red={monat < 0}
+          />
+          <MiniLine label="Abbau" value={`-${abbau.toFixed(2)} h`} red />
         </div>
       </div>
     </section>
@@ -518,18 +661,18 @@ function OvertimeCard({
 function ValueBox({
   label,
   value,
-  orange,
+  highlight,
   green,
   red,
 }: {
   label: string;
   value: string | number;
-  orange?: boolean;
+  highlight?: boolean;
   green?: boolean;
   red?: boolean;
 }) {
-  const color = orange
-    ? "text-orange-500"
+  const color = highlight
+    ? "text-sky-100"
     : green
     ? "text-green-400"
     : red
@@ -537,9 +680,11 @@ function ValueBox({
     : "text-white";
 
   return (
-    <div className="rounded-xl border border-white/10 bg-black/25 p-4">
-      <div className="text-sm font-bold text-white/50">{label}</div>
-      <div className={`mt-2 text-3xl font-black ${color}`}>{value}</div>
+    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+      <div className="text-xs font-black uppercase tracking-[0.18em] text-white/35">
+        {label}
+      </div>
+      <div className={`mt-2 text-2xl font-black ${color}`}>{value}</div>
     </div>
   );
 }
@@ -547,32 +692,61 @@ function ValueBox({
 function InfoRow({
   label,
   value,
-  orange,
+  highlight,
   icon,
 }: {
   label: string;
   value: string | number;
-  orange?: boolean;
+  highlight?: boolean;
   icon?: ReactNode;
 }) {
   return (
-    <div className="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-black/25 p-5 transition hover:border-orange-500/30 hover:bg-black/35">
-      <div>
-        <div className="text-white/55">{label}</div>
+    <div className="mb-4 flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/25 p-5 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
+      <div className="min-w-0">
+        <div className="text-sm text-white/50">{label}</div>
         <div
-          className={`mt-2 text-2xl font-black ${
-            orange ? "text-orange-500" : "text-white"
+          className={`mt-2 truncate text-2xl font-black ${
+            highlight ? "text-sky-100" : "text-white"
           }`}
         >
           {value}
         </div>
       </div>
 
-      {icon && (
-        <div className="rounded-xl bg-orange-500/10 p-3 text-orange-500">
-          {icon}
-        </div>
-      )}
+      {icon && <IconBox>{icon}</IconBox>}
+    </div>
+  );
+}
+
+function MiniLine({
+  label,
+  value,
+  green,
+  red,
+}: {
+  label: string;
+  value: string;
+  green?: boolean;
+  red?: boolean;
+}) {
+  return (
+    <div className="flex justify-between gap-4 text-sm">
+      <span className="text-white/55">{label}</span>
+      <span
+        className={`font-black ${
+          green ? "text-green-400" : red ? "text-red-400" : "text-white"
+        }`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function IconBox({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-sky-300/20 bg-sky-300/10 p-3 text-sky-100">
+      {children}
     </div>
   );
 }
