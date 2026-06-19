@@ -7,6 +7,8 @@ import {
   CalendarDays,
   Clock3,
   TrendingUp,
+  Timer,
+  ClipboardList,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { istFeiertagSG } from "@/lib/feiertage";
@@ -349,31 +351,31 @@ export default function DashboardPage() {
     <main className="min-h-screen bg-[#0b0f14] text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.10),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_30%)]" />
 
-      <div className="relative mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] p-7 shadow-2xl shadow-black/30 backdrop-blur-xl lg:p-10">
-          <div className="pointer-events-none absolute inset-0 opacity-[0.32]">
+      <div className="relative mx-auto w-full max-w-[1600px] space-y-7 px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
+        <section className="relative min-h-[430px] overflow-hidden rounded-[2.25rem] border border-white/10 bg-white/[0.06] p-7 shadow-2xl shadow-black/40 backdrop-blur-xl lg:p-10 xl:p-12">
+          <div className="pointer-events-none absolute inset-0 opacity-[0.42]">
             <div
               className="h-full w-full bg-cover bg-[center_28%]"
               style={{
                 backgroundImage: "url('/berg.png')",
-                filter: "brightness(1.45) contrast(1.05)",
+                filter: "brightness(1.55) contrast(1.08)",
               }}
             />
           </div>
 
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
 
-          <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
+          <div className="relative z-10 flex min-h-[330px] flex-col justify-between gap-10 xl:flex-row xl:items-end">
             <div>
               <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-sky-100">
                 ODZ Kommandozentrale
               </div>
 
-              <h1 className="mt-5 text-5xl font-black tracking-tight text-white lg:text-7xl">
+              <h1 className="mt-6 text-6xl font-black tracking-tight text-white lg:text-8xl">
                 Dashboard
               </h1>
 
-              <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
+              <p className="mt-5 max-w-3xl text-lg font-medium leading-8 text-white/68 lg:text-xl">
                 Willkommen zurück,{" "}
                 <span className="font-black text-sky-100">
                   {stats.letzterMitarbeiter}
@@ -397,7 +399,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl md:grid-cols-4">
+            <div className="grid w-full grid-cols-2 gap-3 rounded-[2rem] border border-white/10 bg-black/30 p-4 text-center shadow-2xl shadow-black/30 backdrop-blur-xl md:grid-cols-4 xl:max-w-[720px] xl:p-5">
               <HeroMini
                 label="Überstunden"
                 value={formatStunden(stats.gesamtUeberstunden)}
@@ -418,6 +420,38 @@ export default function DashboardPage() {
               />
             </div>
           </div>
+        </section>
+
+
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <ActionCard
+            href="/arbeitszeiten"
+            icon={<Timer size={24} />}
+            label="Zeit"
+            title="Arbeitszeiten"
+            description="Start, Stop und Buchungen erfassen"
+          />
+          <ActionCard
+            href="/chef-dashboard"
+            icon={<Activity size={24} />}
+            label="Chef"
+            title="Kommandozentrale"
+            description="Team, Freigaben und Wochenplan"
+          />
+          <ActionCard
+            href="/abwesenheiten"
+            icon={<CalendarDays size={24} />}
+            label="Personal"
+            title="Abwesenheiten"
+            description="Urlaub, Krank und Überstunden"
+          />
+          <ActionCard
+            href="/projektanalyse"
+            icon={<ClipboardList size={24} />}
+            label="Analyse"
+            title="Projektanalyse"
+            description="Wo geht die Zeit wirklich hin?"
+          />
         </section>
 
         {meldung && (
@@ -496,8 +530,9 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-black text-white/70 transition group-open:rotate-180">
-              ↓
+            <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-black text-white/70 transition">
+              <span className="group-open:hidden">▼ Öffnen</span>
+              <span className="hidden group-open:inline">▲ Schließen</span>
             </div>
           </summary>
 
@@ -614,6 +649,40 @@ export default function DashboardPage() {
 }
 
 
+
+function ActionCard({
+  href,
+  icon,
+  label,
+  title,
+  description,
+}: {
+  href: string;
+  icon: ReactNode;
+  label: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <a
+      href={href}
+      className="group rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10"
+    >
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <IconBox>{icon}</IconBox>
+        <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
+          {label}
+        </div>
+      </div>
+
+      <h3 className="text-2xl font-black text-white">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-white/50">{description}</p>
+
+      <div className="mt-5 h-1 w-14 rounded-full bg-sky-200/45 transition-all duration-300 group-hover:w-24 group-hover:bg-sky-200" />
+    </a>
+  );
+}
+
 function HeroMini({
   label,
   value,
@@ -628,9 +697,9 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="rounded-3xl border border-white/10 bg-white/[0.055] p-5 text-center transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
       <div
-        className={`text-2xl font-black md:text-3xl ${
+        className={`text-3xl font-black md:text-4xl ${
           red
             ? "text-red-400"
             : green
