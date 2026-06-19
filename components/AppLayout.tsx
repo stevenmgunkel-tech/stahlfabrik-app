@@ -18,7 +18,7 @@ const navGroups = [
     title: "Personal",
     items: [
       { href: "/abwesenheiten", label: "Abwesenheiten", icon: "◈" },
-      { href: "/mitarbeiter", label: "Mitarbeiter", icon: "◈" },
+      { href: "/mitarbeiter", label: "Mitarbeiter", icon: "◇" },
     ],
   },
   {
@@ -89,7 +89,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/80" onClick={() => setOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black/80"
+            onClick={() => setOpen(false)}
+          />
 
           <aside className="absolute left-0 top-0 h-full w-[320px] border-r border-white/15 bg-[#101418]">
             <Sidebar
@@ -104,7 +107,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       <aside className="fixed left-0 top-0 z-30 hidden h-screen w-[320px] border-r border-white/15 bg-[#101418]/92 shadow-2xl shadow-black/60 backdrop-blur-xl lg:block">
-        <Sidebar pathname={pathname} logout={logout} userName={userName} role={role} />
+        <Sidebar
+          pathname={pathname}
+          logout={logout}
+          userName={userName}
+          role={role}
+        />
       </aside>
 
       <main className="relative z-10 pt-16 lg:ml-[320px] lg:pt-0">
@@ -131,7 +139,7 @@ function Sidebar({
 }) {
   return (
     <div className="flex h-full flex-col px-5 py-7">
-      <div className="mb-8 rounded-3xl border border-white/15 bg-gradient-to-br from-white/[0.13] via-white/[0.07] to-black/20 p-5 shadow-2xl shadow-black/35">
+      <div className="mb-8 rounded-3xl border border-white/15 bg-gradient-to-br from-white/[0.13] via-white/[0.07] to-black/20 p-6 shadow-2xl shadow-black/35">
         <BrandLogo />
       </div>
 
@@ -182,6 +190,7 @@ function Sidebar({
         </div>
 
         <div className="mt-3 text-lg font-black text-white">{userName}</div>
+
         <div className="mt-2 inline-flex rounded-full border border-slate-200/25 bg-white/[0.08] px-3 py-1 text-xs font-black uppercase tracking-widest text-slate-100">
           {role}
         </div>
@@ -201,32 +210,33 @@ function Sidebar({
 
 function BrandLogo({ small = false }: { small?: boolean }) {
   return (
-    <div className={small ? "flex flex-col items-start" : "flex flex-col items-center"}>
+    <div className="flex flex-col items-center text-center">
+      {!small && (
+        <div className="mb-4 text-[11px] font-black uppercase tracking-[0.4em] text-slate-400">
+          ODZ.
+        </div>
+      )}
+
       <div
-        className={`leading-none font-black tracking-tight ${
-          small ? "text-2xl" : "text-[48px]"
+        className={`flex items-center justify-center rounded-2xl border border-white/15 bg-gradient-to-br from-white/[0.16] via-white/[0.08] to-black/20 font-black text-white shadow-xl shadow-black/30 ${
+          small ? "h-11 w-11 text-xl" : "h-20 w-20 text-4xl"
         }`}
       >
-        <span className="text-white">Stahl</span>
-        <span className="bg-gradient-to-b from-slate-100 via-slate-300 to-slate-500 bg-clip-text text-transparent">
-          Fabrik
-        </span>
+        SF
       </div>
 
-      <div className="mt-2 flex items-center justify-center gap-3">
-        {!small && <div className="h-[2px] w-8 rounded-full bg-slate-200/60" />}
+      {!small && (
+        <>
+          <div className="mt-4 text-[38px] font-black leading-none tracking-tight">
+            <span className="text-white">Stahl</span>
+            <span className="text-orange-400">Fabrik</span>
+          </div>
 
-        <div
-          className={`whitespace-nowrap font-bold uppercase ${
-            small ? "text-[8px] tracking-[0.2em]" : "text-[11px] tracking-[0.24em]"
-          }`}
-        >
-          <span className="text-slate-200">Swiss</span>{" "}
-          <span className="text-white/90">ERP System</span>
-        </div>
-
-        {!small && <div className="h-[2px] w-8 rounded-full bg-slate-200/60" />}
-      </div>
+          <div className="mt-3 text-[11px] font-bold uppercase tracking-[0.28em] text-slate-500">
+            Powered by ODZ.
+          </div>
+        </>
+      )}
     </div>
   );
 }
