@@ -24,6 +24,17 @@ const [freigabeSeite, setFreigabeSeite] = useState(1);
     "Werkstatt",
     "Montage",
   ]);
+
+  const [verwaltungsModus, setVerwaltungsModus] = useState<"projekt" | "mitarbeiter">("projekt");
+  const [mitarbeiterName, setMitarbeiterName] = useState("");
+  const [mitarbeiterEmail, setMitarbeiterEmail] = useState("");
+  const [mitarbeiterPasswort, setMitarbeiterPasswort] = useState("");
+  const [mitarbeiterRolle, setMitarbeiterRolle] = useState("Mitarbeiter");
+  const [mitarbeiterWochenstunden, setMitarbeiterWochenstunden] = useState("42.5");
+  const [mitarbeiterFerienwochen, setMitarbeiterFerienwochen] = useState("5");
+  const [mitarbeiterUrlaubstage, setMitarbeiterUrlaubstage] = useState("25");
+  const [mitarbeiterVertragsart, setMitarbeiterVertragsart] = useState("Festangestellt");
+
 const monat = new Date().toISOString().slice(0, 7);
 
   const heute = new Date();
@@ -396,6 +407,68 @@ async function projektErstellen() {
   setMeldung("Projekt wurde erstellt.");
 }
 
+async function mitarbeiterErstellen() {
+  setMeldung("");
+
+  if (!mitarbeiterName.trim()) {
+    setMeldung("Bitte Mitarbeiternamen eintragen.");
+    return;
+  }
+
+  if (!mitarbeiterEmail.trim()) {
+    setMeldung("Bitte E-Mail eintragen.");
+    return;
+  }
+
+  if (!mitarbeiterPasswort.trim() || mitarbeiterPasswort.length < 6) {
+    setMeldung("Bitte ein Passwort mit mindestens 6 Zeichen eintragen.");
+    return;
+  }
+
+  const payload = {
+    name: mitarbeiterName.trim(),
+    email: mitarbeiterEmail.trim(),
+    password: mitarbeiterPasswort,
+    passwort: mitarbeiterPasswort,
+    rolle: mitarbeiterRolle,
+    wochenstunden: Number(mitarbeiterWochenstunden || 0),
+    ferienwochen: Number(mitarbeiterFerienwochen || 0),
+    urlaubstage: Number(mitarbeiterUrlaubstage || 0),
+    vertragsart: mitarbeiterVertragsart,
+  };
+
+  const response = await fetch("/api/create-user", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const result = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    setMeldung(result?.error || result?.message || "Mitarbeiter konnte nicht erstellt werden.");
+    return;
+  }
+
+  const { data: neueMitarbeiter } = await supabase
+    .from("mitarbeiter")
+    .select("*")
+    .order("id", { ascending: false });
+
+  setMitarbeiter(neueMitarbeiter || []);
+  setMitarbeiterName("");
+  setMitarbeiterEmail("");
+  setMitarbeiterPasswort("");
+  setMitarbeiterRolle("Mitarbeiter");
+  setMitarbeiterWochenstunden("42.5");
+  setMitarbeiterFerienwochen("5");
+  setMitarbeiterUrlaubstage("25");
+  setMitarbeiterVertragsart("Festangestellt");
+  setMeldung("Mitarbeiter wurde erstellt.");
+}
+
 async function tagAlsGeprueftMarkieren(id: string) {
   setMeldung("");
 
@@ -608,7 +681,8 @@ const systemStatus =
 
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <a
-          href="#projektzentrale"
+          href="#kommandozentrale"
+          onClick={() => setVerwaltungsModus("projekt")}
           className="group rounded-2xl border border-orange-500/20 bg-orange-500/10 p-5 text-orange-300 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/40 hover:bg-orange-500/15 hover:shadow-lg hover:shadow-orange-500/10"
         >
           <div className="text-sm text-white/50">Projekt</div>
@@ -618,7 +692,8 @@ const systemStatus =
         </a>
 
         <a
-          href="/mitarbeiter"
+          href="#kommandozentrale"
+          onClick={() => setVerwaltungsModus("mitarbeiter")}
           className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/25 hover:bg-orange-500/10 hover:shadow-lg hover:shadow-orange-500/10"
         >
           <div className="text-sm text-white/50">Team</div>
@@ -655,7 +730,7 @@ const systemStatus =
       )}
 
       <section
-        id="projektzentrale"
+        id="kommandozentrale"
         className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 via-white/[0.04] to-white/[0.02] p-6 shadow-2xl shadow-black/30 lg:p-7"
       >
         <div className="mb-7 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
@@ -664,107 +739,263 @@ const systemStatus =
               Kommandozentrale
             </div>
             <h2 className="mt-2 text-2xl font-black text-white">
-              Projekt direkt im Chef Dashboard erstellen
+              Verwaltung direkt im Chef Dashboard
             </h2>
             <p className="mt-1 text-white/55">
-              Projekte werden zentral hier angelegt. Die alte Projektseite wird später zur reinen Übersicht/Auswertung.
+              Projekte und Mitarbeiter werden zentral hier angelegt. So bleibt der Chef im Dashboard.
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="grid grid-cols-4 gap-3 text-center">
             <HeroMini label="Aktiv" value={aktiveProjekte} green={aktiveProjekte > 0} />
             <HeroMini label="Pausiert" value={pausierteProjekte} orange={pausierteProjekte > 0} />
             <HeroMini label="Archiv" value={abgeschlosseneProjekte} />
+            <HeroMini label="Team" value={mitarbeiter.length} />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
+        <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
           <label className="block">
-            <span className="text-sm font-black text-white/65">Kunde</span>
-            <input
-              value={projektKunde}
-              onChange={(event) => setProjektKunde(event.target.value)}
-              placeholder="z.B. Firma"
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-orange-500/40 focus:bg-black/40"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-black text-white/65">Kommission</span>
-            <input
-              value={projektKommission}
-              onChange={(event) => setProjektKommission(event.target.value)}
-              placeholder="z.B. Baustelle"
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-orange-500/40 focus:bg-black/40"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-black text-white/65">Projektname</span>
-            <input
-              value={projektName}
-              onChange={(event) => setProjektName(event.target.value)}
-              placeholder="z.B. Geländer Müller"
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-orange-500/40 focus:bg-black/40"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-black text-white/65">Status</span>
+            <span className="text-sm font-black text-white/65">Was möchtest du erstellen?</span>
             <select
-              value={projektStatus}
-              onChange={(event) => setProjektStatus(event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-orange-500/40 focus:bg-black/40"
+              value={verwaltungsModus}
+              onChange={(event) => setVerwaltungsModus(event.target.value as "projekt" | "mitarbeiter")}
+              className="mt-2 w-full rounded-2xl border border-orange-500/25 bg-orange-500/10 px-4 py-4 font-black text-orange-300 outline-none transition focus:border-orange-500/50 focus:bg-orange-500/15"
             >
-              <option value="Aktiv">Aktiv</option>
-              <option value="Pausiert">Pausiert</option>
-              <option value="Abgeschlossen">Abgeschlossen</option>
+              <option value="projekt">🏗️ Projekt erstellen</option>
+              <option value="mitarbeiter">👤 Mitarbeiter erstellen</option>
             </select>
           </label>
-        </div>
 
-        <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-5">
-          <div className="text-lg font-black text-white">Erlaubte Bereiche</div>
-          <p className="mt-1 text-sm text-white/50">
-            Diese Bereiche erscheinen später in der Zeiterfassung für dieses Projekt.
-          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setVerwaltungsModus("projekt")}
+              className={`rounded-2xl border px-5 py-4 font-black transition-all duration-300 hover:-translate-y-1 ${
+                verwaltungsModus === "projekt"
+                  ? "border-orange-500/40 bg-orange-500/10 text-orange-300 shadow-lg shadow-orange-500/10"
+                  : "border-white/10 bg-white/[0.03] text-white/55 hover:border-orange-500/25 hover:bg-orange-500/10 hover:text-orange-300"
+              }`}
+            >
+              🏗️ Projekt
+            </button>
 
-          <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
-            {standardBereiche.map((bereich) => {
-              const aktiv = projektBereiche.includes(bereich);
-
-              return (
-                <button
-                  key={bereich}
-                  type="button"
-                  onClick={() => toggleProjektBereich(bereich)}
-                  className={`rounded-2xl border px-4 py-3 font-black transition-all duration-300 hover:-translate-y-1 ${
-                    aktiv
-                      ? "border-orange-500/40 bg-orange-500/10 text-orange-300 shadow-lg shadow-orange-500/10"
-                      : "border-white/10 bg-white/[0.03] text-white/55 hover:border-orange-500/25 hover:bg-orange-500/10 hover:text-orange-300"
-                  }`}
-                >
-                  {aktiv ? "✓ " : ""}
-                  {bereich}
-                </button>
-              );
-            })}
+            <button
+              type="button"
+              onClick={() => setVerwaltungsModus("mitarbeiter")}
+              className={`rounded-2xl border px-5 py-4 font-black transition-all duration-300 hover:-translate-y-1 ${
+                verwaltungsModus === "mitarbeiter"
+                  ? "border-green-500/40 bg-green-500/10 text-green-300 shadow-lg shadow-green-500/10"
+                  : "border-white/10 bg-white/[0.03] text-white/55 hover:border-green-500/25 hover:bg-green-500/10 hover:text-green-300"
+              }`}
+            >
+              👤 Mitarbeiter
+            </button>
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-white/45">
-            Ziel: Chef bleibt im Dashboard. Keine doppelte Projektverwaltung mehr.
-          </p>
+        {verwaltungsModus === "projekt" ? (
+          <>
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Kunde</span>
+                <input
+                  value={projektKunde}
+                  onChange={(event) => setProjektKunde(event.target.value)}
+                  placeholder="z.B. Firma"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-orange-500/40 focus:bg-black/40"
+                />
+              </label>
 
-          <button
-            type="button"
-            onClick={projektErstellen}
-            className="rounded-2xl border border-orange-500/30 bg-orange-500/10 px-6 py-4 font-black text-orange-300 shadow-lg shadow-orange-500/10 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/50 hover:bg-orange-500/15 hover:shadow-orange-500/20"
-          >
-            + Projekt speichern
-          </button>
-        </div>
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Kommission</span>
+                <input
+                  value={projektKommission}
+                  onChange={(event) => setProjektKommission(event.target.value)}
+                  placeholder="z.B. Baustelle"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-orange-500/40 focus:bg-black/40"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Projektname</span>
+                <input
+                  value={projektName}
+                  onChange={(event) => setProjektName(event.target.value)}
+                  placeholder="z.B. Geländer Müller"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-orange-500/40 focus:bg-black/40"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Status</span>
+                <select
+                  value={projektStatus}
+                  onChange={(event) => setProjektStatus(event.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-orange-500/40 focus:bg-black/40"
+                >
+                  <option value="Aktiv">Aktiv</option>
+                  <option value="Pausiert">Pausiert</option>
+                  <option value="Abgeschlossen">Abgeschlossen</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-5">
+              <div className="text-lg font-black text-white">Erlaubte Bereiche</div>
+              <p className="mt-1 text-sm text-white/50">
+                Diese Bereiche erscheinen später in der Zeiterfassung für dieses Projekt.
+              </p>
+
+              <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
+                {standardBereiche.map((bereich) => {
+                  const aktiv = projektBereiche.includes(bereich);
+
+                  return (
+                    <button
+                      key={bereich}
+                      type="button"
+                      onClick={() => toggleProjektBereich(bereich)}
+                      className={`rounded-2xl border px-4 py-3 font-black transition-all duration-300 hover:-translate-y-1 ${
+                        aktiv
+                          ? "border-orange-500/40 bg-orange-500/10 text-orange-300 shadow-lg shadow-orange-500/10"
+                          : "border-white/10 bg-white/[0.03] text-white/55 hover:border-orange-500/25 hover:bg-orange-500/10 hover:text-orange-300"
+                      }`}
+                    >
+                      {aktiv ? "✓ " : ""}
+                      {bereich}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-white/45">
+                Ziel: Chef bleibt im Dashboard. Keine doppelte Projektverwaltung mehr.
+              </p>
+
+              <button
+                type="button"
+                onClick={projektErstellen}
+                className="rounded-2xl border border-orange-500/30 bg-orange-500/10 px-6 py-4 font-black text-orange-300 shadow-lg shadow-orange-500/10 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/50 hover:bg-orange-500/15 hover:shadow-orange-500/20"
+              >
+                + Projekt speichern
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Name</span>
+                <input
+                  value={mitarbeiterName}
+                  onChange={(event) => setMitarbeiterName(event.target.value)}
+                  placeholder="z.B. Max Muster"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-green-500/40 focus:bg-black/40"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-white/65">E-Mail</span>
+                <input
+                  value={mitarbeiterEmail}
+                  onChange={(event) => setMitarbeiterEmail(event.target.value)}
+                  placeholder="max@firma.ch"
+                  type="email"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-green-500/40 focus:bg-black/40"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Startpasswort</span>
+                <input
+                  value={mitarbeiterPasswort}
+                  onChange={(event) => setMitarbeiterPasswort(event.target.value)}
+                  placeholder="mind. 6 Zeichen"
+                  type="password"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-green-500/40 focus:bg-black/40"
+                />
+              </label>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-5">
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Rolle</span>
+                <select
+                  value={mitarbeiterRolle}
+                  onChange={(event) => setMitarbeiterRolle(event.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-green-500/40 focus:bg-black/40"
+                >
+                  <option value="Mitarbeiter">Mitarbeiter</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Lehrling">Lehrling</option>
+                  <option value="Temporär">Temporär</option>
+                  <option value="Aushilfe">Aushilfe</option>
+                </select>
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Wochenstunden</span>
+                <input
+                  value={mitarbeiterWochenstunden}
+                  onChange={(event) => setMitarbeiterWochenstunden(event.target.value)}
+                  inputMode="decimal"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-green-500/40 focus:bg-black/40"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Ferienwochen</span>
+                <input
+                  value={mitarbeiterFerienwochen}
+                  onChange={(event) => setMitarbeiterFerienwochen(event.target.value)}
+                  inputMode="decimal"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-green-500/40 focus:bg-black/40"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Urlaubstage</span>
+                <input
+                  value={mitarbeiterUrlaubstage}
+                  onChange={(event) => setMitarbeiterUrlaubstage(event.target.value)}
+                  inputMode="decimal"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-green-500/40 focus:bg-black/40"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Vertragsart</span>
+                <select
+                  value={mitarbeiterVertragsart}
+                  onChange={(event) => setMitarbeiterVertragsart(event.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-green-500/40 focus:bg-black/40"
+                >
+                  <option value="Festangestellt">Festangestellt</option>
+                  <option value="Befristet">Befristet</option>
+                  <option value="Temporär">Temporär</option>
+                  <option value="Aushilfe">Aushilfe</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-white/45">
+                Mitarbeiter wird mit Login erstellt. Die Detailpflege bleibt später in der Mitarbeiterverwaltung.
+              </p>
+
+              <button
+                type="button"
+                onClick={mitarbeiterErstellen}
+                className="rounded-2xl border border-green-500/30 bg-green-500/10 px-6 py-4 font-black text-green-300 shadow-lg shadow-green-500/10 transition-all duration-300 hover:-translate-y-1 hover:border-green-500/50 hover:bg-green-500/15 hover:shadow-green-500/20"
+              >
+                + Mitarbeiter speichern
+              </button>
+            </div>
+          </>
+        )}
       </section>
 
       <section className="grid grid-cols-1 items-start gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -803,118 +1034,7 @@ const systemStatus =
         />
       </section>
 
-      <section
-        id="projektzentrale"
-        className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 via-white/[0.04] to-white/[0.02] p-6 shadow-2xl shadow-black/30 lg:p-7"
-      >
-        <div className="mb-7 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-          <div>
-            <div className="text-xs font-black uppercase tracking-[0.24em] text-orange-400">
-              Kommandozentrale
-            </div>
-            <h2 className="mt-2 text-2xl font-black text-white">
-              Projekt direkt im Chef Dashboard erstellen
-            </h2>
-            <p className="mt-1 text-white/55">
-              Projekte werden zentral hier angelegt. Die alte Projektseite wird später zur reinen Übersicht/Auswertung.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <HeroMini label="Aktiv" value={aktiveProjekte} green={aktiveProjekte > 0} />
-            <HeroMini label="Pausiert" value={pausierteProjekte} orange={pausierteProjekte > 0} />
-            <HeroMini label="Archiv" value={abgeschlosseneProjekte} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
-          <label className="block">
-            <span className="text-sm font-black text-white/65">Kunde</span>
-            <input
-              value={projektKunde}
-              onChange={(event) => setProjektKunde(event.target.value)}
-              placeholder="z.B. Firma"
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-orange-500/40 focus:bg-black/40"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-black text-white/65">Kommission</span>
-            <input
-              value={projektKommission}
-              onChange={(event) => setProjektKommission(event.target.value)}
-              placeholder="z.B. Baustelle"
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-orange-500/40 focus:bg-black/40"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-black text-white/65">Projektname</span>
-            <input
-              value={projektName}
-              onChange={(event) => setProjektName(event.target.value)}
-              placeholder="z.B. Geländer Müller"
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-orange-500/40 focus:bg-black/40"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-black text-white/65">Status</span>
-            <select
-              value={projektStatus}
-              onChange={(event) => setProjektStatus(event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-orange-500/40 focus:bg-black/40"
-            >
-              <option value="Aktiv">Aktiv</option>
-              <option value="Pausiert">Pausiert</option>
-              <option value="Abgeschlossen">Abgeschlossen</option>
-            </select>
-          </label>
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-5">
-          <div className="text-lg font-black text-white">Erlaubte Bereiche</div>
-          <p className="mt-1 text-sm text-white/50">
-            Diese Bereiche erscheinen später in der Zeiterfassung für dieses Projekt.
-          </p>
-
-          <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
-            {standardBereiche.map((bereich) => {
-              const aktiv = projektBereiche.includes(bereich);
-
-              return (
-                <button
-                  key={bereich}
-                  type="button"
-                  onClick={() => toggleProjektBereich(bereich)}
-                  className={`rounded-2xl border px-4 py-3 font-black transition-all duration-300 hover:-translate-y-1 ${
-                    aktiv
-                      ? "border-orange-500/40 bg-orange-500/10 text-orange-300 shadow-lg shadow-orange-500/10"
-                      : "border-white/10 bg-white/[0.03] text-white/55 hover:border-orange-500/25 hover:bg-orange-500/10 hover:text-orange-300"
-                  }`}
-                >
-                  {aktiv ? "✓ " : ""}
-                  {bereich}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-white/45">
-            Ziel: Chef bleibt im Dashboard. Keine doppelte Projektverwaltung mehr.
-          </p>
-
-          <button
-            type="button"
-            onClick={projektErstellen}
-            className="rounded-2xl border border-orange-500/30 bg-orange-500/10 px-6 py-4 font-black text-orange-300 shadow-lg shadow-orange-500/10 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/50 hover:bg-orange-500/15 hover:shadow-orange-500/20"
-          >
-            + Projekt speichern
-          </button>
-        </div>
-      </section>
+      
 
       <section className="grid grid-cols-1 items-start gap-5 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard
@@ -1129,7 +1249,7 @@ const systemStatus =
           <div className="space-y-3">
             <QuickLink href="/admin" label="Urlaubsanträge prüfen" />
             <QuickLink href="/monatsansicht" label="Monatsansicht öffnen" />
-            <QuickLink href="#projektzentrale" label="Projekt erstellen" orange />
+            <QuickLink href="#kommandozentrale" label="Projekt / Mitarbeiter erstellen" orange />
           </div>
         </div>
       </section>
