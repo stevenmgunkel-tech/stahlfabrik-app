@@ -614,8 +614,8 @@ const teamStatus = mitarbeiter.map((person) => {
       name: person.name,
       rolle: person.rolle,
       status: "Zur Prüfung",
-      farbe: "text-amber-300",
-      punkt: "bg-amber-300",
+      farbe: "text-slate-200",
+      punkt: "bg-slate-300",
     };
   }
 
@@ -634,7 +634,7 @@ const systemStatus =
     : "Alles im grünen Bereich";
 
   return (
-    <main className="space-y-8">
+    <main className="space-y-8 text-slate-100">
       <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
         <div className="pointer-events-none absolute inset-0 opacity-[0.45]">
           <div
@@ -651,7 +651,7 @@ const systemStatus =
         <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
           <div>
             <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
-              ODZ V1.1
+              ODZ SILVER
             </div>
 
             <div className="mt-5 text-sm font-bold text-white/60">
@@ -659,11 +659,11 @@ const systemStatus =
             </div>
 
             <h1 className="mt-3 text-5xl font-black tracking-tight text-white lg:text-7xl">
-              STAHLFABRIK 🇨🇭
+              STAHLFABRIK
             </h1>
 
             <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
-              Digitales Betriebssystem für Zeit, Projekte, Team und Kontrolle.
+              Premium Betriebssystem für Zeit, Projekte, Team und Kontrolle.
             </p>
 
             <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-3">
@@ -686,7 +686,7 @@ const systemStatus =
         <a
           href="#kommandozentrale"
           onClick={() => setVerwaltungsModus("projekt")}
-          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-white transition-all duration-300 hover:-translate-y-1 hover:border-amber-400/25 hover:bg-amber-400/10 hover:shadow-lg hover:shadow-amber-400/10"
+          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-white transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/25 hover:bg-slate-200/10 hover:shadow-lg hover:shadow-slate-200/10"
         >
           <div className="text-sm text-white/50">Projekt</div>
           <div className="mt-2 text-lg font-black text-white">
@@ -697,7 +697,7 @@ const systemStatus =
         <a
           href="#kommandozentrale"
           onClick={() => setVerwaltungsModus("mitarbeiter")}
-          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-amber-400/25 hover:bg-amber-400/10 hover:shadow-lg hover:shadow-amber-400/10"
+          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/25 hover:bg-slate-200/10 hover:shadow-lg hover:shadow-slate-200/10"
         >
           <div className="text-sm text-white/50">Team</div>
           <div className="mt-2 text-lg font-black text-white">
@@ -708,7 +708,7 @@ const systemStatus =
         <a
           href="#abwesenheit"
           onClick={() => setAbwesenheitOffen(true)}
-          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-amber-400/25 hover:bg-amber-400/10 hover:shadow-lg hover:shadow-amber-400/10"
+          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/25 hover:bg-slate-200/10 hover:shadow-lg hover:shadow-slate-200/10"
         >
           <div className="text-sm text-white/50">Abwesenheit</div>
           <div className="mt-2 text-lg font-black text-white">
@@ -719,7 +719,7 @@ const systemStatus =
         <a
           href="#auswertung"
           onClick={() => setAuswertungOffen(true)}
-          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-amber-400/25 hover:bg-amber-400/10 hover:shadow-lg hover:shadow-amber-400/10"
+          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/25 hover:bg-slate-200/10 hover:shadow-lg hover:shadow-slate-200/10"
         >
           <div className="text-sm text-white/50">Auswertung</div>
           <div className="mt-2 text-lg font-black text-white">
@@ -729,7 +729,7 @@ const systemStatus =
       </section>
 
       {meldung && (
-        <div className="rounded-xl border border-amber-400/20 bg-amber-400/8 p-4 text-sm font-bold text-amber-200">
+        <div className="rounded-xl border border-slate-200/20 bg-slate-200/10 p-4 text-sm font-bold text-slate-100">
           {meldung}
         </div>
       )}
@@ -740,7 +740,7 @@ const systemStatus =
       >
         <div className="mb-7 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
-            <div className="text-xs font-black uppercase tracking-[0.24em] text-amber-300">
+            <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">
               Kommandozentrale
             </div>
             <h2 className="mt-2 text-2xl font-black text-white">
@@ -765,7 +765,7 @@ const systemStatus =
             <select
               value={verwaltungsModus}
               onChange={(event) => setVerwaltungsModus(event.target.value as "projekt" | "mitarbeiter")}
-              className="mt-2 w-full rounded-2xl border border-amber-400/25 bg-amber-400/10 px-4 py-4 font-black text-amber-200 outline-none transition focus:border-amber-400/50 focus:bg-amber-400/15"
+              className="mt-2 w-full rounded-2xl border border-slate-200/25 bg-slate-200/10 px-4 py-4 font-black text-slate-100 outline-none transition focus:border-slate-200/50 focus:bg-slate-200/15"
             >
               <option value="projekt">🏗️ Projekt erstellen</option>
               <option value="mitarbeiter">👤 Mitarbeiter erstellen</option>
@@ -778,8 +778,8 @@ const systemStatus =
               onClick={() => setVerwaltungsModus("projekt")}
               className={`rounded-2xl border px-5 py-4 font-black transition-all duration-300 hover:-translate-y-1 ${
                 verwaltungsModus === "projekt"
-                  ? "border-amber-400/40 bg-amber-400/10 text-amber-200 shadow-lg shadow-amber-400/10"
-                  : "border-white/10 bg-white/[0.03] text-white/55 hover:border-amber-400/25 hover:bg-amber-400/10 hover:text-amber-200"
+                  ? "border-slate-200/40 bg-slate-200/10 text-slate-100 shadow-lg shadow-slate-200/10"
+                  : "border-white/10 bg-white/[0.03] text-white/55 hover:border-slate-200/25 hover:bg-slate-200/10 hover:text-slate-100"
               }`}
             >
               🏗️ Projekt
@@ -808,7 +808,7 @@ const systemStatus =
                   value={projektKunde}
                   onChange={(event) => setProjektKunde(event.target.value)}
                   placeholder="z.B. Firma"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-amber-400/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-slate-200/40 focus:bg-black/40"
                 />
               </label>
 
@@ -818,7 +818,7 @@ const systemStatus =
                   value={projektKommission}
                   onChange={(event) => setProjektKommission(event.target.value)}
                   placeholder="z.B. Baustelle"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-amber-400/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-slate-200/40 focus:bg-black/40"
                 />
               </label>
 
@@ -828,7 +828,7 @@ const systemStatus =
                   value={projektName}
                   onChange={(event) => setProjektName(event.target.value)}
                   placeholder="z.B. Geländer Müller"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-amber-400/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-slate-200/40 focus:bg-black/40"
                 />
               </label>
 
@@ -837,7 +837,7 @@ const systemStatus =
                 <select
                   value={projektStatus}
                   onChange={(event) => setProjektStatus(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-amber-400/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-slate-200/40 focus:bg-black/40"
                 >
                   <option value="Aktiv">Aktiv</option>
                   <option value="Pausiert">Pausiert</option>
@@ -863,8 +863,8 @@ const systemStatus =
                       onClick={() => toggleProjektBereich(bereich)}
                       className={`rounded-2xl border px-4 py-3 font-black transition-all duration-300 hover:-translate-y-1 ${
                         aktiv
-                          ? "border-amber-400/40 bg-amber-400/10 text-amber-200 shadow-lg shadow-amber-400/10"
-                          : "border-white/10 bg-white/[0.03] text-white/55 hover:border-amber-400/25 hover:bg-amber-400/10 hover:text-amber-200"
+                          ? "border-slate-200/40 bg-slate-200/10 text-slate-100 shadow-lg shadow-slate-200/10"
+                          : "border-white/10 bg-white/[0.03] text-white/55 hover:border-slate-200/25 hover:bg-slate-200/10 hover:text-slate-100"
                       }`}
                     >
                       {aktiv ? "✓ " : ""}
@@ -883,7 +883,7 @@ const systemStatus =
               <button
                 type="button"
                 onClick={projektErstellen}
-                className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-6 py-4 font-black text-amber-200 shadow-lg shadow-amber-400/10 transition-all duration-300 hover:-translate-y-1 hover:border-amber-400/50 hover:bg-amber-400/15 hover:shadow-amber-400/20"
+                className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-6 py-4 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/50 hover:bg-slate-200/15 hover:shadow-slate-200/20"
               >
                 + Projekt speichern
               </button>
@@ -1097,7 +1097,7 @@ const systemStatus =
       {abgeschlosseneTageListe.map((tag) => (
         <div
           key={tag.id}
-          className="flex flex-col justify-between gap-4 rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-400/10 to-black/25 p-5 md:flex-row md:items-center"
+          className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200/20 bg-gradient-to-br from-slate-200/10 to-black/25 p-5 md:flex-row md:items-center"
         >
           <div>
             <div className="text-lg font-black text-white">
@@ -1108,7 +1108,7 @@ const systemStatus =
               {tag.datum} · {formatStunden(Number(tag.netto_stunden || 0))}
             </div>
 
-            <div className="mt-1 text-xs font-bold uppercase tracking-widest text-amber-300">
+            <div className="mt-1 text-xs font-bold uppercase tracking-widest text-slate-200">
               Status: {tag.status}
             </div>
           </div>
@@ -1142,7 +1142,7 @@ const systemStatus =
       </p>
     </div>
 
-    <div className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm font-black text-amber-300">
+    <div className="rounded-xl border border-slate-200/30 bg-slate-200/10 px-4 py-3 text-sm font-black text-slate-200">
       {gepruefteOffen ? "Schließen ▲" : "Historie öffnen ▼"}
     </div>
   </button>
@@ -1197,7 +1197,7 @@ const systemStatus =
             type="button"
             onClick={() => setFreigabeSeite((s) => Math.max(1, s - 1))}
             disabled={freigabeSeite === 1}
-            className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 font-black text-white/70 transition hover:border-amber-400/30 hover:text-amber-300 disabled:cursor-not-allowed disabled:opacity-30"
+            className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 font-black text-white/70 transition hover:border-slate-200/30 hover:text-slate-200 disabled:cursor-not-allowed disabled:opacity-30"
           >
             ◀
           </button>
@@ -1212,7 +1212,7 @@ const systemStatus =
               setFreigabeSeite((s) => Math.min(freigabeSeiten, s + 1))
             }
             disabled={freigabeSeite === freigabeSeiten}
-            className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 font-black text-white/70 transition hover:border-amber-400/30 hover:text-amber-300 disabled:cursor-not-allowed disabled:opacity-30"
+            className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 font-black text-white/70 transition hover:border-slate-200/30 hover:text-slate-200 disabled:cursor-not-allowed disabled:opacity-30"
           >
             ▶
           </button>
@@ -1311,7 +1311,7 @@ const systemStatus =
                     </div>
 
                     <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
-                      <div className="h-full rounded-full bg-gradient-to-r from-slate-200/80 to-amber-300/80 shadow-lg shadow-amber-400/10" style={{ width: `${percent}%` }} />
+                      <div className="h-full rounded-full bg-gradient-to-r from-slate-200/80 to-slate-100/80 shadow-lg shadow-slate-200/10" style={{ width: `${percent}%` }} />
                     </div>
                   </div>
                 );
@@ -1350,9 +1350,9 @@ const systemStatus =
             {topBereiche.map((bereich, index) => (
               <div
                 key={bereich.name}
-                className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-amber-400/25 hover:shadow-lg hover:shadow-amber-400/10"
+                className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/25 hover:shadow-lg hover:shadow-slate-200/10"
               >
-                <div className="text-xs font-black uppercase tracking-[0.22em] text-amber-300">
+                <div className="text-xs font-black uppercase tracking-[0.22em] text-slate-200">
                   #{index + 1}
                 </div>
                 <div className="mt-3 text-xl font-black text-white">{bereich.name}</div>
@@ -1624,7 +1624,7 @@ function KpiCard({
     : red
     ? "text-red-400"
     : orange
-    ? "text-amber-300"
+    ? "text-slate-200"
     : "text-slate-100";
 
   return (
@@ -1644,9 +1644,9 @@ function KpiCard({
       transition-all
       duration-300
       hover:-translate-y-1
-      hover:border-amber-400/25
+      hover:border-slate-200/25
       hover:shadow-2xl
-      hover:shadow-amber-400/10
+      hover:shadow-slate-200/10
     "
   >
       <div className={`text-4xl font-black md:text-5xl ${color}`}>
@@ -1657,7 +1657,7 @@ function KpiCard({
         {label}
       </div>
 
-      <div className="mt-5 h-1 w-16 rounded-full bg-white/30 transition-all duration-300 group-hover:w-24 group-hover:bg-amber-300/70" />
+      <div className="mt-5 h-1 w-16 rounded-full bg-white/30 transition-all duration-300 group-hover:w-24 group-hover:bg-slate-100/70" />
     </div>
   );
 }
@@ -1675,7 +1675,7 @@ function HeroMini({
   green?: boolean;
 }) {
   const color = orange
-    ? "text-amber-300"
+    ? "text-slate-200"
     : green
     ? "text-green-400"
     : "text-slate-100";
@@ -1704,7 +1704,7 @@ function MiniCard({
       <div className="text-sm font-bold text-white/50">{label}</div>
       <div
         className={`mt-3 text-4xl font-black ${
-          orange ? "text-amber-300" : "text-slate-100"
+          orange ? "text-slate-200" : "text-slate-100"
         }`}
       >
         {value}
@@ -1742,14 +1742,14 @@ function DropdownPanel({
         className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-white/[0.03] lg:flex-row lg:items-center lg:p-7"
       >
         <div>
-          <div className="text-xs font-black uppercase tracking-[0.24em] text-amber-300">
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">
             {eyebrow}
           </div>
           <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
           <p className="mt-1 text-white/55">{description}</p>
         </div>
 
-        <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-5 py-3 text-sm font-black text-amber-200 transition hover:border-amber-400/50 hover:bg-amber-400/15">
+        <div className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 transition hover:border-slate-200/50 hover:bg-slate-200/15">
           {open ? "Schließen ▲" : "Öffnen ▼"}
         </div>
       </button>
@@ -1766,8 +1766,8 @@ function QuickLink({ href, label, orange, onClick }: { href: string; label: stri
       onClick={onClick}
       className={`block rounded-xl border p-4 font-black transition-all duration-300 hover:-translate-y-1 ${
         orange
-          ? "border-amber-400/20 bg-white/[0.03] text-amber-200 hover:border-amber-400/35 hover:bg-amber-400/10"
-          : "border-white/10 bg-white/[0.03] text-white hover:border-amber-400/25 hover:bg-amber-400/10 hover:text-amber-200"
+          ? "border-slate-200/20 bg-white/[0.03] text-slate-100 hover:border-slate-200/35 hover:bg-slate-200/10"
+          : "border-white/10 bg-white/[0.03] text-white hover:border-slate-200/25 hover:bg-slate-200/10 hover:text-slate-100"
       }`}
     >
       {label}
@@ -1789,7 +1789,7 @@ function Info({
       <div className="text-xs text-white/45">{label}</div>
       <div
         className={`mt-1 font-bold ${
-          orange ? "text-amber-300" : "text-slate-100"
+          orange ? "text-slate-200" : "text-slate-100"
         }`}
       >
         {value}
