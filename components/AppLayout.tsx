@@ -140,28 +140,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           border: 2px solid #070a0d;
         }
 
-        .odz-scrollbar {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(56, 189, 248, 0.75) rgba(15, 23, 42, 0.08);
+        .hide-sidebar-scrollbar {
+          scrollbar-width: none;
         }
 
-        .odz-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-
-        .odz-scrollbar::-webkit-scrollbar-track {
-          background: rgba(15, 23, 42, 0.06);
-          border-radius: 999px;
-        }
-
-        .odz-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(
-            180deg,
-            rgba(186, 230, 253, 0.95),
-            rgba(56, 189, 248, 0.85)
-          );
-          border-radius: 999px;
-          border: 2px solid rgba(244, 247, 250, 0.95);
+        .hide-sidebar-scrollbar::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </div>
@@ -196,11 +180,11 @@ function Sidebar({
 
   return (
     <div className="flex h-full w-full flex-col bg-[#f4f7fa] px-4 py-5 text-slate-950">
-      <div className="mb-5 shrink-0 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-xl shadow-slate-950/10 ring-1 ring-slate-200">
+      <div className="mb-5 shrink-0 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-xl shadow-slate-950/10 ring-1 ring-slate-200">
         <BrandLogo />
       </div>
 
-      <nav className="odz-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto pr-2">
+      <nav className="hide-sidebar-scrollbar min-h-0 flex-1 space-y-5 overflow-y-auto">
         {navGroups.map((group) => {
           const groupOpen = openGroups[group.title];
           const activeInGroup = group.items.some((item) => item.href === pathname);
@@ -217,7 +201,7 @@ function Sidebar({
               <button
                 type="button"
                 onClick={() => toggleGroup(group.title)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left"
               >
                 <div>
                   <div className="text-[11px] font-black uppercase tracking-[0.28em] text-slate-500">
@@ -240,7 +224,7 @@ function Sidebar({
               </button>
 
               {groupOpen && (
-                <div className="space-y-2 border-t border-slate-200 px-3 pb-3 pt-2">
+                <div className="space-y-3 border-t border-slate-200 px-3 pb-4 pt-3">
                   {group.items.map((item) => {
                     const active = pathname === item.href;
 
@@ -249,14 +233,14 @@ function Sidebar({
                         key={item.href}
                         href={item.href}
                         onClick={close}
-                        className={`group flex items-center gap-3 rounded-2xl px-3 py-3 text-[15px] font-black transition-all duration-300 ${
+                        className={`group flex items-center gap-4 rounded-2xl px-3.5 py-3.5 text-[15px] font-black transition-all duration-300 ${
                           active
                             ? "border border-sky-300/75 bg-sky-50 text-slate-950 shadow-md shadow-sky-300/20"
                             : "border border-transparent text-slate-700 hover:-translate-y-0.5 hover:border-sky-300/55 hover:bg-sky-50 hover:text-slate-950"
                         }`}
                       >
                         <span
-                          className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm transition ${
+                          className={`flex h-10 w-10 items-center justify-center rounded-xl border text-sm transition ${
                             active
                               ? "border-sky-300/75 bg-sky-100 text-sky-700"
                               : "border-slate-200 bg-white text-slate-500 group-hover:border-sky-300/65 group-hover:text-sky-700"
@@ -276,7 +260,7 @@ function Sidebar({
         })}
       </nav>
 
-      <div className="mt-5 shrink-0 rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-950/10 ring-1 ring-slate-200">
+      <div className="mt-auto shrink-0 rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-950/10 ring-1 ring-slate-200">
         <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-500">
           Angemeldet
         </div>
@@ -331,9 +315,9 @@ function BrandLogo({ small = false }: { small?: boolean }) {
   }
 
   return (
-    <div className="relative min-h-[155px] text-slate-950">
+    <div className="relative min-h-[145px] text-slate-950">
       <div className="absolute left-0 top-0">
-        <div className="text-[42px] font-black uppercase leading-none tracking-[0.12em] text-slate-950 drop-shadow-[0_8px_22px_rgba(15,23,42,0.14)]">
+        <div className="text-[40px] font-black uppercase leading-none tracking-[0.12em] text-slate-950 drop-shadow-[0_8px_22px_rgba(15,23,42,0.14)]">
           ODZ.
         </div>
 
@@ -342,8 +326,8 @@ function BrandLogo({ small = false }: { small?: boolean }) {
         </div>
       </div>
 
-      <div className="flex h-full min-h-[155px] flex-col items-start justify-end pt-8 text-left">
-        <div className="text-[34px] font-black leading-none tracking-tight">
+      <div className="flex h-full min-h-[145px] flex-col items-start justify-end pt-8 text-left">
+        <div className="text-[32px] font-black leading-none tracking-tight">
           <span className="text-slate-950">Stahl</span>
           <span className="text-orange-500">Fabrik</span>
         </div>
