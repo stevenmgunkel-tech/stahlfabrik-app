@@ -2,17 +2,32 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-const navItems = [
-  { href: "/", label: "Dashboard", icon: "▦" },
-  { href: "/arbeitszeiten", label: "Arbeitszeiten", icon: "◷" },
-  { href: "/chef-dashboard", label: "Chef Dashboard", icon: "◆" },
-  { href: "/abwesenheiten", label: "Abwesenheiten", icon: "◈" },
-  { href: "/mitarbeiter", label: "Mitarbeiter", icon: "◇" },
-  { href: "/projekte", label: "Projekte", icon: "▣" },
-  { href: "/projektanalyse", label: "Projektanalyse", icon: "◫" },
+const navGroups = [
+  {
+    title: "Betrieb",
+    items: [
+      { href: "/", label: "Dashboard", icon: "▦" },
+      { href: "/arbeitszeiten", label: "Arbeitszeiten", icon: "◷" },
+      { href: "/chef-dashboard", label: "Chef Dashboard", icon: "◆" },
+    ],
+  },
+  {
+    title: "Personal",
+    items: [
+      { href: "/abwesenheiten", label: "Abwesenheiten", icon: "◈" },
+      { href: "/mitarbeiter", label: "Mitarbeiter", icon: "◇" },
+    ],
+  },
+  {
+    title: "Projekte",
+    items: [
+      { href: "/projekte", label: "Projekte", icon: "▣" },
+      { href: "/projektanalyse", label: "Projektanalyse", icon: "◫" },
+    ],
+  },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -94,7 +109,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      {/* Desktop Sidebar: ZWANG von oben bis unten */}
+      {/* Desktop Sidebar: läuft fix von oben bis unten */}
       <aside className="fixed bottom-0 left-0 top-0 z-30 hidden w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/95 shadow-2xl shadow-black/40 backdrop-blur-xl lg:block">
         <Sidebar pathname={pathname} logout={logout} userName={userName} role={role} />
       </aside>
@@ -105,6 +120,39 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+
+      <style jsx global>{`
+        html,
+        body {
+          min-height: 100%;
+          background: #070a0d;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(56, 189, 248, 0.9) rgba(7, 10, 13, 0.95);
+        }
+
+        body::-webkit-scrollbar {
+          width: 10px;
+        }
+
+        body::-webkit-scrollbar-track {
+          background: rgba(7, 10, 13, 0.95);
+        }
+
+        body::-webkit-scrollbar-thumb {
+          background: linear-gradient(
+            180deg,
+            rgba(186, 230, 253, 0.95),
+            rgba(56, 189, 248, 0.95)
+          );
+          border-radius: 999px;
+          border: 2px solid rgba(7, 10, 13, 0.95);
+          box-shadow: 0 0 18px rgba(56, 189, 248, 0.45);
+        }
+
+        body::-webkit-scrollbar-thumb:hover {
+          background: rgba(125, 211, 252, 1);
+        }
+      `}</style>
     </div>
   );
 }
@@ -122,6 +170,39 @@ function Sidebar({
   role: string;
   close?: () => void;
 }) {
+  const initialOpenGroups = useMemo(() => {
+    const groups: Record<string, boolean> = {};
+    navGroups.forEach((group) => {
+      groups[group.title] = group.items.some((item) => item.href === pathname);
+    });
+
+    return groups;
+  }, [pathname]);
+
+  const [openGroups, setOpenGroups] =
+    useState<Record<string, boolean>>(initialOpenGroups);
+
+  useEffect(() => {
+    setOpenGroups((current) => {
+      const next = { ...current };
+
+      navGroups.forEach((group) => {
+        if (group.items.some((item) => item.href === pathname)) {
+          next[group.title] = true;
+        }
+      });
+
+      return next;
+    });
+  }, [pathname]);
+
+  function toggleGroup(title: string) {
+    setOpenGroups((current) => ({
+      ...current,
+      [title]: !current[title],
+    }));
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-col text-slate-100">
       {/* Logo */}
@@ -131,33 +212,68 @@ function Sidebar({
 
       {/* Navigation nimmt den freien Platz */}
       <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="space-y-1">
-          {navItems.map((item) => {
-            const active = pathname === item.href;
+        <div className="space-y-3">
+          {navGroups.map((group) => {
+            const groupOpen = openGroups[group.title];
+            const activeInGroup = group.items.some((item) => item.href === pathname);
 
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={close}
-                className={`flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-black transition ${
-                  active
-                    ? "border-sky-300/45 bg-sky-300/12 text-white shadow-lg shadow-sky-950/20"
-                    : "border-transparent text-slate-300 hover:border-white/10 hover:bg-white/[0.06] hover:text-white"
-                }`}
-              >
-                <span
-                  className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm ${
-                    active
-                      ? "border-sky-300/35 bg-sky-300/15 text-sky-100"
-                      : "border-white/10 bg-white/[0.045] text-slate-400"
+              <div key={group.title}>
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group.title)}
+                  className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left transition ${
+                    activeInGroup
+                      ? "border-sky-300/25 bg-sky-300/8"
+                      : "border-transparent hover:border-white/10 hover:bg-white/[0.045]"
                   }`}
                 >
-                  {item.icon}
-                </span>
+                  <span className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">
+                    {group.title}
+                  </span>
 
-                <span>{item.label}</span>
-              </Link>
+                  <span
+                    className={`text-xs font-black transition ${
+                      groupOpen ? "rotate-180 text-sky-200" : "text-slate-500"
+                    }`}
+                  >
+                    ▼
+                  </span>
+                </button>
+
+                {groupOpen && (
+                  <div className="mt-1 space-y-1">
+                    {group.items.map((item) => {
+                      const active = pathname === item.href;
+
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={close}
+                          className={`flex items-center gap-3 rounded-2xl border px-3 py-3.5 text-[15px] font-black transition ${
+                            active
+                              ? "border-sky-300/45 bg-sky-300/12 text-white shadow-lg shadow-sky-950/20"
+                              : "border-transparent text-slate-300 hover:border-white/10 hover:bg-white/[0.06] hover:text-white"
+                          }`}
+                        >
+                          <span
+                            className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm ${
+                              active
+                                ? "border-sky-300/35 bg-sky-300/15 text-sky-100"
+                                : "border-white/10 bg-white/[0.045] text-slate-400"
+                            }`}
+                          >
+                            {item.icon}
+                          </span>
+
+                          <span>{item.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -200,25 +316,48 @@ function Sidebar({
 }
 
 function BrandLogo({ small = false }: { small?: boolean }) {
+  if (small) {
+    return (
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-xl font-black uppercase leading-none tracking-[0.14em] text-white">
+            ODZ.
+          </div>
+
+          <div className="mt-1 inline-flex rounded-full border border-sky-300/20 bg-white/[0.045] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-sky-100">
+            v1.1
+          </div>
+        </div>
+
+        <div className="text-xl font-black leading-none">
+          <span className="text-white">Stahl</span>
+          <span className="text-orange-500">Fabrik</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div className="space-y-4">
       <div>
-        <div
-          className={`font-black uppercase leading-none tracking-[0.14em] text-white ${
-            small ? "text-xl" : "text-3xl"
-          }`}
-        >
+        <div className="text-[34px] font-black uppercase leading-none tracking-[0.18em] text-white drop-shadow-[0_0_22px_rgba(226,232,240,0.18)]">
           ODZ.
         </div>
 
-        <div className="mt-1 inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-sky-100">
-          v1.1
+        <div className="mt-2 inline-flex rounded-full border border-white/10 bg-gradient-to-r from-white/[0.10] to-sky-300/[0.08] px-3 py-1 text-[9px] font-black uppercase tracking-[0.22em] text-slate-200 shadow-inner shadow-white/5">
+          Silver · v1.1
         </div>
       </div>
 
-      <div className={`font-black leading-none ${small ? "text-xl" : "text-2xl"}`}>
-        <span className="text-white">Stahl</span>
-        <span className="text-orange-500">Fabrik</span>
+      <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 shadow-lg shadow-black/20">
+        <div className="text-[24px] font-black leading-none tracking-tight">
+          <span className="text-white">Stahl</span>
+          <span className="text-orange-500">Fabrik</span>
+        </div>
+
+        <div className="mt-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+          Powered by ODZ.
+        </div>
       </div>
     </div>
   );
