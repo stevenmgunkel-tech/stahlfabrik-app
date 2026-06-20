@@ -131,8 +131,7 @@ function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>(initialStats);
-  
-  const [loading, setLoading] = useState(false);
+
   const [meldung, setMeldung] = useState("");
 
   useEffect(() => {
@@ -140,7 +139,6 @@ export default function DashboardPage() {
   }, []);
 
   async function loadDashboard() {
-    setLoading(true);
     setMeldung("");
 
     const userData = await supabase.auth.getUser();
@@ -334,7 +332,6 @@ export default function DashboardPage() {
       offeneAntraege,
     });
 
-        setLoading(false);
   }
 
   const today = new Date().toLocaleDateString("de-CH", {
