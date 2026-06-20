@@ -131,7 +131,7 @@ function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>(initialStats);
-  const [ready, setReady] = useState(false);
+  
   const [loading, setLoading] = useState(false);
   const [meldung, setMeldung] = useState("");
 
@@ -334,8 +334,7 @@ export default function DashboardPage() {
       offeneAntraege,
     });
 
-    setReady(true);
-    setLoading(false);
+        setLoading(false);
   }
 
   const today = new Date().toLocaleDateString("de-CH", {
@@ -344,10 +343,7 @@ export default function DashboardPage() {
     year: "numeric",
   });
 
-  if (!ready) {
-    return null;
-  }
-
+  
   return (
     <main className="space-y-8 text-slate-100">
       <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
@@ -390,19 +386,19 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-4">
             <HeroMini
               label="Ü-Std."
-              value={ready ? formatStunden(stats.gesamtUeberstunden) : "00 h 00 min"}
+              value={formatStunden(stats.gesamtUeberstunden)}
               green={stats.gesamtUeberstunden >= 0}
               red={stats.gesamtUeberstunden < 0}
             />
-            <HeroMini label="Projekte" value={ready ? stats.projekte : "00"} />
+            <HeroMini label="Projekte" value={stats.projekte} />
             <HeroMini
               label="Offen"
-              value={ready ? stats.offeneAntraege : "00"}
+              value={stats.offeneAntraege}
               blue={stats.offeneAntraege > 0}
             />
             <HeroMini
               label="Heute"
-              value={ready ? formatKurz(stats.heuteDifferenz) : "+00.00 h"}
+              value={formatKurz(stats.heuteDifferenz)}
               green={stats.heuteDifferenz >= 0}
               red={stats.heuteDifferenz < 0}
             />
@@ -582,7 +578,7 @@ export default function DashboardPage() {
 
           <InfoRow
             label="Ü-Std."
-            value={ready ? formatStunden(stats.gesamtUeberstunden) : "00 h 00 min"}
+            value={formatStunden(stats.gesamtUeberstunden)}
             highlight={stats.gesamtUeberstunden >= 0}
             danger={stats.gesamtUeberstunden < 0}
             icon={<TrendingUp size={22} />}
@@ -615,27 +611,24 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="flex h-[84px] min-w-[132px] flex-col justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
-      <div
-        className={`truncate whitespace-nowrap text-xl font-black leading-tight md:text-2xl ${
-          red
-            ? "text-red-400"
-            : green
-              ? "text-green-400"
-              : blue
-                ? "text-sky-200"
-                : "text-slate-100"
-        }`}
-      >
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+      <div className={`text-xl font-black leading-tight md:text-2xl ${
+        red
+          ? "text-red-400"
+          : green
+          ? "text-green-400"
+          : blue
+          ? "text-sky-200"
+          : "text-slate-100"
+      }`}>
         {value}
       </div>
-      <div className="mt-1 truncate whitespace-nowrap text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
+      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
         {label}
       </div>
     </div>
   );
 }
-
 
 function WorkTimeCard({
   eyebrow,
