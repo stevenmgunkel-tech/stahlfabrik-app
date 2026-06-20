@@ -78,7 +78,7 @@ export default function AbwesenheitenPage() {
   const [bis, setBis] = useState("");
   const [stunden, setStunden] = useState("");
 
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [meldung, setMeldung] = useState("");
   const [formularOffen, setFormularOffen] = useState(true);
   const [uebersichtOffen, setUebersichtOffen] = useState(true);
@@ -128,7 +128,6 @@ export default function AbwesenheitenPage() {
     if (error) {
       setMeldung(error.message);
       console.log(error);
-      setLoading(false);
       return;
     }
 
@@ -243,7 +242,7 @@ export default function AbwesenheitenPage() {
       ueberstundenAktuell,
     });
 
-    setLoading(false);
+    
   }
 
   function berechneTage() {
@@ -339,7 +338,7 @@ export default function AbwesenheitenPage() {
       mitarbeiterName = mitarbeiterData.name;
     }
 
-    setLoading(true);
+    
 
     const { error } = await supabase.from("urlaub").insert([
       {
@@ -355,7 +354,7 @@ export default function AbwesenheitenPage() {
     ]);
 
     if (error) {
-      setLoading(false);
+      
       setMeldung(error.message);
       console.log(error);
       return;
@@ -368,7 +367,7 @@ export default function AbwesenheitenPage() {
 
     await ladeDaten();
 
-    setLoading(false);
+    
     setMeldung("Abwesenheit gespeichert.");
   }
 
