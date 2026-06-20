@@ -368,8 +368,8 @@ function BrandLogo({ small = false }: { small?: boolean }) {
 </div>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 shadow-lg shadow-black/20">
-        <div className="text-[24px] font-black leading-none tracking-tight">
+      <div className="flex flex-col items-center rounded-2xl border border-white/10 bg-white/[0.045] p-4 shadow-lg shadow-black/20 text-center">
+        <div className="text-center text-[24px] font-black leading-none tracking-tight">
   <span className="bg-gradient-to-b from-white via-slate-100 to-slate-400 bg-clip-text text-transparent drop-shadow-[0_8px_18px_rgba(255,255,255,0.08)]">
     Stahl
   </span>
@@ -378,7 +378,7 @@ function BrandLogo({ small = false }: { small?: boolean }) {
   </span>
 </div>
 
-        <div className="mt-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+        <div className="mt-3 text-center text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
           Powered by ODZ.
         </div>
       </div>
