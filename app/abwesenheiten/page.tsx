@@ -88,7 +88,6 @@ export default function AbwesenheitenPage() {
   }, []);
 
   async function ladeDaten() {
-    setLoading(true);
     setMeldung("");
 
     const userData = await supabase.auth.getUser();
@@ -488,19 +487,21 @@ export default function AbwesenheitenPage() {
                 Urlaub, Krankheit, Überstundenabbau und Resturlaub an einem Ort.
               </p>
 
-              <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
-                <span
-                  className={`h-3 w-3 rounded-full ${
-                    konto.offeneAntraege > 0
-                      ? "bg-sky-300 shadow-lg shadow-sky-300/40"
-                      : "bg-green-400 shadow-lg shadow-green-400/40"
-                  }`}
-                />
-                <span className="text-xs font-black uppercase tracking-widest text-white/70">
-                  {konto.offeneAntraege > 0
-                    ? `${konto.offeneAntraege} Antrag offen`
-                    : "Alles sauber"}
-                </span>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+                  <span
+                    className={`h-3 w-3 rounded-full ${
+                      konto.offeneAntraege > 0
+                        ? "bg-sky-300 shadow-lg shadow-sky-300/40"
+                        : "bg-green-400 shadow-lg shadow-green-400/40"
+                    }`}
+                  />
+                  <span className="text-xs font-black uppercase tracking-widest text-white/70">
+                    {konto.offeneAntraege > 0
+                      ? `${konto.offeneAntraege} Antrag offen`
+                      : "Alles sauber"}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -922,12 +923,12 @@ function KpiCard({
       : "text-white";
 
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+    <div className="min-h-[132px] rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
       <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
         {label}
       </div>
 
-      <div className={`mt-4 break-words text-4xl font-black ${color}`}>
+      <div className={`mt-4 min-h-[44px] break-words text-4xl font-black ${color}`}>
         {value}
       </div>
 
@@ -1049,20 +1050,21 @@ function HeroMini({
   blue?: boolean;
   red?: boolean;
 }) {
-  const color = red
-    ? "text-red-400"
-    : green
-    ? "text-green-400"
-    : blue
-    ? "text-sky-200"
-    : "text-slate-100";
-
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
-      <div className={`text-xl font-black leading-tight md:text-2xl ${color}`}>
+      <div
+        className={`text-xl font-black leading-tight md:text-2xl ${
+          red
+            ? "text-red-400"
+            : green
+              ? "text-green-400"
+              : blue
+                ? "text-sky-200"
+                : "text-slate-100"
+        }`}
+      >
         {value}
       </div>
-
       <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
         {label}
       </div>

@@ -902,17 +902,19 @@ setBisZeit("");
               Arbeitszeit sauber erfassen, nachtragen und als Tagesübersicht kontrollieren.
             </p>
 
-            <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
-              <span
-                className={`h-3 w-3 rounded-full ${
-                  offenerArbeitstag
-                    ? "bg-green-400 shadow-lg shadow-green-400/40"
-                    : "bg-slate-400"
-                }`}
-              />
-              <span className="text-sm font-black uppercase tracking-widest text-white/70">
-                {offenerArbeitstag ? "Arbeitstag läuft" : "Bereit zur Erfassung"}
-              </span>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+                <span
+                  className={`h-3 w-3 rounded-full ${
+                    offenerArbeitstag
+                      ? "bg-green-400 shadow-lg shadow-green-400/40"
+                      : "bg-slate-400"
+                  }`}
+                />
+                <span className="text-xs font-black uppercase tracking-widest text-white/70">
+                  {offenerArbeitstag ? "Arbeitstag läuft" : "Bereit zur Erfassung"}
+                </span>
+              </div>
             </div>
           </div>
 
