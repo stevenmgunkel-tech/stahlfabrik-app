@@ -65,12 +65,12 @@ function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
 export default function AbwesenheitenPage() {
   const [abwesenheiten, setAbwesenheiten] = useState<Abwesenheit[]>([]);
   const [konto, setKonto] = useState<Konto>({
-  jahresurlaub: 99.99,
-  genommenerUrlaub: 99.99,
-  kranktage: 99,
-  offeneAntraege: 99,
-  ueberstundenabbauStunden: 99.99,
-  ueberstundenAktuell: 99.99,
+  jahresurlaub: 0,
+  genommenerUrlaub: 0,
+  kranktage: 0,
+  offeneAntraege: 0,
+  ueberstundenabbauStunden: 0,
+  ueberstundenAktuell: 0,
 });
 
   const [typ, setTyp] = useState("Urlaub");
@@ -484,8 +484,8 @@ export default function AbwesenheitenPage() {
                 Abwesenheiten
               </h1>
 
-              <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-white/65 sm:text-base">
-                Urlaub, Krankheit, Überstundenabbau und Resturlaub an einem Ort.
+              <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-white/65 sm:text-base">
+                Urlaub, Krankheit und Überstundenabbau im Überblick.
               </p>
 
               <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
@@ -505,9 +505,9 @@ export default function AbwesenheitenPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-4">
-              <HeroMini label="Resturlaub" value={resturlaub} green={resturlaub >= 0} red={resturlaub < 0} />
+              <HeroMini label="Ferien" value={resturlaub} green={resturlaub >= 0} red={resturlaub < 0} />
               <HeroMini
-                label="Überstunden"
+                label="Ü-Std."
                 value={formatStunden(konto.ueberstundenAktuell, true)}
                 green={konto.ueberstundenAktuell >= 0}
                 red={konto.ueberstundenAktuell < 0}
