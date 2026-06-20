@@ -344,7 +344,7 @@ export default function DashboardPage() {
 
   return (
     <main className="space-y-8 text-slate-100">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
         <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
@@ -357,10 +357,10 @@ export default function DashboardPage() {
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
 
-        <div className="relative z-10 flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
+        <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
           <div>
             <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
-              ODZ
+              ODZ SILVER
             </div>
 
             <div className="mt-5 text-sm font-bold text-white/60">
@@ -394,7 +394,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl md:grid-cols-4">
             <HeroMini
               label="Überstunden"
               value={formatStunden(stats.gesamtUeberstunden)}
@@ -622,9 +622,9 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
       <div
-        className={`text-xl font-black md:text-2xl ${
+        className={`text-2xl font-black md:text-3xl ${
           red
             ? "text-red-400"
             : green
@@ -636,7 +636,7 @@ function HeroMini({
       >
         {value}
       </div>
-      <div className="mt-2 text-[9px] font-black uppercase tracking-[0.18em] text-white/45">
+      <div className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
         {label}
       </div>
     </div>
