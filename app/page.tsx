@@ -344,42 +344,42 @@ export default function DashboardPage() {
 
   return (
     <main className="space-y-8 text-slate-100">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.035] to-black/25 p-7 shadow-2xl shadow-black/35 ring-1 ring-white/[0.035] lg:p-10">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#121922] shadow-2xl shadow-black/35 ring-1 ring-white/[0.035]">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.52]">
           <div
-            className="h-full w-full bg-cover bg-[center_20%]"
+            className="h-full w-full bg-cover bg-[center_22%]"
             style={{
               backgroundImage: "url('/berg.png')",
-              filter: "brightness(0.95) contrast(1.12) saturate(0.78)",
+              filter: "brightness(0.78) contrast(1.12) saturate(0.72)",
             }}
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/78 via-black/38 to-black/10" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.035] via-transparent to-black/35" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#05080d]/95 via-[#05080d]/58 to-[#05080d]/18" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.04] via-transparent to-black/36" />
 
-        <div className="relative z-10 flex min-h-[300px] flex-col justify-between gap-8 xl:flex-row xl:items-end">
-          <div>
-            <div className="inline-flex rounded-full border border-white/10 bg-white/[0.085] px-4 py-2 text-[11px] font-black uppercase tracking-[0.26em] text-slate-200 shadow-inner shadow-white/5">
+        <div className="relative z-10 grid min-h-[360px] grid-cols-1 gap-8 p-7 lg:p-10 xl:grid-cols-[1fr_600px] xl:items-end">
+          <div className="max-w-2xl">
+            <div className="inline-flex rounded-full border border-white/10 bg-white/[0.08] px-4 py-2 text-[11px] font-black uppercase tracking-[0.26em] text-slate-200 shadow-inner shadow-white/5">
               ODZ SILVER
             </div>
 
-            <div className="mt-5 text-sm font-bold text-white/60">
+            <div className="mt-5 text-sm font-bold text-white/65">
               Guten Tag {stats.letzterMitarbeiter} 👋 · {today}
             </div>
 
-            <h1 className="mt-5 text-5xl font-black tracking-tight text-white drop-shadow-[0_18px_45px_rgba(0,0,0,0.42)] lg:text-7xl">
+            <h1 className="mt-5 text-5xl font-black tracking-tight text-white drop-shadow-[0_18px_45px_rgba(0,0,0,0.45)] lg:text-7xl">
               Dashboard
             </h1>
 
-            <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
+            <p className="mt-4 max-w-xl text-lg font-medium leading-8 text-white/68">
               Woche, Arbeitszeit, Projekte und offene Punkte auf einen Blick.
             </p>
 
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-xl">
+            <div className="mt-6 grid max-w-[520px] gap-3 sm:grid-cols-[1fr_1fr]">
+              <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-black/28 px-4 py-3 shadow-inner shadow-white/[0.03]">
                 <span className="h-3 w-3 rounded-full bg-green-400 shadow-lg shadow-green-400/40" />
-                <span className="text-sm font-black uppercase tracking-widest text-white/70">
+                <span className="text-sm font-black uppercase tracking-widest text-white/72">
                   Alles im Überblick
                 </span>
               </div>
@@ -388,32 +388,34 @@ export default function DashboardPage() {
                 type="button"
                 onClick={loadDashboard}
                 disabled={loading}
-                className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-black text-white/70 transition hover:border-sky-300/30 hover:bg-sky-300/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-2xl border border-white/10 bg-black/28 px-4 py-3 text-sm font-black text-white/72 shadow-inner shadow-white/[0.03] transition hover:border-sky-300/30 hover:bg-sky-300/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? "Lädt..." : "Aktualisieren"}
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/28 p-4 text-center shadow-2xl shadow-black/30 backdrop-blur-xl md:grid-cols-4 xl:min-w-[560px]">
-            <HeroMini
-              label="Überstunden"
-              value={formatStunden(stats.gesamtUeberstunden)}
-              green={stats.gesamtUeberstunden >= 0}
-              red={stats.gesamtUeberstunden < 0}
-            />
-            <HeroMini label="Projekte" value={stats.projekte} />
-            <HeroMini
-              label="Offen"
-              value={stats.offeneAntraege}
-              blue={stats.offeneAntraege > 0}
-            />
-            <HeroMini
-              label="Heute"
-              value={formatKurz(stats.heuteDifferenz)}
-              green={stats.heuteDifferenz >= 0}
-              red={stats.heuteDifferenz < 0}
-            />
+          <div className="rounded-[1.75rem] border border-white/10 bg-black/30 p-4 shadow-2xl shadow-black/35 backdrop-blur-xl">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <HeroMini
+                label="Überstunden"
+                value={formatStunden(stats.gesamtUeberstunden)}
+                green={stats.gesamtUeberstunden >= 0}
+                red={stats.gesamtUeberstunden < 0}
+              />
+              <HeroMini label="Projekte" value={stats.projekte} />
+              <HeroMini
+                label="Offen"
+                value={stats.offeneAntraege}
+                blue={stats.offeneAntraege > 0}
+              />
+              <HeroMini
+                label="Heute"
+                value={formatKurz(stats.heuteDifferenz)}
+                green={stats.heuteDifferenz >= 0}
+                red={stats.heuteDifferenz < 0}
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -424,7 +426,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#151c24]/90 shadow-xl shadow-black/25">
+      <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#151c24]/92 shadow-xl shadow-black/25 ring-1 ring-white/[0.025]">
         <div className="flex flex-col justify-between gap-4 border-b border-white/10 px-5 py-5 sm:px-6 lg:flex-row lg:items-center">
           <div className="xl:max-w-[58%]">
             <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-sky-100">
@@ -478,7 +480,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <details className="group overflow-hidden rounded-[2rem] border border-white/10 bg-[#151c24]/90 shadow-xl shadow-black/25">
+      <details className="group overflow-hidden rounded-[2rem] border border-white/10 bg-[#151c24]/92 shadow-xl shadow-black/25 ring-1 ring-white/[0.025]">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 transition hover:bg-sky-300/[0.03] sm:px-6">
           <div className="xl:max-w-[58%]">
             <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-sky-100">
@@ -540,7 +542,7 @@ export default function DashboardPage() {
       </details>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.95fr]">
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 backdrop-blur-xl sm:p-7">
+        <div className="rounded-[2rem] border border-white/10 bg-[#151c24]/92 p-6 shadow-xl shadow-black/25 ring-1 ring-white/[0.025] sm:p-7">
           <div className="mb-6 flex items-center gap-4">
             <IconBox>
               <Activity size={24} />
@@ -576,7 +578,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 backdrop-blur-xl sm:p-7">
+        <div className="rounded-[2rem] border border-white/10 bg-[#151c24]/92 p-6 shadow-xl shadow-black/25 ring-1 ring-white/[0.025] sm:p-7">
           <div className="mb-6">
             <h2 className="text-2xl font-black text-white">Schnellübersicht</h2>
             <p className="text-sm text-white/50">Live Infos</p>
