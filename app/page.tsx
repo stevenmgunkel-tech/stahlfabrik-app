@@ -344,23 +344,23 @@ export default function DashboardPage() {
 
   return (
     <main className="space-y-8 text-slate-100">
-      <section className="relative overflow-hidden rounded-[2rem] border border-sky-300/15 bg-white/[0.035] p-6 shadow-2xl shadow-black/35 ring-1 ring-white/[0.04] lg:p-8">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.035] to-black/25 p-7 shadow-2xl shadow-black/35 ring-1 ring-white/[0.035] lg:p-10">
         <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
             style={{
               backgroundImage: "url('/berg.png')",
-              filter: "brightness(0.72) contrast(1.12) saturate(0.78)",
+              filter: "brightness(0.95) contrast(1.12) saturate(0.78)",
             }}
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#05080d]/92 via-[#05080d]/55 to-[#05080d]/20" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/78 via-black/38 to-black/10" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.035] via-transparent to-black/35" />
 
         <div className="relative z-10 flex min-h-[300px] flex-col justify-between gap-8 xl:flex-row xl:items-end">
           <div>
-            <div className="inline-flex rounded-full border border-white/10 bg-white/[0.08] px-4 py-2 text-[11px] font-black uppercase tracking-[0.26em] text-slate-200 shadow-inner shadow-white/5">
+            <div className="inline-flex rounded-full border border-white/10 bg-white/[0.085] px-4 py-2 text-[11px] font-black uppercase tracking-[0.26em] text-slate-200 shadow-inner shadow-white/5">
               ODZ SILVER
             </div>
 
@@ -368,7 +368,7 @@ export default function DashboardPage() {
               Guten Tag {stats.letzterMitarbeiter} 👋 · {today}
             </div>
 
-            <h1 className="mt-5 text-5xl font-black tracking-tight text-white drop-shadow-[0_18px_45px_rgba(0,0,0,0.45)] lg:text-7xl">
+            <h1 className="mt-5 text-5xl font-black tracking-tight text-white drop-shadow-[0_18px_45px_rgba(0,0,0,0.42)] lg:text-7xl">
               Dashboard
             </h1>
 
@@ -388,14 +388,14 @@ export default function DashboardPage() {
                 type="button"
                 onClick={loadDashboard}
                 disabled={loading}
-                className="rounded-2xl border border-white/10 bg-black/22 px-4 py-3 text-sm font-black text-white/70 transition hover:border-sky-300/30 hover:bg-sky-300/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-black text-white/70 transition hover:border-sky-300/30 hover:bg-sky-300/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? "Lädt..." : "Aktualisieren"}
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/28 p-4 text-center shadow-2xl shadow-black/30 backdrop-blur-xl md:grid-cols-6 xl:min-w-[620px]">
+          <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/28 p-4 text-center shadow-2xl shadow-black/30 backdrop-blur-xl md:grid-cols-4 xl:min-w-[560px]">
             <HeroMini
               label="Überstunden"
               value={formatStunden(stats.gesamtUeberstunden)}
@@ -414,8 +414,6 @@ export default function DashboardPage() {
               green={stats.heuteDifferenz >= 0}
               red={stats.heuteDifferenz < 0}
             />
-            <HeroMini label="Woche" value={formatKurz(stats.wocheDifferenz)} green={stats.wocheDifferenz >= 0} red={stats.wocheDifferenz < 0} />
-            <HeroMini label="Monat" value={formatKurz(stats.monatDifferenz)} green={stats.monatDifferenz >= 0} red={stats.monatDifferenz < 0} />
           </div>
         </div>
       </section>
@@ -426,7 +424,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#151c24]/92 shadow-xl shadow-black/25">
+      <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#151c24]/90 shadow-xl shadow-black/25">
         <div className="flex flex-col justify-between gap-4 border-b border-white/10 px-5 py-5 sm:px-6 lg:flex-row lg:items-center">
           <div className="xl:max-w-[58%]">
             <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-sky-100">
@@ -441,7 +439,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-black/22 px-4 py-3 text-sm font-black text-white/70">
+          <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-black text-white/70">
             Montag – Sonntag
           </div>
         </div>
@@ -453,10 +451,10 @@ export default function DashboardPage() {
             return (
               <div
                 key={tag}
-                className={`min-h-[135px] rounded-3xl border p-4 transition hover:border-sky-300/25 hover:bg-sky-300/8 ${
+                className={`min-h-[120px] rounded-3xl border p-4 transition hover:border-sky-300/25 hover:bg-sky-300/8 ${
                   istHeute
                     ? "border-sky-300/25 bg-sky-300/10"
-                    : "border-white/10 bg-black/22"
+                    : "border-white/10 bg-black/20"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -471,7 +469,7 @@ export default function DashboardPage() {
                   )}
                 </div>
 
-                <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.055] p-3 text-xs font-bold text-white/45">
+                <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-xs font-bold text-white/45">
                   Kalenderdaten folgen
                 </div>
               </div>
@@ -480,7 +478,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <details className="group overflow-hidden rounded-[2rem] border border-white/10 bg-[#151c24]/92 shadow-xl shadow-black/25">
+      <details className="group overflow-hidden rounded-[2rem] border border-white/10 bg-[#151c24]/90 shadow-xl shadow-black/25">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 transition hover:bg-sky-300/[0.03] sm:px-6">
           <div className="xl:max-w-[58%]">
             <div className="inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.22em] text-sky-100">
@@ -496,7 +494,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-black/22 px-4 py-3 text-sm font-black text-white/70 transition">
+          <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-black text-white/70 transition">
             <span className="group-open:hidden">▼ Öffnen</span>
             <span className="hidden group-open:inline">▲ Schließen</span>
           </div>
@@ -542,7 +540,7 @@ export default function DashboardPage() {
       </details>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.95fr]">
-        <div className="rounded-[2rem] border border-white/10 bg-[#151c24]/92 p-6 shadow-xl shadow-black/25 sm:p-7">
+        <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 backdrop-blur-xl sm:p-7">
           <div className="mb-6 flex items-center gap-4">
             <IconBox>
               <Activity size={24} />
@@ -556,7 +554,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-black/25 p-5 transition hover:border-sky-300/25 hover:bg-sky-300/8">
+          <div className="rounded-3xl border border-white/10 bg-black/25 p-5 transition hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
             <div className="mb-4 text-xs font-black uppercase tracking-[0.22em] text-sky-100">
               Arbeitszeit
             </div>
@@ -578,7 +576,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-white/10 bg-[#151c24]/92 p-6 shadow-xl shadow-black/25 sm:p-7">
+        <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 backdrop-blur-xl sm:p-7">
           <div className="mb-6">
             <h2 className="text-2xl font-black text-white">Schnellübersicht</h2>
             <p className="text-sm text-white/50">Live Infos</p>
@@ -625,7 +623,7 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="min-h-[112px] rounded-2xl border border-white/10 bg-white/[0.055] p-4 text-center shadow-inner shadow-white/[0.03] transition hover:border-sky-300/25 hover:bg-sky-300/10">
+    <div className="flex min-h-[118px] flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.055] p-4 text-center shadow-inner shadow-white/[0.035] transition hover:border-sky-300/25 hover:bg-sky-300/10">
       <div
         className={`text-2xl font-black md:text-3xl ${
           red
@@ -662,7 +660,7 @@ function WorkTimeCard({
   differenz: number;
 }) {
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
@@ -705,7 +703,7 @@ function OvertimeCard({
   abbau: number;
 }) {
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
@@ -795,7 +793,7 @@ function InfoRow({
   icon?: ReactNode;
 }) {
   return (
-    <div className="mb-4 flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/25 p-5 transition hover:border-sky-300/25 hover:bg-sky-300/8">
+    <div className="mb-4 flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/25 p-5 transition hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
       <div className="min-w-0">
         <div className="text-sm text-white/50">{label}</div>
         <div
