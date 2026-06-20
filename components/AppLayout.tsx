@@ -110,7 +110,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Desktop Sidebar: läuft fix von oben bis unten */}
-      <aside className="fixed bottom-0 left-0 top-0 z-30 hidden w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/95 shadow-2xl shadow-black/40 backdrop-blur-xl lg:block">
+      <aside className="fixed bottom-0 left-0 top-0 z-30 hidden w-[286px] overflow-hidden rounded-r-3xl border-r border-white/10 bg-[#0b1118]/95 shadow-2xl shadow-black/40 backdrop-blur-xl lg:block">
         <Sidebar pathname={pathname} logout={logout} userName={userName} role={role} />
       </aside>
 
@@ -340,20 +340,43 @@ function BrandLogo({ small = false }: { small?: boolean }) {
   return (
     <div className="space-y-4">
       <div>
-        <div className="text-[34px] font-black uppercase leading-none tracking-[0.18em] text-white drop-shadow-[0_0_22px_rgba(226,232,240,0.18)]">
-          ODZ.
-        </div>
+        <div
+  className="
+    text-[36px]
+    font-black
+    uppercase
+    leading-none
+    tracking-[0.18em]
+    bg-gradient-to-b
+    from-white
+    via-slate-100
+    to-slate-400
+    bg-clip-text
+    text-transparent
+    drop-shadow-[0_1px_0_rgba(255,255,255,0.20)]
+  "
+  style={{
+    textShadow:
+      "0 2px 8px rgba(255,255,255,0.08), 0 12px 24px rgba(255,255,255,0.06)",
+  }}
+>
+  ODZ.
+</div>
 
-        <div className="mt-2 inline-flex rounded-full border border-white/10 bg-gradient-to-r from-white/[0.10] to-sky-300/[0.08] px-3 py-1 text-[9px] font-black uppercase tracking-[0.22em] text-slate-200 shadow-inner shadow-white/5">
-          Silver · v1.1
-        </div>
+        <div className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[8px] font-black uppercase tracking-[0.28em] text-slate-300">
+  ODZ SILVER · V1.1
+</div>
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 shadow-lg shadow-black/20">
         <div className="text-[24px] font-black leading-none tracking-tight">
-          <span className="text-white">Stahl</span>
-          <span className="text-orange-500">Fabrik</span>
-        </div>
+  <span className="bg-gradient-to-b from-white via-slate-100 to-slate-400 bg-clip-text text-transparent drop-shadow-[0_8px_18px_rgba(255,255,255,0.08)]">
+    Stahl
+  </span>
+  <span className="text-orange-500 drop-shadow-[0_0_14px_rgba(249,115,22,0.18)]">
+    Fabrik
+  </span>
+</div>
 
         <div className="mt-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
           Powered by ODZ.
