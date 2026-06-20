@@ -131,7 +131,7 @@ function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>(initialStats);
-  const [loading, setLoading] = useState(false);
+  const loading = false;
   const [meldung, setMeldung] = useState("");
 
   useEffect(() => {
@@ -139,7 +139,6 @@ export default function DashboardPage() {
   }, []);
 
   async function loadDashboard() {
-    setLoading(true);
     setMeldung("");
 
     const userData = await supabase.auth.getUser();
@@ -333,7 +332,6 @@ export default function DashboardPage() {
       offeneAntraege,
     });
 
-    setLoading(false);
   }
 
   const today = new Date().toLocaleDateString("de-CH", {
@@ -383,7 +381,7 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-4">
             <HeroMini
-              label="Überstunden"
+              label="Ü-Std."
               value={formatStunden(stats.gesamtUeberstunden)}
               green={stats.gesamtUeberstunden >= 0}
               red={stats.gesamtUeberstunden < 0}
@@ -575,7 +573,7 @@ export default function DashboardPage() {
           />
 
           <InfoRow
-            label="Überstunden"
+            label="Ü-Std."
             value={formatStunden(stats.gesamtUeberstunden)}
             highlight={stats.gesamtUeberstunden >= 0}
             danger={stats.gesamtUeberstunden < 0}
@@ -609,9 +607,9 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="min-h-[82px] rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
       <div
-        className={`text-xl font-black leading-tight md:text-2xl ${
+        className={`min-h-[30px] text-xl font-black leading-tight md:text-2xl ${
           red
             ? "text-red-400"
             : green
@@ -646,7 +644,7 @@ function WorkTimeCard({
   differenz: number;
 }) {
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+    <section className="min-h-[390px] rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
@@ -689,7 +687,7 @@ function OvertimeCard({
   abbau: number;
 }) {
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+    <section className="min-h-[390px] rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
@@ -760,7 +758,7 @@ function ValueBox({
       <div className="text-xs font-black uppercase tracking-[0.18em] text-white/35">
         {label}
       </div>
-      <div className={`mt-2 text-2xl font-black ${color}`}>{value}</div>
+      <div className={`mt-2 min-h-[34px] text-2xl font-black leading-tight ${color}`}>{value}</div>
     </div>
   );
 }

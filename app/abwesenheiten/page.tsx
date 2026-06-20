@@ -78,7 +78,7 @@ export default function AbwesenheitenPage() {
   const [bis, setBis] = useState("");
   const [stunden, setStunden] = useState("");
 
-  const [loading] = useState(false);
+  const loading = false;
   const [meldung, setMeldung] = useState("");
   const [formularOffen, setFormularOffen] = useState(true);
   const [uebersichtOffen, setUebersichtOffen] = useState(true);
@@ -545,7 +545,7 @@ export default function AbwesenheitenPage() {
           />
 
           <KpiCard
-            label="Resturlaub"
+            label="Ferien"
             value={resturlaub}
             subtext={resturlaub >= 0 ? "Noch verfügbar" : "Überzogen"}
             highlight={resturlaub >= 0 ? "green" : "red"}
@@ -559,23 +559,15 @@ export default function AbwesenheitenPage() {
           />
 
           <KpiCard
-            label="Überstunden"
-            value={
-              loading
-                ? "..."
-                : formatStunden(Number(konto.ueberstundenAktuell || 0), true)
-            }
+            label="Ü-Std."
+            value={formatStunden(Number(konto.ueberstundenAktuell || 0), true)}
             subtext="Aktueller Stand"
             highlight={konto.ueberstundenAktuell >= 0 ? "green" : "red"}
           />
 
           <KpiCard
             label="Abbau"
-            value={
-              loading
-                ? "..."
-                : formatStunden(Number(konto.ueberstundenabbauStunden || 0))
-            }
+            value={formatStunden(Number(konto.ueberstundenabbauStunden || 0))}
             subtext="Genehmigte Abbaustunden"
           />
         </section>
@@ -922,12 +914,12 @@ function KpiCard({
       : "text-white";
 
   return (
-    <div className="h-[230px] rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+    <div className="min-h-[150px] rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-4 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
       <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
         {label}
       </div>
 
-      <div className={`mt-4 h-[96px] flex items-start break-words text-4xl font-black ${color}`}>
+      <div className={`mt-3 min-h-[42px] break-words text-2xl font-black leading-tight sm:text-3xl ${color}`}>
         {value}
       </div>
 
