@@ -344,6 +344,10 @@ export default function DashboardPage() {
     year: "numeric",
   });
 
+  if (!ready) {
+    return null;
+  }
+
   return (
     <main className="space-y-8 text-slate-100">
       <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
