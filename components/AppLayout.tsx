@@ -81,7 +81,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             onClick={() => setOpen(false)}
           />
 
-          <aside className="fixed bottom-0 left-0 top-0 h-dvh w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/95 shadow-2xl shadow-black/50 backdrop-blur-xl">
+          <aside
+            className="fixed left-0 top-0 w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/95 shadow-2xl shadow-black/50 backdrop-blur-xl"
+            style={{ height: "100vh" }}
+          >
             <Sidebar
               pathname={pathname}
               logout={logout}
@@ -94,7 +97,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="fixed left-0 top-0 z-30 hidden h-dvh w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/90 shadow-2xl shadow-black/40 backdrop-blur-xl lg:block">
+      <aside
+        className="fixed left-0 top-0 z-30 hidden w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/90 shadow-2xl shadow-black/40 backdrop-blur-xl lg:block"
+        style={{ height: "100vh" }}
+      >
         <Sidebar pathname={pathname} logout={logout} userName={userName} role={role} />
       </aside>
 
@@ -122,14 +128,20 @@ function Sidebar({
   close?: () => void;
 }) {
   return (
-    <div className="flex h-dvh min-h-0 flex-col text-slate-100">
+    <div className="relative h-full min-h-0 text-slate-100">
       {/* Logo */}
-      <div className="shrink-0 border-b border-white/10 px-5 py-5">
+      <div className="border-b border-white/10 px-5 py-5">
         <BrandLogo />
       </div>
 
-      {/* Navigation: darf scrollen, aber Account bleibt immer fix unten */}
-      <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Navigation */}
+      <nav
+        className="overflow-y-auto px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{
+          height: "calc(100vh - 156px)",
+          paddingBottom: "250px",
+        }}
+      >
         <div className="space-y-1">
           {navItems.map((item) => {
             const active = pathname === item.href;
@@ -162,8 +174,8 @@ function Sidebar({
         </div>
       </nav>
 
-      {/* Account fix unten */}
-      <div className="shrink-0 border-t border-white/10 bg-[#0b1118]/98 px-4 py-4">
+      {/* Account wirklich fix unten */}
+      <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 bg-[#0b1118] px-4 py-4">
         <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 shadow-lg shadow-black/25">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
             Angemeldet
