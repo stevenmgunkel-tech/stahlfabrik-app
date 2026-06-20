@@ -315,32 +315,29 @@ export default function ProjektePage() {
               Projekte werden im Chef Dashboard erstellt. Hier werden bestehende Projekte verwaltet, geprüft und angepasst.
             </p>
 
-            <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
-              <span className="h-3 w-3 rounded-full bg-green-400 shadow-lg shadow-green-400/40" />
-              <span className="text-xs font-black uppercase tracking-widest text-white/70">
-                {aktiveProjekte} aktive Projekte
-              </span>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+                <span className="h-3 w-3 rounded-full bg-green-400 shadow-lg shadow-green-400/40" />
+                <span className="text-xs font-black uppercase tracking-widest text-white/70">
+                  Projektverwaltung bereit
+                </span>
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3">
-            <HeroMini label="Aktiv" value={aktiveProjekte} green />
-            <HeroMini label="Pausiert" value={pausierteProjekte} blue />
-            <HeroMini label="Archiv" value={abgeschlosseneProjekte} />
+            <HeroMini label="Aktiv" value={String(aktiveProjekte).padStart(2, "0")} green />
+            <HeroMini label="Pausiert" value={String(pausierteProjekte).padStart(2, "0")} blue />
+            <HeroMini label="Archiv" value={String(abgeschlosseneProjekte).padStart(2, "0")} />
           </div>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <ActionCard href="#uebersicht" label="Übersicht" title="📋 Projekte" onClick={() => setUebersichtOffen(true)} />
-        <ActionCard href="#bearbeiten" label="Bearbeiten" title="✏️ Bestehende Projekte" onClick={() => setBearbeitungOffen(true)} />
-        <ActionCard href="/projektarchiv" label="Archiv" title="🗄️ Projektarchiv" />
-      </section>
-
-      <section className="grid grid-cols-1 gap-5 md:grid-cols-3">
-        <KpiCard label="Aktive Projekte" value={aktiveProjekte} green />
-        <KpiCard label="Pausiert" value={pausierteProjekte} blue />
-        <KpiCard label="Archiv" value={abgeschlosseneProjekte} />
+        <ActionCard href="#bearbeiten" label="Bearbeiten" title="✏️ Projekte" onClick={() => setBearbeitungOffen(true)} />
+        <ActionCard href="/chef-dashboard" label="Erstellen" title="➕ Chef Dash" />
+        <ActionCard href="/projektarchiv" label="Archiv" title="🗄️ Archiv" />
       </section>
 
       {meldung && (
@@ -567,6 +564,12 @@ export default function ProjektePage() {
           background: #111315;
           color: white;
         }
+
+        .dark-input::-webkit-calendar-picker-indicator {
+          filter: brightness(0) invert(1);
+          opacity: 1;
+          cursor: pointer;
+        }
       `}</style>
     </main>
   );
@@ -691,14 +694,3 @@ function HeroMini({ label, value, blue, green }: { label: string; value: string 
   );
 }
 
-function KpiCard({ label, value, green, blue }: { label: string; value: string | number; green?: boolean; blue?: boolean }) {
-  const color = green ? "text-green-400" : blue ? "text-sky-200" : "text-slate-100";
-
-  return (
-    <div className="group overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
-      <div className={`text-3xl font-black md:text-4xl ${color}`}>{value}</div>
-      <div className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">{label}</div>
-      <div className="mt-4 h-1 w-14 rounded-full bg-slate-200/40 transition-all duration-300 group-hover:w-20 group-hover:bg-sky-200/70" />
-    </div>
-  );
-}
