@@ -131,7 +131,7 @@ function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>(initialStats);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [meldung, setMeldung] = useState("");
 
   useEffect(() => {
@@ -139,7 +139,6 @@ export default function DashboardPage() {
   }, []);
 
   async function loadDashboard() {
-    setLoading(true);
     setMeldung("");
 
     const userData = await supabase.auth.getUser();
@@ -344,7 +343,7 @@ export default function DashboardPage() {
 
   return (
     <main className="space-y-8 text-slate-100">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
+      <section className="relative min-h-[230px] overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:min-h-[255px] lg:p-9">
         <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
@@ -357,19 +356,19 @@ export default function DashboardPage() {
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
 
-        <div className="relative z-10 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
+        <div className="relative z-10 flex min-h-[180px] flex-col justify-between gap-6 xl:min-h-[190px] xl:flex-row xl:items-end">
           <div>
             <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
               ODZ SILVER · Dashboard
             </div>
 
-            <h1 className="mt-4 text-5xl font-black tracking-tight text-white lg:text-7xl">
+            <h1 className="mt-4 text-6xl font-black tracking-tight text-white lg:text-8xl">
               Dashboard
             </h1>
 
-            <p className="mt-3 max-w-2xl text-base font-medium text-white/65">
-  Woche, Arbeitszeit, Projekte und offene Punkte auf einen Blick.
-</p>
+            <p className="mt-3 max-w-2xl text-lg font-medium text-white/65">
+              Woche, Arbeitszeit, Projekte und offene Punkte auf einen Blick.
+            </p>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-xl">
@@ -381,7 +380,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-3 text-center backdrop-blur-xl md:grid-cols-4">
+          <div className="grid min-h-[116px] grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl md:grid-cols-4">
             <HeroMini
               label="Überstunden"
               value={formatStunden(stats.gesamtUeberstunden)}
@@ -609,9 +608,9 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="min-h-[84px] rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
       <div
-        className={`text-2xl font-black md:text-3xl ${
+        className={`text-3xl font-black md:text-4xl ${
           red
             ? "text-red-400"
             : green
@@ -623,7 +622,7 @@ function HeroMini({
       >
         {value}
       </div>
-      <div className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
+      <div className="mt-2 text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
         {label}
       </div>
     </div>
