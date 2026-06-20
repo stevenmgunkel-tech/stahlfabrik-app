@@ -360,11 +360,7 @@ export default function DashboardPage() {
         <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
           <div>
             <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
-              ODZ SILVER
-            </div>
-
-            <div className="mt-5 text-sm font-bold text-white/60">
-              Guten Tag {stats.letzterMitarbeiter} 👋 · {today}
+              ODZ SILVER · Dashboard
             </div>
 
             <h1 className="mt-5 text-5xl font-black tracking-tight text-white lg:text-7xl">
@@ -372,7 +368,7 @@ export default function DashboardPage() {
             </h1>
 
             <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
-              Woche, Arbeitszeit, Projekte und offene Punkte auf einen Blick.
+              Guten Tag {stats.letzterMitarbeiter} 👋 · {today} · Woche, Arbeitszeit, Projekte und offene Punkte auf einen Blick.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
