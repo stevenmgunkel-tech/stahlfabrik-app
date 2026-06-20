@@ -131,7 +131,7 @@ function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>(initialStats);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [meldung, setMeldung] = useState("");
 
   useEffect(() => {
@@ -363,7 +363,7 @@ export default function DashboardPage() {
               ODZ SILVER · Dashboard
             </div>
 
-            <h1 className="mt-3 text-5xl font-black tracking-tight text-white lg:text-7xl">
+            <h1 className="mt-4 text-5xl font-black tracking-tight text-white lg:text-7xl">
               Dashboard
             </h1>
 
