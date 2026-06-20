@@ -66,6 +66,7 @@ export default function MitarbeiterPage() {
   const [meldung, setMeldung] = useState("");
   const [suche, setSuche] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [teamOffen, setTeamOffen] = useState(true);
   const [detailsOffen, setDetailsOffen] = useState(true);
   const [bearbeitenOffen, setBearbeitenOffen] = useState(false);
 
@@ -271,7 +272,7 @@ export default function MitarbeiterPage() {
 
   return (
     <main className="space-y-8 text-slate-100">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
         <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
@@ -284,58 +285,59 @@ export default function MitarbeiterPage() {
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
 
-        <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
+        <div className="relative z-10 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
           <div>
             <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
               ODZ SILVER · Personal
             </div>
 
-            <h1 className="mt-5 text-5xl font-black tracking-tight text-white lg:text-7xl">
+            <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
               Mitarbeiter
             </h1>
 
-            <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
+            <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-white/65 sm:text-base">
               Teamübersicht, Rollen, Verträge, Ferien, Probezeit und Stärken in einer sauberen Personal-Zentrale.
             </p>
 
-            <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 backdrop-blur-xl">
+            <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
               <span className="h-3 w-3 rounded-full bg-green-400 shadow-lg shadow-green-400/40" />
-              <span className="text-sm font-black uppercase tracking-widest text-white/70">
+              <span className="text-xs font-black uppercase tracking-widest text-white/70">
                 {aktive} aktive Mitarbeiter
               </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl md:grid-cols-4">
-            <HeroMini label="Team" value={mitarbeiter.length} />
-            <HeroMini label="Aktiv" value={aktive} green={aktive > 0} />
-            <HeroMini label="Probezeit" value={probezeit} blue={probezeit > 0} />
-            <HeroMini label="Woche" value={formatStunden(gesamtWochenstunden)} />
+          <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-4">
+            <HeroMini label="Team" value={String(mitarbeiter.length).padStart(2, "0")} />
+            <HeroMini label="Aktiv" value={String(aktive).padStart(2, "0")} green={aktive > 0} />
+            <HeroMini label="Probe" value={String(probezeit).padStart(2, "0")} blue={probezeit > 0} />
+            <HeroMini label="Admin" value={String(admins).padStart(2, "0")} />
           </div>
         </div>
       </section>
 
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <ActionCard href="#team" label="Übersicht" title="👥 Team" onClick={() => setDetailsOffen(true)} />
+        <ActionCard href="#team" label="Übersicht" title="👥 Team" onClick={() => setTeamOffen(true)} />
         <ActionCard href="#details" label="Details" title="📋 Personalakte" onClick={() => setDetailsOffen(true)} />
         <ActionCard href="#bearbeiten" label="Verwalten" title="✎ Bearbeiten" onClick={() => selected && formularFuellen(selected)} />
         <ActionCard href="#staerken" label="Entwicklung" title="🎯 Stärken" onClick={() => setDetailsOffen(true)} />
       </section>
 
         {meldung && (
-          <div className="rounded-2xl border border-sky-300/20 bg-sky-300/10 p-5 text-sm font-bold text-sky-100">
+          <div className="rounded-xl border border-slate-200/20 bg-slate-200/10 p-4 text-sm font-bold text-slate-100">
             {meldung}
           </div>
         )}
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <KpiCard label="Teammitglieder" value={mitarbeiter.length} />
-          <KpiCard label="Aktive Mitarbeiter" value={aktive} tone="green" />
-          <KpiCard label="In Probezeit" value={probezeit} tone="sky" />
-          <KpiCard label="Admins" value={admins} />
-        </section>
-
-        <section id="team" className="grid gap-6 xl:grid-cols-[420px_1fr]">
+        <DropdownPanel
+          id="team"
+          title="Team"
+          eyebrow="Übersicht · Auswahl · Suche"
+          description="Mitarbeiter auswählen und Details bearbeiten."
+          open={teamOffen}
+          onToggle={() => setTeamOffen(!teamOffen)}
+        >
+          <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
           <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
             <div className="border-b border-white/10 p-5 sm:p-6">
               <h2 className="text-xl font-black text-white">Team</h2>
@@ -346,7 +348,7 @@ export default function MitarbeiterPage() {
                 value={suche}
                 onChange={(e) => setSuche(e.target.value)}
                 placeholder="Mitarbeiter suchen..."
-                className="mt-5 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-bold text-white outline-none transition placeholder:text-white/30 focus:border-sky-300/40 focus:bg-black/40 focus:ring-4 focus:ring-sky-300/10"
+                className="dark-input mt-5"
               />
             </div>
 
@@ -397,9 +399,15 @@ export default function MitarbeiterPage() {
               </div>
             ) : (
               <>
-                <section id="details" className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
-                  <div className="border-b border-white/10 p-5 sm:p-6">
-                    <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
+                <DropdownPanel
+                  id="details"
+                  title="Personalakte"
+                  eyebrow="Details · Vertrag · Zeiten"
+                  description="Rollen, Arbeitszeit, Ferien und Vertragsdaten des ausgewählten Mitarbeiters."
+                  open={detailsOffen}
+                  onToggle={() => setDetailsOffen(!detailsOffen)}
+                >
+                  <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
                       <div>
                         <div className="flex flex-wrap items-center gap-3">
                           <h2 className="text-3xl font-black text-white">{selected.name}</h2>
@@ -413,13 +421,6 @@ export default function MitarbeiterPage() {
                       <div className="flex flex-wrap gap-3">
                         <button
                           type="button"
-                          onClick={() => setDetailsOffen(!detailsOffen)}
-                          className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black text-white transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
-                        >
-                          {detailsOffen ? "▲ Schließen" : "▼ Öffnen"}
-                        </button>
-                        <button
-                          type="button"
                           onClick={() => formularFuellen(selected)}
                           className="rounded-2xl border border-sky-300/25 bg-sky-300/10 px-4 py-3 text-sm font-black text-sky-100 transition hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/15 hover:shadow-lg hover:shadow-sky-300/10"
                         >
@@ -427,10 +428,8 @@ export default function MitarbeiterPage() {
                         </button>
                       </div>
                     </div>
-                  </div>
 
-                  {detailsOffen && (
-                    <div className="space-y-5 p-5 sm:p-6">
+                    <div className="space-y-5">
                       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                         <InfoCard label="Wochenstunden" value={formatStunden(selected.wochenstunden)} />
                         <InfoCard label="Ferienwochen" value={`${selected.ferienwochen || 4} Wochen`} />
@@ -463,17 +462,18 @@ export default function MitarbeiterPage() {
                         </div>
                       </div>
                     </div>
-                  )}
-                </section>
+                </DropdownPanel>
 
                 {bearbeitenOffen && (
-                  <section id="bearbeiten" className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
-                    <div className="border-b border-white/10 p-5 sm:p-6">
-                      <h2 className="text-xl font-black text-white">Mitarbeiter bearbeiten</h2>
-                      <p className="mt-1 text-sm text-white/50">Neue Mitarbeiter werden weiterhin im Chef Dashboard erstellt.</p>
-                    </div>
-
-                    <div className="space-y-5 p-5 sm:p-6">
+                  <DropdownPanel
+                    id="bearbeiten"
+                    title="Mitarbeiter bearbeiten"
+                    eyebrow="Verwalten · Vertrag · Ferien"
+                    description="Neue Mitarbeiter werden weiterhin im Chef Dashboard erstellt."
+                    open={bearbeitenOffen}
+                    onToggle={() => setBearbeitenOffen(!bearbeitenOffen)}
+                  >
+                    <div className="space-y-5">
                       <div className="grid gap-4 lg:grid-cols-3">
                         <Field label="Name"><Input value={name} onChange={setName} /></Field>
                         <Field label="Rolle"><Select value={rolle} onChange={setRolle} options={["Mitarbeiter", "Admin", "Lehrling", "Temporär", "Aushilfe"]} /></Field>
@@ -514,12 +514,47 @@ export default function MitarbeiterPage() {
                         </button>
                       </div>
                     </div>
-                  </section>
+                  </DropdownPanel>
                 )}
               </>
             )}
           </div>
-        </section>
+          </div>
+        </DropdownPanel>
+
+      <style jsx global>{`
+        .dark-input {
+          width: 100%;
+          border-radius: 1rem;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(0, 0, 0, 0.28);
+          padding: 0.95rem 1rem;
+          color: white;
+          outline: none;
+          transition: 0.2s ease;
+        }
+
+        .dark-input:focus {
+          border-color: rgba(125, 211, 252, 0.45);
+          box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.1);
+          background: rgba(0, 0, 0, 0.38);
+        }
+
+        .dark-input::placeholder {
+          color: rgba(255, 255, 255, 0.35);
+        }
+
+        .dark-input option {
+          background: #111315;
+          color: white;
+        }
+
+        .dark-input::-webkit-calendar-picker-indicator {
+          filter: brightness(0) invert(1);
+          opacity: 1;
+          cursor: pointer;
+        }
+      `}</style>
     </main>
   );
 }
@@ -538,27 +573,26 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
       <div
-        className={`text-2xl font-black md:text-3xl ${
+        className={`text-xl font-black leading-tight md:text-2xl ${
           red
             ? "text-red-400"
             : green
-            ? "text-green-400"
-            : blue
-            ? "text-sky-200"
-            : "text-slate-100"
+              ? "text-green-400"
+              : blue
+                ? "text-sky-200"
+                : "text-slate-100"
         }`}
       >
         {value}
       </div>
-      <div className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
+      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
         {label}
       </div>
     </div>
   );
 }
-
 
 function ActionCard({
   href,
@@ -583,13 +617,43 @@ function ActionCard({
   );
 }
 
-function KpiCard({ label, value, tone }: { label: string; value: string | number; tone?: "green" | "sky" }) {
-  const color = tone === "green" ? "text-green-300" : tone === "sky" ? "text-sky-100" : "text-white";
+function DropdownPanel({
+  id,
+  title,
+  eyebrow,
+  description,
+  open,
+  onToggle,
+  children,
+}: {
+  id: string;
+  title: string;
+  eyebrow: string;
+  description: string;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
-      <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">{label}</div>
-      <div className={`mt-4 break-words text-4xl font-black leading-tight ${color}`}>{value}</div>
-    </div>
+    <section id={id} className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-sky-300/5 lg:flex-row lg:items-center lg:p-7"
+      >
+        <div>
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">{eyebrow}</div>
+          <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
+          <p className="mt-1 text-white/55">{description}</p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 transition hover:border-sky-300/35 hover:bg-sky-300/10 hover:text-sky-100">
+          {open ? "Schließen ▲" : "Öffnen ▼"}
+        </div>
+      </button>
+
+      {open && <div className="space-y-6 border-t border-white/10 p-6 lg:p-7">{children}</div>}
+    </section>
   );
 }
 
@@ -658,7 +722,7 @@ function Input({ value, onChange, type = "text", step, readOnly }: { value: stri
       value={value}
       readOnly={readOnly}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-bold text-white outline-none transition placeholder:text-white/30 focus:border-sky-300/40 focus:bg-black/40 focus:ring-4 focus:ring-sky-300/10 disabled:opacity-50"
+      className="dark-input"
     />
   );
 }
@@ -668,7 +732,7 @@ function Select({ value, onChange, options }: { value: string; onChange: (value:
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40 focus:ring-4 focus:ring-sky-300/10"
+      className="dark-input"
     >
       {options.map((option) => (
         <option key={option} value={option} className="bg-[#111315] text-white">
