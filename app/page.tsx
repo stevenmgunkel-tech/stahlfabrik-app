@@ -131,7 +131,6 @@ function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>(initialStats);
-  const [loading, setLoading] = useState(true);
 
   const [meldung, setMeldung] = useState("");
 
@@ -140,7 +139,6 @@ export default function DashboardPage() {
   }, []);
 
   async function loadDashboard() {
-    setLoading(true);
     setMeldung("");
 
     const userData = await supabase.auth.getUser();
@@ -334,12 +332,7 @@ export default function DashboardPage() {
       offeneAntraege,
     });
 
-    setLoading(false);
   }
-  if (loading) {
-    return null;
-  }
-
 return (
     <main className="space-y-8 text-slate-100">
       <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
@@ -382,14 +375,14 @@ return (
           <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-4">
             <HeroMini
               label="Ü-Std."
-              value={formatStunden(stats.gesamtUeberstunden)}
+              value={formatKurz(stats.gesamtUeberstunden)}
               green={stats.gesamtUeberstunden >= 0}
               red={stats.gesamtUeberstunden < 0}
             />
-            <HeroMini label="Projekte" value={stats.projekte} />
+            <HeroMini label="Projekte" value={String(stats.projekte).padStart(2, "0")} />
             <HeroMini
               label="Offen"
-              value={stats.offeneAntraege}
+              value={String(stats.offeneAntraege).padStart(2, "0")}
               blue={stats.offeneAntraege > 0}
             />
             <HeroMini
@@ -612,10 +605,10 @@ function HeroMini({
         red
           ? "text-red-400"
           : green
-          ? "text-green-400"
-          : blue
-          ? "text-sky-200"
-          : "text-slate-100"
+            ? "text-green-400"
+            : blue
+              ? "text-sky-200"
+              : "text-slate-100"
       }`}>
         {value}
       </div>
