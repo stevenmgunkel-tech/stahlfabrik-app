@@ -382,7 +382,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-4">
             <HeroMini
               label="Ü-Std."
-              value={formatStunden(stats.gesamtUeberstunden)}
+              value={formatKurz(stats.gesamtUeberstunden)}
               green={stats.gesamtUeberstunden >= 0}
               red={stats.gesamtUeberstunden < 0}
             />
@@ -574,7 +574,7 @@ export default function DashboardPage() {
 
           <InfoRow
             label="Ü-Std."
-            value={formatStunden(stats.gesamtUeberstunden)}
+            value={formatKurz(stats.gesamtUeberstunden)}
             highlight={stats.gesamtUeberstunden >= 0}
             danger={stats.gesamtUeberstunden < 0}
             icon={<TrendingUp size={22} />}
@@ -606,27 +606,27 @@ function HeroMini({
   blue?: boolean;
   red?: boolean;
 }) {
+  const color = red
+    ? "text-red-400"
+    : green
+    ? "text-green-400"
+    : blue
+    ? "text-sky-200"
+    : "text-slate-100";
+
   return (
-    <div className="flex h-[82px] min-w-[128px] flex-col justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
-      <div
-        className={`truncate whitespace-nowrap text-lg font-black leading-tight sm:text-xl md:text-2xl ${
-          red
-            ? "text-red-400"
-            : green
-              ? "text-green-400"
-              : blue
-                ? "text-sky-200"
-                : "text-slate-100"
-        }`}
-      >
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+      <div className={`text-xl font-black leading-tight md:text-2xl ${color}`}>
         {value}
       </div>
-      <div className="mt-1 truncate whitespace-nowrap text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
+
+      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
         {label}
       </div>
     </div>
   );
 }
+
 
 function WorkTimeCard({
   eyebrow,
