@@ -505,9 +505,9 @@ export default function AbwesenheitenPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-4">
-              <HeroMini label="Resturlaub" value={resturlaub} green={resturlaub >= 0} red={resturlaub < 0} />
+              <HeroMini label="Ferien" value={resturlaub} green={resturlaub >= 0} red={resturlaub < 0} />
               <HeroMini
-                label="Überstunden"
+  label="Ü-Std."
                 value={formatStunden(konto.ueberstundenAktuell, true)}
                 green={konto.ueberstundenAktuell >= 0}
                 red={konto.ueberstundenAktuell < 0}
@@ -922,12 +922,12 @@ function KpiCard({
       : "text-white";
 
   return (
-    <div className="min-h-[132px] rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+    <div className="min-h-[220px] rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
       <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
         {label}
       </div>
 
-      <div className={`mt-4 min-h-[44px] break-words text-4xl font-black ${color}`}>
+      <div className={`mt-4 min-h-[90px] flex items-start break-words text-4xl font-black ${color}`}>
         {value}
       </div>
 
