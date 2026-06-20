@@ -363,7 +363,7 @@ export default function DashboardPage() {
               ODZ SILVER · Dashboard
             </div>
 
-            <h1 className="mt-2 text-5xl font-black tracking-tight text-white lg:text-6xl">
+            <h1 className="mt-3 text-5xl font-black tracking-tight text-white lg:text-7xl">
               Dashboard
             </h1>
 
