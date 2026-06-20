@@ -88,6 +88,7 @@ export default function AbwesenheitenPage() {
   }, []);
 
   async function ladeDaten() {
+    
     setMeldung("");
 
     const userData = await supabase.auth.getUser();
@@ -128,6 +129,7 @@ export default function AbwesenheitenPage() {
     if (error) {
       setMeldung(error.message);
       console.log(error);
+      
       return;
     }
 
@@ -242,6 +244,7 @@ export default function AbwesenheitenPage() {
       ueberstundenAktuell,
     });
 
+    
   }
 
   function berechneTage() {
@@ -337,6 +340,7 @@ export default function AbwesenheitenPage() {
       mitarbeiterName = mitarbeiterData.name;
     }
 
+    
 
     const { error } = await supabase.from("urlaub").insert([
       {
@@ -352,10 +356,11 @@ export default function AbwesenheitenPage() {
     ]);
 
     if (error) {
-  setMeldung(error.message);
-  console.log(error);
-  return;
-}
+      
+      setMeldung(error.message);
+      console.log(error);
+      return;
+    }
 
     setTyp("Urlaub");
     setVon("");
@@ -364,6 +369,7 @@ export default function AbwesenheitenPage() {
 
     await ladeDaten();
 
+    
     setMeldung("Abwesenheit gespeichert.");
   }
 
@@ -501,7 +507,7 @@ export default function AbwesenheitenPage() {
             <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-4">
               <HeroMini label="Resturlaub" value={resturlaub} green={resturlaub >= 0} red={resturlaub < 0} />
               <HeroMini
-                label="Ü-Std."
+                label="Überstunden"
                 value={formatStunden(konto.ueberstundenAktuell, true)}
                 green={konto.ueberstundenAktuell >= 0}
                 red={konto.ueberstundenAktuell < 0}
@@ -528,32 +534,32 @@ export default function AbwesenheitenPage() {
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
           <KpiCard
             label="Jahresurlaub"
-            value={loading ? "..." : konto.jahresurlaub}
+            value={konto.jahresurlaub}
             subtext="Verfügbare Tage pro Jahr"
           />
 
           <KpiCard
             label="Genommen"
-            value={loading ? "..." : konto.genommenerUrlaub}
+            value={konto.genommenerUrlaub}
             subtext="Genehmigte Urlaubstage"
           />
 
           <KpiCard
             label="Resturlaub"
-            value={loading ? "..." : resturlaub}
+            value={resturlaub}
             subtext={resturlaub >= 0 ? "Noch verfügbar" : "Überzogen"}
             highlight={resturlaub >= 0 ? "green" : "red"}
           />
 
           <KpiCard
             label="Krank"
-            value={loading ? "..." : konto.kranktage}
+            value={konto.kranktage}
             subtext="Erfasste Kranktage"
             highlight={konto.kranktage > 0 ? "red" : undefined}
           />
 
           <KpiCard
-            label="Ü-Std."
+            label="Überstunden"
             value={
               loading
                 ? "..."
@@ -597,7 +603,7 @@ export default function AbwesenheitenPage() {
                   Verbraucht
                 </div>
                 <div className="mt-2 text-5xl font-black text-sky-100">
-                  {loading ? "..." : konto.genommenerUrlaub}
+                  {konto.genommenerUrlaub}
                 </div>
                 <div className="mt-1 text-sm text-white/50">
                   von {konto.jahresurlaub} Tagen
@@ -613,7 +619,7 @@ export default function AbwesenheitenPage() {
                     resturlaub >= 0 ? "text-green-400" : "text-red-400"
                   }`}
                 >
-                  {loading ? "..." : resturlaub}
+                  {resturlaub}
                 </div>
                 <div className="mt-1 text-sm text-white/50">
                   Tage verfügbar
@@ -916,7 +922,7 @@ function KpiCard({
       : "text-white";
 
   return (
-    <div className="min-h-[220px] rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
       <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
         {label}
       </div>
