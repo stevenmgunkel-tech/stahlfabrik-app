@@ -25,7 +25,6 @@ type Konto = {
   ueberstundenAktuell: number;
 };
 
-
 function formatDateLocal(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -64,23 +63,23 @@ function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
 
 export default function AbwesenheitenPage() {
   const [abwesenheiten, setAbwesenheiten] = useState<Abwesenheit[]>([]);
-  const [ready, setReady] = useState(false);
   const [konto, setKonto] = useState<Konto>({
-  jahresurlaub: 0,
-  genommenerUrlaub: 0,
-  kranktage: 0,
-  offeneAntraege: 0,
-  ueberstundenabbauStunden: 0,
-  ueberstundenAktuell: 0,
-});
+    jahresurlaub: 0,
+    genommenerUrlaub: 0,
+    kranktage: 0,
+    offeneAntraege: 0,
+    ueberstundenabbauStunden: 0,
+    ueberstundenAktuell: 0,
+  });
 
   const [typ, setTyp] = useState("Urlaub");
   const [von, setVon] = useState("");
   const [bis, setBis] = useState("");
   const [stunden, setStunden] = useState("");
 
-  const loading = false;
+  const [saving, setSaving] = useState(false);
   const [meldung, setMeldung] = useState("");
+  const [kontoOffen, setKontoOffen] = useState(true);
   const [formularOffen, setFormularOffen] = useState(true);
   const [uebersichtOffen, setUebersichtOffen] = useState(true);
 
@@ -89,7 +88,6 @@ export default function AbwesenheitenPage() {
   }, []);
 
   async function ladeDaten() {
-    
     setMeldung("");
 
     const userData = await supabase.auth.getUser();
@@ -130,7 +128,6 @@ export default function AbwesenheitenPage() {
     if (error) {
       setMeldung(error.message);
       console.log(error);
-      
       return;
     }
 
@@ -244,8 +241,6 @@ export default function AbwesenheitenPage() {
       ueberstundenabbauStunden,
       ueberstundenAktuell,
     });
-
-    setReady(true);
   }
 
   function berechneTage() {
@@ -341,7 +336,7 @@ export default function AbwesenheitenPage() {
       mitarbeiterName = mitarbeiterData.name;
     }
 
-    
+    setSaving(true);
 
     const { error } = await supabase.from("urlaub").insert([
       {
@@ -357,7 +352,7 @@ export default function AbwesenheitenPage() {
     ]);
 
     if (error) {
-      
+      setSaving(false);
       setMeldung(error.message);
       console.log(error);
       return;
@@ -370,7 +365,7 @@ export default function AbwesenheitenPage() {
 
     await ladeDaten();
 
-    
+    setSaving(false);
     setMeldung("Abwesenheit gespeichert.");
   }
 
@@ -460,40 +455,37 @@ export default function AbwesenheitenPage() {
   const berechneteTage = berechneTage();
   const berechneteStunden = Number(stunden || 0);
 
-  if (!ready) {
-    return null;
-  }
-
   return (
     <main className="space-y-8 text-slate-100">
-        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
-          <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
-            <div
-              className="h-full w-full bg-cover bg-[center_20%]"
-              style={{
-                backgroundImage: "url('/berg.png')",
-                filter: "brightness(1.65) contrast(1.05)",
-              }}
-            />
-          </div>
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
+          <div
+            className="h-full w-full bg-cover bg-[center_20%]"
+            style={{
+              backgroundImage: "url('/berg.png')",
+              filter: "brightness(1.65) contrast(1.05)",
+            }}
+          />
+        </div>
 
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
 
-          <div className="relative z-10 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
-            <div>
-              <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
-                ODZ SILVER · Abwesenheiten
-              </div>
+        <div className="relative z-10 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
+          <div>
+            <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
+              ODZ SILVER · Abwesenheiten
+            </div>
 
-              <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
-                Abwesenheiten
-              </h1>
+            <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
+              Abwesenheiten
+            </h1>
 
-              <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-white/65 sm:text-base">
-                Urlaub, Krankheit und Überstundenabbau im Überblick.
-              </p>
+            <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-white/65 sm:text-base">
+              Urlaub, Krankheit und Überstundenabbau sauber erfassen und kontrollieren.
+            </p>
 
-              <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
                 <span
                   className={`h-3 w-3 rounded-full ${
                     konto.offeneAntraege > 0
@@ -502,374 +494,321 @@ export default function AbwesenheitenPage() {
                   }`}
                 />
                 <span className="text-xs font-black uppercase tracking-widest text-white/70">
-                  {konto.offeneAntraege > 0
-                    ? `${konto.offeneAntraege} Antrag offen`
-                    : "Alles sauber"}
+                  {konto.offeneAntraege > 0 ? "Antrag offen" : "Alles sauber"}
                 </span>
               </div>
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-4">
-              <HeroMini label="Ferien" value={resturlaub} green={resturlaub >= 0} red={resturlaub < 0} />
-              <HeroMini
-                label="Ü-Std."
-                value={ready ? formatStunden(konto.ueberstundenAktuell, true) : "+00 h 00 min"}
-                green={konto.ueberstundenAktuell >= 0}
-                red={konto.ueberstundenAktuell < 0}
-              />
-              <HeroMini label="Offen" value={ready ? konto.offeneAntraege : "00"} blue={konto.offeneAntraege > 0} />
-              <HeroMini label="Krank" value={ready ? konto.kranktage : "00"} red={konto.kranktage > 0} />
+          <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-3">
+            <HeroMini label="Ferien" value={resturlaub} green={resturlaub >= 0} red={resturlaub < 0} />
+            <HeroMini label="Offen" value={String(konto.offeneAntraege).padStart(2, "0")} blue={konto.offeneAntraege > 0} />
+            <HeroMini label="Krank" value={String(konto.kranktage).padStart(2, "0")} red={konto.kranktage > 0} />
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <ActionCard href="#konto" label="Konto" title="🌿 Urlaub" onClick={() => setKontoOffen(true)} />
+        <ActionCard href="#formular" label="Beantragen" title="✦ Abwesenheit" onClick={() => setFormularOffen(true)} />
+        <ActionCard href="#uebersicht" label="Status" title="▤ Anträge" onClick={() => setUebersichtOffen(true)} />
+        <ActionCard href="#uebersicht" label="Verlauf" title="📊 Übersicht" onClick={() => setUebersichtOffen(true)} />
+      </section>
+
+      {meldung && (
+        <div className="rounded-xl border border-slate-200/20 bg-slate-200/10 p-4 text-sm font-bold text-slate-100">
+          {meldung}
+        </div>
+      )}
+
+      <DropdownPanel
+        id="konto"
+        title="Urlaubskonto"
+        eyebrow="Ferien · Krankheit · Überstunden"
+        description="Jahresurlaub, Verbrauch, Resturlaub und Überstundenabbau als ruhige Kontoübersicht."
+        open={kontoOffen}
+        onToggle={() => setKontoOffen(!kontoOffen)}
+      >
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <InfoBox label="Jahresurlaub" value={`${konto.jahresurlaub} Tage`} />
+          <InfoBox label="Genommen" value={`${konto.genommenerUrlaub} Tage`} />
+          <InfoBox
+            label="Resturlaub"
+            value={`${resturlaub} Tage`}
+            highlight={resturlaub >= 0 ? "green" : "red"}
+          />
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+          <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+            <div>
+              <div className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
+                Verbrauch
+              </div>
+              <div className="mt-2 text-2xl font-black text-white">
+                {konto.genommenerUrlaub} von {konto.jahresurlaub} Tagen
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-black text-slate-100">
+              {restProzent.toFixed(0)}% verfügbar
             </div>
           </div>
-        </section>
 
-        <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <ActionCard href="#formular" label="Beantragen" title="✦ Neue Abwesenheit" onClick={() => setFormularOffen(true)} />
-          <ActionCard href="#uebersicht" label="Status" title="▤ Meine Anträge" onClick={() => setUebersichtOffen(true)} />
-          <ActionCard href="#formular" label="Konto" title="🌿 Urlaubskonto" onClick={() => setFormularOffen(true)} />
-          <ActionCard href="#uebersicht" label="Verlauf" title="📊 Übersicht" onClick={() => setUebersichtOffen(true)} />
-        </section>
+          <div className="overflow-hidden rounded-full border border-white/10 bg-black/35 p-1">
+            <div
+              className="h-4 rounded-full bg-gradient-to-r from-sky-200 to-emerald-300 shadow-lg shadow-sky-300/20 transition-all"
+              style={{ width: `${verbrauchtProzent}%` }}
+            />
+          </div>
 
-        {meldung && (
-          <div className="rounded-2xl border border-sky-300/20 bg-sky-300/10 p-4 text-sm font-bold text-sky-100">
-            {meldung}
+          <div className="mt-4 flex justify-between text-sm text-white/50">
+            <span>{verbrauchtProzent.toFixed(0)}% verbraucht</span>
+            <span>{restProzent.toFixed(0)}% verfügbar</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <InfoBox
+            label="Offene Anträge"
+            value={konto.offeneAntraege}
+            highlight={konto.offeneAntraege > 0 ? "blue" : "green"}
+          />
+          <InfoBox
+            label="Kranktage"
+            value={konto.kranktage}
+            highlight={konto.kranktage > 0 ? "red" : undefined}
+          />
+          <InfoBox
+            label="Überstundenabbau"
+            value={formatStunden(konto.ueberstundenabbauStunden)}
+          />
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+          <div className="text-sm font-bold text-white/50">Aktuelle Überstunden</div>
+          <div
+            className={`mt-2 text-3xl font-black ${
+              konto.ueberstundenAktuell >= 0 ? "text-green-400" : "text-red-400"
+            }`}
+          >
+            {formatStunden(konto.ueberstundenAktuell, true)}
+          </div>
+        </div>
+      </DropdownPanel>
+
+      <DropdownPanel
+        id="formular"
+        title="Abwesenheit erfassen"
+        eyebrow="Urlaub · Krankheit · Überstundenabbau"
+        description={
+          typ === "Überstundenabbau"
+            ? "Datum und Stunden für Überstundenabbau eintragen."
+            : "Zeitraum auswählen und Antrag speichern."
+        }
+        open={formularOffen}
+        onToggle={() => setFormularOffen(!formularOffen)}
+      >
+        <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+          <div className="rounded-2xl border border-white/10 bg-black/25 px-5 py-4">
+            <div className="text-xs font-black uppercase tracking-[0.2em] text-white/45">
+              Berechnet
+            </div>
+            <div className="mt-2 text-3xl font-black text-slate-100">
+              {typ === "Überstundenabbau"
+                ? formatStunden(berechneteStunden || 0)
+                : `${berechneteTage} Tage`}
+            </div>
+          </div>
+
+          {typ === "Überstundenabbau" && (
+            <div className="rounded-2xl border border-sky-300/20 bg-sky-300/5 p-4 text-sm font-medium text-sky-100">
+              Überstundenabbau wird in Stunden erfasst und später direkt vom Überstundenkonto abgezogen.
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <Field label="Typ">
+            <select
+              value={typ}
+              onChange={(e) => {
+                setTyp(e.target.value);
+                setVon("");
+                setBis("");
+                setStunden("");
+              }}
+              className="dark-input"
+            >
+              <option value="Urlaub">Urlaub</option>
+              <option value="Krank">Krank</option>
+              <option value="Überstundenabbau">Überstundenabbau</option>
+            </select>
+          </Field>
+
+          {typ === "Überstundenabbau" ? (
+            <>
+              <Field label="Datum">
+                <input
+                  type="date"
+                  value={von}
+                  onChange={(e) => setVon(e.target.value)}
+                  className="dark-input"
+                />
+              </Field>
+
+              <Field label="Stunden">
+                <input
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  placeholder="z.B. 2.5"
+                  value={stunden}
+                  onChange={(e) => setStunden(e.target.value)}
+                  className="dark-input"
+                />
+              </Field>
+            </>
+          ) : (
+            <>
+              <Field label="Von">
+                <input
+                  type="date"
+                  value={von}
+                  onChange={(e) => setVon(e.target.value)}
+                  className="dark-input"
+                />
+              </Field>
+
+              <Field label="Bis">
+                <input
+                  type="date"
+                  value={bis}
+                  onChange={(e) => setBis(e.target.value)}
+                  className="dark-input"
+                />
+              </Field>
+            </>
+          )}
+
+          <div className="flex flex-col justify-end">
+            <button
+              type="button"
+              onClick={abwesenheitHinzufuegen}
+              disabled={saving}
+              className="rounded-2xl border border-slate-200/30 bg-slate-200/10 p-4 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/10 hover:shadow-sky-300/10 disabled:opacity-50"
+            >
+              {saving ? "Speichern..." : "Speichern"}
+            </button>
+          </div>
+        </div>
+      </DropdownPanel>
+
+      <DropdownPanel
+        id="uebersicht"
+        title="Meine Abwesenheiten"
+        eyebrow="Status · Verlauf · Kontrolle"
+        description="Übersicht deiner Anträge, Genehmigungen und abgelehnten Einträge."
+        open={uebersichtOffen}
+        onToggle={() => setUebersichtOffen(!uebersichtOffen)}
+      >
+        <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+          <div>
+            <h2 className="text-2xl font-black text-white">Übersicht</h2>
+            <p className="mt-1 text-white/55">
+              Alle Abwesenheiten mit Status und Menge.
+            </p>
+          </div>
+
+          <div className="text-sm text-white/50">
+            {abwesenheiten.length} Einträge
+          </div>
+        </div>
+
+        {abwesenheiten.length === 0 && (
+          <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
+            Noch keine Abwesenheiten vorhanden.
           </div>
         )}
 
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
-          <KpiCard
-            label="Jahresurlaub"
-            value={konto.jahresurlaub}
-            subtext="Verfügbare Tage pro Jahr"
-          />
+        <div className="space-y-4 md:hidden">
+          {abwesenheiten.map((eintrag) => (
+            <MobileEntry
+              key={eintrag.id}
+              eintrag={eintrag}
+              typFarbe={typFarbe}
+              statusFarbe={statusFarbe}
+              eintragZeitraum={eintragZeitraum}
+              eintragMenge={eintragMenge}
+              onDelete={() => abwesenheitLoeschen(eintrag.id)}
+            />
+          ))}
+        </div>
 
-          <KpiCard
-            label="Genommen"
-            value={konto.genommenerUrlaub}
-            subtext="Genehmigte Urlaubstage"
-          />
-
-          <KpiCard
-            label="Resturlaub"
-            value={resturlaub}
-            subtext={resturlaub >= 0 ? "Noch verfügbar" : "Überzogen"}
-            highlight={resturlaub >= 0 ? "green" : "red"}
-          />
-
-          <KpiCard
-            label="Krank"
-            value={konto.kranktage}
-            subtext="Erfasste Kranktage"
-            highlight={konto.kranktage > 0 ? "red" : undefined}
-          />
-
-          <KpiCard
-            label="Ü-Std."
-            value={
-              loading
-                ? "..."
-                : formatStunden(Number(konto.ueberstundenAktuell || 0), true)
-            }
-            subtext="Aktueller Stand"
-            highlight={konto.ueberstundenAktuell >= 0 ? "green" : "red"}
-          />
-
-          <KpiCard
-            label="Abbau"
-            value={
-              loading
-                ? "..."
-                : formatStunden(Number(konto.ueberstundenabbauStunden || 0))
-            }
-            subtext="Genehmigte Abbaustunden"
-          />
-        </section>
-
-        <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 backdrop-blur-xl sm:p-7">
-            <div className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-              <div>
-                <h2 className="text-2xl font-black text-white">
-                  Urlaubskonto
-                </h2>
-                <p className="mt-1 text-sm text-white/55">
-                  Jahresurlaub, Verbrauch und Resturlaub.
-                </p>
+        <div className="hidden overflow-hidden rounded-2xl border border-white/10 md:block">
+          <div className="overflow-x-auto">
+            <div className="min-w-[850px]">
+              <div className="grid grid-cols-6 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+                <div>Typ</div>
+                <div>Von</div>
+                <div>Bis / Datum</div>
+                <div>Tage / Stunden</div>
+                <div>Status</div>
+                <div>Aktion</div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-black text-white/70">
-                {restProzent.toFixed(0)}% verfügbar
-              </div>
-            </div>
-
-            <div className="mb-6 flex items-end justify-between gap-4">
-              <div>
-                <div className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
-                  Verbraucht
-                </div>
-                <div className="mt-2 text-5xl font-black text-sky-100">
-                  {konto.genommenerUrlaub}
-                </div>
-                <div className="mt-1 text-sm text-white/50">
-                  von {konto.jahresurlaub} Tagen
-                </div>
-              </div>
-
-              <div className="text-right">
-                <div className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
-                  Rest
-                </div>
+              {abwesenheiten.map((eintrag) => (
                 <div
-                  className={`mt-2 text-5xl font-black ${
-                    resturlaub >= 0 ? "text-green-400" : "text-red-400"
-                  }`}
+                  key={eintrag.id}
+                  className="grid grid-cols-6 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-sky-300/5"
                 >
-                  {resturlaub}
-                </div>
-                <div className="mt-1 text-sm text-white/50">
-                  Tage verfügbar
-                </div>
-              </div>
-            </div>
-
-            <div className="overflow-hidden rounded-full border border-white/10 bg-black/35 p-1">
-              <div
-                className="h-4 rounded-full bg-gradient-to-r from-sky-200 to-emerald-300 shadow-lg shadow-sky-300/20 transition-all"
-                style={{ width: `${verbrauchtProzent}%` }}
-              />
-            </div>
-
-            <div className="mt-4 flex justify-between text-sm text-white/50">
-              <span>{verbrauchtProzent.toFixed(0)}% verbraucht</span>
-              <span>{restProzent.toFixed(0)}% verfügbar</span>
-            </div>
-          </div>
-
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20 backdrop-blur-xl sm:p-7">
-            <h2 className="text-2xl font-black text-white">Aktueller Status</h2>
-            <p className="mt-1 text-sm text-white/55">Offene Anträge, Krankheit und Überstundenabbau kompakt zusammengefasst.</p>
-
-            <div className="mt-6 grid gap-4">
-              <InfoBox label="Offene Anträge" value={konto.offeneAntraege} highlight={konto.offeneAntraege > 0 ? "blue" : "green"} />
-              <InfoBox label="Kranktage" value={konto.kranktage} highlight={konto.kranktage > 0 ? "red" : undefined} />
-              <InfoBox label="Abbau" value={formatStunden(konto.ueberstundenabbauStunden)} />
-            </div>
-          </div>
-        </section>
-
-        <DropdownPanel
-          id="formular"
-          title="Abwesenheit erfassen"
-          eyebrow="Urlaub · Krankheit · Überstundenabbau"
-          description={
-            typ === "Überstundenabbau"
-              ? "Datum und Stunden für Überstundenabbau eintragen."
-              : "Zeitraum auswählen und Antrag speichern."
-          }
-          open={formularOffen}
-          onToggle={() => setFormularOffen(!formularOffen)}
-        >
-          <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-            <div className="rounded-2xl border border-white/10 bg-black/25 px-5 py-4">
-              <div className="text-xs font-black uppercase tracking-[0.2em] text-white/45">
-                Berechnet
-              </div>
-              <div className="mt-2 text-3xl font-black text-slate-100">
-                {typ === "Überstundenabbau"
-                  ? formatStunden(berechneteStunden || 0)
-                  : `${berechneteTage} Tage`}
-              </div>
-            </div>
-
-            {typ === "Überstundenabbau" && (
-              <div className="rounded-2xl border border-sky-300/20 bg-sky-300/5 p-4 text-sm font-medium text-sky-100">
-                Überstundenabbau wird in Stunden erfasst und später direkt vom
-                Überstundenkonto abgezogen.
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <Field label="Typ">
-              <select
-                value={typ}
-                onChange={(e) => {
-                  setTyp(e.target.value);
-                  setVon("");
-                  setBis("");
-                  setStunden("");
-                }}
-                className="dark-input"
-              >
-                <option value="Urlaub">Urlaub</option>
-                <option value="Krank">Krank</option>
-                <option value="Überstundenabbau">Überstundenabbau</option>
-              </select>
-            </Field>
-
-            {typ === "Überstundenabbau" ? (
-              <>
-                <Field label="Datum">
-                  <input
-                    type="date"
-                    value={von}
-                    onChange={(e) => setVon(e.target.value)}
-                    className="dark-input"
-                  />
-                </Field>
-
-                <Field label="Stunden">
-                  <input
-                    type="number"
-                    step="0.25"
-                    min="0"
-                    placeholder="z.B. 2.5"
-                    value={stunden}
-                    onChange={(e) => setStunden(e.target.value)}
-                    className="dark-input"
-                  />
-                </Field>
-              </>
-            ) : (
-              <>
-                <Field label="Von">
-                  <input
-                    type="date"
-                    value={von}
-                    onChange={(e) => setVon(e.target.value)}
-                    className="dark-input"
-                  />
-                </Field>
-
-                <Field label="Bis">
-                  <input
-                    type="date"
-                    value={bis}
-                    onChange={(e) => setBis(e.target.value)}
-                    className="dark-input"
-                  />
-                </Field>
-              </>
-            )}
-
-            <div className="flex flex-col justify-end">
-              <button
-                type="button"
-                onClick={abwesenheitHinzufuegen}
-                disabled={loading}
-                className="rounded-2xl border border-white/10 bg-white/10 p-4 font-black text-white shadow-lg shadow-black/20 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {loading ? "Speichern..." : "Speichern"}
-              </button>
-            </div>
-          </div>
-        </DropdownPanel>
-
-        <DropdownPanel
-          id="uebersicht"
-          title="Meine Abwesenheiten"
-          eyebrow="Status · Verlauf · Kontrolle"
-          description="Übersicht deiner Anträge, Genehmigungen und abgelehnten Einträge."
-          open={uebersichtOffen}
-          onToggle={() => setUebersichtOffen(!uebersichtOffen)}
-        >
-          <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
-            <div>
-              <h2 className="text-2xl font-black text-white">Übersicht</h2>
-              <p className="mt-1 text-white/55">
-                Alle Abwesenheiten mit Status und Menge.
-              </p>
-            </div>
-
-            <div className="text-sm text-white/50">
-              {abwesenheiten.length} Einträge
-            </div>
-          </div>
-
-          {abwesenheiten.length === 0 && (
-            <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
-              Noch keine Abwesenheiten vorhanden.
-            </div>
-          )}
-
-          <div className="space-y-4 md:hidden">
-            {abwesenheiten.map((eintrag) => (
-              <MobileEntry
-                key={eintrag.id}
-                eintrag={eintrag}
-                typFarbe={typFarbe}
-                statusFarbe={statusFarbe}
-                eintragZeitraum={eintragZeitraum}
-                eintragMenge={eintragMenge}
-                onDelete={() => abwesenheitLoeschen(eintrag.id)}
-              />
-            ))}
-          </div>
-
-          <div className="hidden overflow-hidden rounded-2xl border border-white/10 md:block">
-            <div className="overflow-x-auto">
-              <div className="min-w-[850px]">
-                <div className="grid grid-cols-6 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
-                  <div>Typ</div>
-                  <div>Von</div>
-                  <div>Bis / Datum</div>
-                  <div>Tage / Stunden</div>
-                  <div>Status</div>
-                  <div>Aktion</div>
-                </div>
-
-                {abwesenheiten.map((eintrag) => (
-                  <div
-                    key={eintrag.id}
-                    className="grid grid-cols-6 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-sky-300/5"
-                  >
-                    <div>
-                      <span
-                        className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${typFarbe(
-                          eintrag.typ
-                        )}`}
-                      >
-                        {eintrag.typ || "Urlaub"}
-                      </span>
-                    </div>
-
-                    <div>{eintrag.von}</div>
-
-                    <div>
-                      {eintrag.typ === "Überstundenabbau"
-                        ? eintrag.von
-                        : eintrag.bis}
-                    </div>
-
-                    <div className="font-black text-slate-100">
-                      {eintragMenge(eintrag)}
-                    </div>
-
-                    <div>
-                      <span
-                        className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(
-                          eintrag.status
-                        )}`}
-                      >
-                        {eintrag.status}
-                      </span>
-                    </div>
-
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => abwesenheitLoeschen(eintrag.id)}
-                        className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 font-bold text-red-300 transition hover:bg-red-500/15"
-                      >
-                        Löschen
-                      </button>
-                    </div>
+                  <div>
+                    <span
+                      className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${typFarbe(
+                        eintrag.typ
+                      )}`}
+                    >
+                      {eintrag.typ || "Urlaub"}
+                    </span>
                   </div>
-                ))}
-              </div>
+
+                  <div>{eintrag.von}</div>
+
+                  <div>
+                    {eintrag.typ === "Überstundenabbau"
+                      ? eintrag.von
+                      : eintrag.bis}
+                  </div>
+
+                  <div className="font-black text-slate-100">
+                    {eintragMenge(eintrag)}
+                  </div>
+
+                  <div>
+                    <span
+                      className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(
+                        eintrag.status
+                      )}`}
+                    >
+                      {eintrag.status}
+                    </span>
+                  </div>
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => abwesenheitLoeschen(eintrag.id)}
+                      className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 font-bold text-red-300 transition hover:bg-red-500/15"
+                    >
+                      Löschen
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </DropdownPanel>
+        </div>
+      </DropdownPanel>
 
       <style jsx global>{`
         .dark-input {
@@ -908,35 +847,30 @@ export default function AbwesenheitenPage() {
   );
 }
 
-function KpiCard({
+function InfoBox({
   label,
   value,
-  subtext,
   highlight,
 }: {
   label: string;
   value: string | number;
-  subtext: string;
-  highlight?: "green" | "red";
+  highlight?: "green" | "red" | "blue";
 }) {
   const color =
     highlight === "green"
       ? "text-green-400"
       : highlight === "red"
       ? "text-red-400"
-      : "text-white";
+      : highlight === "blue"
+      ? "text-sky-200"
+      : "text-slate-100";
 
   return (
-    <div className="h-[230px] rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
-      <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
+    <div className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
+      <div className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
         {label}
       </div>
-
-      <div className={`mt-4 h-[96px] flex items-start break-words text-4xl font-black ${color}`}>
-        {value}
-      </div>
-
-      <div className="mt-3 text-sm text-white/45">{subtext}</div>
+      <div className={`mt-2 text-2xl font-black ${color}`}>{value}</div>
     </div>
   );
 }
@@ -982,62 +916,25 @@ function DropdownPanel({
   children: ReactNode;
 }) {
   return (
-    <section
-      id={id}
-      className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30"
-    >
+    <section id={id} className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30">
       <button
         type="button"
         onClick={onToggle}
         className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-sky-300/5 lg:flex-row lg:items-center lg:p-7"
       >
         <div>
-          <div className="text-xs font-black uppercase tracking-[0.24em] text-sky-100">
-            {eyebrow}
-          </div>
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">{eyebrow}</div>
           <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
           <p className="mt-1 text-white/55">{description}</p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-black text-white transition hover:border-sky-300/25 hover:bg-sky-300/5">
+        <div className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 transition hover:border-sky-300/35 hover:bg-sky-300/10 hover:text-sky-100">
           {open ? "Schließen ▲" : "Öffnen ▼"}
         </div>
       </button>
 
-      {open && (
-        <div className="space-y-6 border-t border-white/10 p-6 lg:p-7">
-          {children}
-        </div>
-      )}
+      {open && <div className="space-y-6 border-t border-white/10 p-6 lg:p-7">{children}</div>}
     </section>
-  );
-}
-
-function InfoBox({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: string | number;
-  highlight?: "green" | "red" | "blue";
-}) {
-  const color =
-    highlight === "green"
-      ? "text-green-400"
-      : highlight === "red"
-      ? "text-red-400"
-      : highlight === "blue"
-      ? "text-sky-200"
-      : "text-slate-100";
-
-  return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
-      <div className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
-        {label}
-      </div>
-      <div className={`mt-2 text-2xl font-black ${color}`}>{value}</div>
-    </div>
   );
 }
 
@@ -1054,27 +951,25 @@ function HeroMini({
   blue?: boolean;
   red?: boolean;
 }) {
-  const color = red
-    ? "text-red-400"
-    : green
-    ? "text-green-400"
-    : blue
-    ? "text-sky-200"
-    : "text-slate-100";
-
   return (
-    <div className="flex h-[84px] min-w-[132px] flex-col justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
-      <div className={`truncate whitespace-nowrap text-xl font-black leading-tight md:text-2xl ${color}`}>
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+      <div
+        className={`text-xl font-black leading-tight md:text-2xl ${
+          red
+            ? "text-red-400"
+            : green
+              ? "text-green-400"
+              : blue
+                ? "text-sky-200"
+                : "text-slate-100"
+        }`}
+      >
         {value}
       </div>
-
-      <div className="mt-1 truncate whitespace-nowrap text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
-        {label}
-      </div>
+      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">{label}</div>
     </div>
   );
 }
-
 
 function Field({
   label,
@@ -1085,9 +980,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-bold text-white/70">
-        {label}
-      </label>
+      <label className="mb-2 block text-sm font-bold text-white/70">{label}</label>
       {children}
     </div>
   );

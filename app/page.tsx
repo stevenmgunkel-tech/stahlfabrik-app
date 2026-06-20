@@ -373,12 +373,7 @@ return (
           </div>
 
           <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-4">
-            <HeroMini
-              label="Ü-Std."
-              value={formatKurz(stats.gesamtUeberstunden)}
-              green={stats.gesamtUeberstunden >= 0}
-              red={stats.gesamtUeberstunden < 0}
-            />
+            <HeroMini label="Heute" value={formatDateLocal(new Date()).slice(5)} />
             <HeroMini label="Projekte" value={String(stats.projekte).padStart(2, "0")} />
             <HeroMini
               label="Offen"
@@ -386,7 +381,7 @@ return (
               blue={stats.offeneAntraege > 0}
             />
             <HeroMini
-              label="Heute"
+              label="Tag"
               value={formatKurz(stats.heuteDifferenz)}
               green={stats.heuteDifferenz >= 0}
               red={stats.heuteDifferenz < 0}
@@ -601,15 +596,17 @@ function HeroMini({
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
-      <div className={`text-xl font-black leading-tight md:text-2xl ${
-        red
-          ? "text-red-400"
-          : green
-            ? "text-green-400"
-            : blue
-              ? "text-sky-200"
-              : "text-slate-100"
-      }`}>
+      <div
+        className={`text-xl font-black leading-tight md:text-2xl ${
+          red
+            ? "text-red-400"
+            : green
+              ? "text-green-400"
+              : blue
+                ? "text-sky-200"
+                : "text-slate-100"
+        }`}
+      >
         {value}
       </div>
       <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
