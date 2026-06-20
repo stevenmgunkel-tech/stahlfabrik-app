@@ -242,7 +242,6 @@ export default function AbwesenheitenPage() {
       ueberstundenAktuell,
     });
 
-    
   }
 
   function berechneTage() {
@@ -338,7 +337,6 @@ export default function AbwesenheitenPage() {
       mitarbeiterName = mitarbeiterData.name;
     }
 
-    
 
     const { error } = await supabase.from("urlaub").insert([
       {
@@ -354,11 +352,10 @@ export default function AbwesenheitenPage() {
     ]);
 
     if (error) {
-      
-      setMeldung(error.message);
-      console.log(error);
-      return;
-    }
+  setMeldung(error.message);
+  console.log(error);
+  return;
+}
 
     setTyp("Urlaub");
     setVon("");
@@ -367,7 +364,6 @@ export default function AbwesenheitenPage() {
 
     await ladeDaten();
 
-    
     setMeldung("Abwesenheit gespeichert.");
   }
 
@@ -486,28 +482,26 @@ export default function AbwesenheitenPage() {
                 Urlaub, Krankheit, Überstundenabbau und Resturlaub an einem Ort.
               </p>
 
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
-                  <span
-                    className={`h-3 w-3 rounded-full ${
-                      konto.offeneAntraege > 0
-                        ? "bg-sky-300 shadow-lg shadow-sky-300/40"
-                        : "bg-green-400 shadow-lg shadow-green-400/40"
-                    }`}
-                  />
-                  <span className="text-xs font-black uppercase tracking-widest text-white/70">
-                    {konto.offeneAntraege > 0
-                      ? `${konto.offeneAntraege} Antrag offen`
-                      : "Alles sauber"}
-                  </span>
-                </div>
+              <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+                <span
+                  className={`h-3 w-3 rounded-full ${
+                    konto.offeneAntraege > 0
+                      ? "bg-sky-300 shadow-lg shadow-sky-300/40"
+                      : "bg-green-400 shadow-lg shadow-green-400/40"
+                  }`}
+                />
+                <span className="text-xs font-black uppercase tracking-widest text-white/70">
+                  {konto.offeneAntraege > 0
+                    ? `${konto.offeneAntraege} Antrag offen`
+                    : "Alles sauber"}
+                </span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-4">
-              <HeroMini label="Ferien" value={resturlaub} green={resturlaub >= 0} red={resturlaub < 0} />
+              <HeroMini label="Resturlaub" value={resturlaub} green={resturlaub >= 0} red={resturlaub < 0} />
               <HeroMini
-  label="Ü-Std."
+                label="Ü-Std."
                 value={formatStunden(konto.ueberstundenAktuell, true)}
                 green={konto.ueberstundenAktuell >= 0}
                 red={konto.ueberstundenAktuell < 0}
@@ -559,7 +553,7 @@ export default function AbwesenheitenPage() {
           />
 
           <KpiCard
-            label="Überstunden"
+            label="Ü-Std."
             value={
               loading
                 ? "..."
@@ -570,7 +564,7 @@ export default function AbwesenheitenPage() {
           />
 
           <KpiCard
-            label="Überstundenabbau"
+            label="Abbau"
             value={
               loading
                 ? "..."
@@ -647,7 +641,7 @@ export default function AbwesenheitenPage() {
             <div className="mt-6 grid gap-4">
               <InfoBox label="Offene Anträge" value={konto.offeneAntraege} highlight={konto.offeneAntraege > 0 ? "blue" : "green"} />
               <InfoBox label="Kranktage" value={konto.kranktage} highlight={konto.kranktage > 0 ? "red" : undefined} />
-              <InfoBox label="Überstundenabbau" value={formatStunden(konto.ueberstundenabbauStunden)} />
+              <InfoBox label="Abbau" value={formatStunden(konto.ueberstundenabbauStunden)} />
             </div>
           </div>
         </section>
@@ -927,7 +921,7 @@ function KpiCard({
         {label}
       </div>
 
-      <div className={`mt-4 min-h-[90px] flex items-start break-words text-4xl font-black ${color}`}>
+      <div className={`mt-4 break-words text-4xl font-black ${color}`}>
         {value}
       </div>
 
@@ -1049,21 +1043,20 @@ function HeroMini({
   blue?: boolean;
   red?: boolean;
 }) {
+  const color = red
+    ? "text-red-400"
+    : green
+    ? "text-green-400"
+    : blue
+    ? "text-sky-200"
+    : "text-slate-100";
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
-      <div
-        className={`text-xl font-black leading-tight md:text-2xl ${
-          red
-            ? "text-red-400"
-            : green
-              ? "text-green-400"
-              : blue
-                ? "text-sky-200"
-                : "text-slate-100"
-        }`}
-      >
+      <div className={`text-xl font-black leading-tight md:text-2xl ${color}`}>
         {value}
       </div>
+
       <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
         {label}
       </div>
