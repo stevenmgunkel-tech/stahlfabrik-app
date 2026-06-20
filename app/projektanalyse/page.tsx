@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 
 type Ansicht = "aktiv" | "archiv";
@@ -235,77 +235,76 @@ export default function ProjektanalysePage() {
 
   return (
     <main className="space-y-8 text-slate-100">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-7 shadow-2xl shadow-black/30 lg:p-10">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.34]">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
             style={{
               backgroundImage: "url('/berg.png')",
-              filter: "brightness(1.55) contrast(1.05)",
+              filter: "brightness(1.65) contrast(1.05)",
             }}
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
 
-        <div className="relative z-10 flex flex-col justify-between gap-8 xl:flex-row xl:items-end">
+        <div className="relative z-10 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
           <div>
             <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
               ODZ SILVER · Projekte
             </div>
 
-            <h1 className="mt-5 text-5xl font-black tracking-tight text-white lg:text-7xl">
+            <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
               Projektanalyse
             </h1>
 
-            <p className="mt-4 max-w-2xl text-lg font-medium text-white/65">
+            <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-white/65 sm:text-base">
               Statistik und Archiv in einer Kommandozentrale. Zeigt, wo die Zeit im Unternehmen wirklich hingeht.
             </p>
 
-            <div className="mt-6 flex flex-wrap gap-3">
-              <AnsichtButton
-                active={ansicht === "aktiv"}
-                label="Aktive Projekte"
-                count={aktiveProjekte}
-                onClick={() => setAnsicht("aktiv")}
-              />
-              <AnsichtButton
-                active={ansicht === "archiv"}
-                label="Archiv"
-                count={archivProjekte}
-                onClick={() => setAnsicht("archiv")}
-              />
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+                <span className="h-3 w-3 rounded-full bg-green-400 shadow-lg shadow-green-400/40" />
+                <span className="text-xs font-black uppercase tracking-widest text-white/70">
+                  {ansicht === "aktiv" ? "Aktive Projekte" : "Archiv"}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 rounded-3xl border border-white/10 bg-black/25 p-4 text-center backdrop-blur-xl sm:grid-cols-4 xl:grid-cols-2">
+          <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-4">
             <HeroMini label="Ansicht" value={ansicht === "aktiv" ? "Aktiv" : "Archiv"} blue />
-            <HeroMini label="Projekte" value={projektDaten.length} />
-            <HeroMini label="Stunden" value={formatStunden(gesamtStunden)} blue />
-            <HeroMini label="Buchungen" value={gesamtBuchungen} green />
+            <HeroMini label="Projekte" value={String(projektDaten.length).padStart(2, "0")} />
+            <HeroMini label="Bereiche" value={String(bereichDaten.length).padStart(2, "0")} />
+            <HeroMini label="Seite" value={`${projektSeite}/${gesamtProjektSeiten}`} green />
           </div>
         </div>
-
-        <button
-          onClick={ladeDaten}
-          disabled={loading}
-          className="relative z-10 mt-7 rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/10 hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {loading ? "Lädt..." : "Daten aktualisieren"}
-        </button>
       </section>
 
-        {meldung && (
-          <div className="rounded-2xl border border-red-400/25 bg-red-500/10 p-5 text-sm font-bold text-red-100">
-            {meldung}
-          </div>
-        )}
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <ActionCard href="#projekte" label="Ansicht" title="📋 Aktiv" onClick={() => setAnsicht("aktiv")} />
+        <ActionCard href="#projekte" label="Archiv" title="🗄️ Archiv" onClick={() => setAnsicht("archiv")} />
+        <ActionCard href="#bereiche" label="Bereiche" title="📊 Auswertung" onClick={() => setBereichOffen(true)} />
+        <ActionCard href="#analyse" label="Refresh" title={loading ? "⏳ Lädt" : "↻ Aktualisieren"} onClick={ladeDaten} />
+      </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {meldung && (
+        <div className="rounded-xl border border-slate-200/20 bg-slate-200/10 p-4 text-sm font-bold text-slate-100">
+          {meldung}
+        </div>
+      )}
+
+      <DropdownPanel
+        id="analyse"
+        title="Kennzahlen"
+        eyebrow="Stunden · Buchungen · Top Projekt"
+        description="Große variable Werte bleiben bewusst im Inhaltsbereich, damit der Hero ruhig bleibt."
+        open={true}
+        onToggle={() => {}}
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <KpiCard
-            label={
-              ansicht === "aktiv" ? "Aktive Projekte" : "Archivierte Projekte"
-            }
+            label={ansicht === "aktiv" ? "Aktive Projekte" : "Archivierte Projekte"}
             value={projektDaten.length}
             subvalue="in dieser Ansicht"
           />
@@ -316,183 +315,183 @@ export default function ProjektanalysePage() {
           />
           <KpiCard label="Buchungen" value={gesamtBuchungen} />
           <KpiCard
-            label={topProjekt ? "Top Projekt" : "Top Projekt"}
+            label="Top Projekt"
             value={topProjekt?.titel || "-"}
             subvalue={topProjekt ? formatStunden(topProjekt.stunden) : "0 h"}
           />
-        </section>
+        </div>
 
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30 backdrop-blur-xl">
+        <div className="flex flex-wrap gap-3">
           <button
             type="button"
-            onClick={() => setBereichOffen(!bereichOffen)}
-            className="flex w-full flex-col gap-3 border-b border-white/10 px-5 py-5 text-left transition hover:bg-sky-300/[0.03] sm:px-6 lg:flex-row lg:items-center lg:justify-between"
+            onClick={() => setAnsicht("aktiv")}
+            className={`rounded-2xl border px-4 py-3 text-sm font-black transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10 ${
+              ansicht === "aktiv"
+                ? "border-sky-300/25 bg-sky-300/10 text-sky-100"
+                : "border-white/10 bg-white/10 text-white/65"
+            }`}
           >
-            <div>
-              <h2 className="text-xl font-black text-white">
-                Bereichsauswertung
-              </h2>
-              <p className="mt-1 text-sm leading-6 text-white/50">
-                Werkstatt, Montage, Planung, Logistik und weitere Bereiche nach
-                Stunden.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-black text-white">
-              {bereichOffen ? "▲ Schließen" : "▼ Öffnen"}
-            </div>
+            Aktive Projekte · {aktiveProjekte}
           </button>
 
-          {bereichOffen && (
-            <>
-              {loading ? (
-                <EmptyState text="Lade Bereichsdaten..." />
-              ) : bereichDaten.length === 0 ? (
-                <EmptyState text="Noch keine Bereichsdaten vorhanden." />
-              ) : (
-                <div className="grid gap-4 p-5 sm:p-6 md:grid-cols-2 xl:grid-cols-4">
-                  {bereichDaten.map((bereich, index) => (
-                    <div
-                      key={bereich.bereich}
-                      className="rounded-3xl border border-white/10 bg-black/25 p-5 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-lg font-black text-white">
-                            {bereich.bereich}
-                          </p>
-                          <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-white/35">
-                            Rang {index + 1}
-                          </p>
-                        </div>
-
-                        <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200">
-                          {prozent(bereich.stunden, gesamtStunden).toFixed(0)}%
-                        </div>
-                      </div>
-
-                      <div className="mt-5 text-3xl font-black text-sky-100">
-                        {formatStunden(bereich.stunden)}
-                      </div>
-
-                      <div className="mt-2 text-sm font-bold text-white/40">
-                        {formatDezimal(bereich.stunden)}
-                      </div>
-
-                      <div className="mt-5 overflow-hidden rounded-full bg-black/40">
-                        <div
-                          className="h-2 rounded-full bg-gradient-to-r from-sky-200 to-emerald-300"
-                          style={{
-                            width: `${prozent(bereich.stunden, gesamtStunden)}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </section>
-
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30 backdrop-blur-xl">
           <button
             type="button"
-            onClick={() => setProjektOffen(!projektOffen)}
-            className="flex w-full flex-col gap-4 border-b border-white/10 px-5 py-5 text-left transition hover:bg-sky-300/[0.03] sm:px-6 lg:flex-row lg:items-center lg:justify-between"
+            onClick={() => setAnsicht("archiv")}
+            className={`rounded-2xl border px-4 py-3 text-sm font-black transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10 ${
+              ansicht === "archiv"
+                ? "border-sky-300/25 bg-sky-300/10 text-sky-100"
+                : "border-white/10 bg-white/10 text-white/65"
+            }`}
           >
-            <div>
-              <h2 className="text-xl font-black text-white">
-                {ansicht === "aktiv"
-                  ? "Aktive Projekte"
-                  : "Archivierte Projekte"}
-              </h2>
-              <p className="mt-1 text-sm leading-6 text-white/50">
-                Maximal 10 Projekte pro Seite, inklusive Bereichsstunden und
-                Detailbuchungen.
-              </p>
-            </div>
+            Archiv · {archivProjekte}
+          </button>
 
-            <div className="flex flex-wrap items-center gap-3">
-              {!loading && projektDaten.length > 0 && (
-                <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-2 text-xs font-black text-white/55">
-                  {ersterProjektIndex}–{letzterProjektIndex} von{" "}
-                  {projektDaten.length}
+          <button
+            type="button"
+            onClick={ladeDaten}
+            disabled={loading}
+            className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-4 py-3 text-sm font-black text-slate-100 transition hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/10 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? "Lädt..." : "Daten aktualisieren"}
+          </button>
+        </div>
+      </DropdownPanel>
+
+      <DropdownPanel
+        id="bereiche"
+        title="Bereichsauswertung"
+        eyebrow="Werkstatt · Montage · Planung"
+        description="Bereiche nach Stunden in der aktuellen Projektansicht."
+        open={bereichOffen}
+        onToggle={() => setBereichOffen(!bereichOffen)}
+      >
+        {loading ? (
+          <EmptyState text="Lade Bereichsdaten..." />
+        ) : bereichDaten.length === 0 ? (
+          <EmptyState text="Noch keine Bereichsdaten vorhanden." />
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {bereichDaten.map((bereich, index) => (
+              <div
+                key={bereich.bereich}
+                className="rounded-3xl border border-white/10 bg-black/25 p-5 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-lg font-black text-white">
+                      {bereich.bereich}
+                    </p>
+                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-white/35">
+                      Rang {index + 1}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200">
+                    {prozent(bereich.stunden, gesamtStunden).toFixed(0)}%
+                  </div>
                 </div>
-              )}
-              <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-black text-white">
-                {projektOffen ? "▲ Schließen" : "▼ Öffnen"}
+
+                <div className="mt-5 text-3xl font-black text-sky-100">
+                  {formatStunden(bereich.stunden)}
+                </div>
+
+                <div className="mt-2 text-sm font-bold text-white/40">
+                  {formatDezimal(bereich.stunden)}
+                </div>
+
+                <div className="mt-5 overflow-hidden rounded-full bg-black/40">
+                  <div
+                    className="h-2 rounded-full bg-gradient-to-r from-sky-200 to-emerald-300"
+                    style={{
+                      width: `${prozent(bereich.stunden, gesamtStunden)}%`,
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          </button>
+            ))}
+          </div>
+        )}
+      </DropdownPanel>
 
-          {projektOffen && (
-            <>
-              {!loading && projektDaten.length > PROJEKTE_PRO_SEITE && (
-                <Pagination
-                  seite={projektSeite}
-                  gesamtSeiten={gesamtProjektSeiten}
-                  onZurueck={() =>
-                    setProjektSeite((seite) => Math.max(1, seite - 1))
-                  }
-                  onWeiter={() =>
-                    setProjektSeite((seite) =>
-                      Math.min(gesamtProjektSeiten, seite + 1),
-                    )
-                  }
-                />
-              )}
+      <DropdownPanel
+        id="projekte"
+        title={ansicht === "aktiv" ? "Aktive Projekte" : "Archivierte Projekte"}
+        eyebrow="Projektstunden · Bereiche · Details"
+        description="Maximal 10 Projekte pro Seite, inklusive Bereichsstunden und Detailbuchungen."
+        open={projektOffen}
+        onToggle={() => setProjektOffen(!projektOffen)}
+      >
+        {!loading && projektDaten.length > 0 && (
+          <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-xs font-black text-white/55">
+            {ersterProjektIndex}–{letzterProjektIndex} von {projektDaten.length}
+          </div>
+        )}
 
-              {loading ? (
-                <EmptyState text="Lade Projekte..." />
-              ) : projektDaten.length === 0 ? (
-                <EmptyState
-                  text={
-                    ansicht === "aktiv"
-                      ? "Keine aktiven Projekte gefunden."
-                      : "Keine abgeschlossenen Projekte im Archiv."
-                  }
-                />
-              ) : (
-                <div className="divide-y divide-white/10">
-                  {sichtbareProjekte.map((projekt, index) => (
-                    <ProjektBlock
-                      key={projekt.projekt.id}
-                      projekt={projekt}
-                      rang={(projektSeite - 1) * PROJEKTE_PRO_SEITE + index + 1}
-                      gesamtStunden={gesamtStunden}
-                      istOffen={offen === projekt.projekt.id}
-                      onToggle={() =>
-                        setOffen(
-                          offen === projekt.projekt.id
-                            ? null
-                            : projekt.projekt.id,
-                        )
-                      }
-                    />
-                  ))}
-                </div>
-              )}
+        {!loading && projektDaten.length > PROJEKTE_PRO_SEITE && (
+          <Pagination
+            seite={projektSeite}
+            gesamtSeiten={gesamtProjektSeiten}
+            onZurueck={() =>
+              setProjektSeite((seite) => Math.max(1, seite - 1))
+            }
+            onWeiter={() =>
+              setProjektSeite((seite) =>
+                Math.min(gesamtProjektSeiten, seite + 1),
+              )
+            }
+          />
+        )}
 
-              {!loading && projektDaten.length > PROJEKTE_PRO_SEITE && (
-                <Pagination
-                  seite={projektSeite}
-                  gesamtSeiten={gesamtProjektSeiten}
-                  onZurueck={() =>
-                    setProjektSeite((seite) => Math.max(1, seite - 1))
-                  }
-                  onWeiter={() =>
-                    setProjektSeite((seite) =>
-                      Math.min(gesamtProjektSeiten, seite + 1),
-                    )
-                  }
-                />
-              )}
-            </>
-          )}
-        </section>
+        {loading ? (
+          <EmptyState text="Lade Projekte..." />
+        ) : projektDaten.length === 0 ? (
+          <EmptyState
+            text={
+              ansicht === "aktiv"
+                ? "Keine aktiven Projekte gefunden."
+                : "Keine abgeschlossenen Projekte im Archiv."
+            }
+          />
+        ) : (
+          <div className="divide-y divide-white/10 overflow-hidden rounded-2xl border border-white/10 bg-black/25">
+            {sichtbareProjekte.map((projekt, index) => (
+              <ProjektBlock
+                key={projekt.projekt.id}
+                projekt={projekt}
+                rang={(projektSeite - 1) * PROJEKTE_PRO_SEITE + index + 1}
+                gesamtStunden={gesamtStunden}
+                istOffen={offen === projekt.projekt.id}
+                onToggle={() =>
+                  setOffen(
+                    offen === projekt.projekt.id
+                      ? null
+                      : projekt.projekt.id,
+                  )
+                }
+              />
+            ))}
+          </div>
+        )}
+
+        {!loading && projektDaten.length > PROJEKTE_PRO_SEITE && (
+          <Pagination
+            seite={projektSeite}
+            gesamtSeiten={gesamtProjektSeiten}
+            onZurueck={() =>
+              setProjektSeite((seite) => Math.max(1, seite - 1))
+            }
+            onWeiter={() =>
+              setProjektSeite((seite) =>
+                Math.min(gesamtProjektSeiten, seite + 1),
+              )
+            }
+          />
+        )}
+      </DropdownPanel>
     </main>
   );
 }
+
 
 function HeroMini({
   label,
@@ -508,38 +507,73 @@ function HeroMini({
   const color = blue ? "text-sky-200" : green ? "text-green-400" : "text-slate-100";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition hover:border-sky-300/25 hover:bg-sky-300/5">
-      <div className={`text-2xl font-black ${color}`}>{value}</div>
-      <div className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
-        {label}
-      </div>
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+      <div className={`text-xl font-black leading-tight md:text-2xl ${color}`}>{value}</div>
+      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">{label}</div>
     </div>
   );
 }
 
-function AnsichtButton({
-  active,
+function ActionCard({
+  href,
   label,
-  count,
+  title,
   onClick,
 }: {
-  active: boolean;
+  href: string;
   label: string;
-  count: number;
-  onClick: () => void;
+  title: string;
+  onClick?: () => void;
 }) {
   return (
-    <button
-      type="button"
+    <a
+      href={href}
       onClick={onClick}
-      className={`rounded-2xl border px-4 py-3 text-sm font-black transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10 ${
-        active
-          ? "border-sky-300/25 bg-sky-300/10 text-sky-100"
-          : "border-white/10 bg-white/10 text-white/65"
-      }`}
+      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
     >
-      {label} · {count}
-    </button>
+      <div className="text-sm text-white/50">{label}</div>
+      <div className="mt-2 text-lg font-black text-white">{title}</div>
+    </a>
+  );
+}
+
+function DropdownPanel({
+  id,
+  title,
+  eyebrow,
+  description,
+  open,
+  onToggle,
+  children,
+}: {
+  id: string;
+  title: string;
+  eyebrow: string;
+  description: string;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <section id={id} className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-sky-300/5 lg:flex-row lg:items-center lg:p-7"
+      >
+        <div>
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">{eyebrow}</div>
+          <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
+          <p className="mt-1 text-white/55">{description}</p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 transition hover:border-sky-300/35 hover:bg-sky-300/10 hover:text-sky-100">
+          {open ? "Schließen ▲" : "Öffnen ▼"}
+        </div>
+      </button>
+
+      {open && <div className="space-y-6 border-t border-white/10 p-6 lg:p-7">{children}</div>}
+    </section>
   );
 }
 
