@@ -65,13 +65,13 @@ function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
 export default function AbwesenheitenPage() {
   const [abwesenheiten, setAbwesenheiten] = useState<Abwesenheit[]>([]);
   const [konto, setKonto] = useState<Konto>({
-    jahresurlaub: 0,
-    genommenerUrlaub: 0,
-    kranktage: 0,
-    offeneAntraege: 0,
-    ueberstundenabbauStunden: 0,
-    ueberstundenAktuell: 0,
-  });
+  jahresurlaub: 99.99,
+  genommenerUrlaub: 99.99,
+  kranktage: 99,
+  offeneAntraege: 99,
+  ueberstundenabbauStunden: 99.99,
+  ueberstundenAktuell: 99.99,
+});
 
   const [typ, setTyp] = useState("Urlaub");
   const [von, setVon] = useState("");
@@ -922,12 +922,12 @@ function KpiCard({
       : "text-white";
 
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+    <div className="h-[230px] rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
       <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
         {label}
       </div>
 
-      <div className={`mt-4 break-words text-4xl font-black ${color}`}>
+      <div className={`mt-4 h-[96px] flex items-start break-words text-4xl font-black ${color}`}>
         {value}
       </div>
 
