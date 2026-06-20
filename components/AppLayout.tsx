@@ -57,28 +57,29 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (isLogin) return <>{children}</>;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950">
-      {/* Mobile Header */}
-      <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm lg:hidden">
+    <div className="min-h-screen overflow-x-hidden bg-[#070a0d] text-slate-100">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.10),transparent_32%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.08),transparent_30%),linear-gradient(135deg,#070a0d,#0d141c_48%,#050608)]" />
+      <div className="pointer-events-none fixed inset-0 opacity-[0.04] [background-image:linear-gradient(rgba(255,255,255,.65)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.65)_1px,transparent_1px)] [background-size:42px_42px]" />
+
+      <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-[#0b1118]/90 px-4 shadow-lg shadow-black/30 backdrop-blur-xl lg:hidden">
         <BrandLogo small />
 
         <button
           onClick={() => setOpen(true)}
-          className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-bold text-white"
+          className="rounded-xl border border-sky-300/25 bg-sky-300/10 px-4 py-2 text-sm font-black text-sky-100"
         >
           Menü
         </button>
       </header>
 
-      {/* Mobile Sidebar */}
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           />
 
-          <aside className="fixed bottom-0 left-0 top-0 h-screen w-[280px] bg-white shadow-xl">
+          <aside className="fixed bottom-0 left-0 top-0 h-screen w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/95 shadow-2xl shadow-black/50 backdrop-blur-xl">
             <Sidebar
               pathname={pathname}
               logout={logout}
@@ -90,13 +91,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      <aside className="fixed left-0 top-0 z-30 hidden h-screen w-[280px] border-r border-slate-200 bg-white lg:block">
+      <aside className="fixed left-0 top-0 z-30 hidden h-screen w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/82 shadow-2xl shadow-black/40 backdrop-blur-xl lg:block">
         <Sidebar pathname={pathname} logout={logout} userName={userName} role={role} />
       </aside>
 
-      {/* Main */}
-      <main className="pt-16 lg:ml-[280px] lg:pt-0">
+      <main className="relative z-10 pt-16 lg:ml-[286px] lg:pt-0">
         <div className="mx-auto min-h-screen w-full max-w-7xl px-4 py-6 md:px-6 lg:px-8">
           {children}
         </div>
@@ -119,13 +118,11 @@ function Sidebar({
   close?: () => void;
 }) {
   return (
-    <div className="flex h-screen flex-col bg-white text-slate-950">
-      {/* Logo */}
-      <div className="shrink-0 border-b border-slate-200 px-5 py-5">
+    <div className="flex h-screen min-h-0 flex-col text-slate-100">
+      <div className="shrink-0 border-b border-white/10 px-5 py-5">
         <BrandLogo />
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navItems.map((item) => {
           const active = pathname === item.href;
@@ -135,17 +132,17 @@ function Sidebar({
               key={item.href}
               href={item.href}
               onClick={close}
-              className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${
+              className={`flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-black transition ${
                 active
-                  ? "bg-sky-50 text-sky-700"
-                  : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+                  ? "border-sky-300/25 bg-sky-300/12 text-white shadow-lg shadow-sky-950/20"
+                  : "border-transparent text-slate-300 hover:border-white/10 hover:bg-white/[0.06] hover:text-white"
               }`}
             >
               <span
-                className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm ${
+                className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm ${
                   active
-                    ? "bg-sky-100 text-sky-700"
-                    : "bg-slate-100 text-slate-500"
+                    ? "border-sky-300/25 bg-sky-300/15 text-sky-100"
+                    : "border-white/10 bg-white/[0.045] text-slate-400"
                 }`}
               >
                 {item.icon}
@@ -157,38 +154,70 @@ function Sidebar({
         })}
       </nav>
 
-      {/* Account unten */}
-      <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-4 py-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+      <div className="shrink-0 px-4 pb-4">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-4 shadow-lg shadow-black/20">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+            System
+          </p>
+
+          <div className="mt-3 space-y-2 text-xs">
+            <SystemLine label="Version" value="ODZ. V1.1" />
+            <SystemLine label="Mandant" value="StahlFabrik" />
+            <SystemLine label="Status" value="Aktiv" positive />
+          </div>
+        </div>
+      </div>
+
+      <div className="shrink-0 border-t border-white/10 bg-black/15 px-4 py-4">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 shadow-lg shadow-black/25">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
             Angemeldet
           </p>
 
-          <p className="mt-2 truncate text-base font-black text-slate-950">
+          <p className="mt-2 truncate text-base font-black text-white">
             {userName}
           </p>
 
-          <p className="mt-1 inline-flex rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+          <p className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-300">
             {role}
           </p>
 
           <button
             onClick={logout}
-            className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-left text-sm font-bold text-slate-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+            className="mt-4 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-left text-sm font-black text-slate-300 transition hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-200"
           >
             Logout
           </button>
         </div>
 
         <div className="pt-4 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
             © 2026 ODZ.
           </p>
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-300">
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600">
             All Rights Reserved
           </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SystemLine({
+  label,
+  value,
+  positive,
+}: {
+  label: string;
+  value: string;
+  positive?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-slate-500">{label}</span>
+      <span className={`font-black ${positive ? "text-green-300" : "text-slate-200"}`}>
+        {value}
+      </span>
     </div>
   );
 }
@@ -198,20 +227,20 @@ function BrandLogo({ small = false }: { small?: boolean }) {
     <div className="flex items-center justify-between gap-3">
       <div>
         <div
-          className={`font-black uppercase leading-none tracking-[0.14em] text-slate-950 ${
+          className={`font-black uppercase leading-none tracking-[0.14em] text-white ${
             small ? "text-xl" : "text-3xl"
           }`}
         >
           ODZ.
         </div>
 
-        <div className="mt-1 inline-flex rounded-full bg-sky-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-sky-700">
+        <div className="mt-1 inline-flex rounded-full border border-sky-300/20 bg-sky-300/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-sky-100">
           v1.1
         </div>
       </div>
 
       <div className={`font-black leading-none ${small ? "text-xl" : "text-2xl"}`}>
-        <span className="text-slate-950">Stahl</span>
+        <span className="text-white">Stahl</span>
         <span className="text-orange-500">Fabrik</span>
       </div>
     </div>
