@@ -61,7 +61,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.10),transparent_32%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.08),transparent_30%),linear-gradient(135deg,#070a0d,#0d141c_48%,#050608)]" />
       <div className="pointer-events-none fixed inset-0 opacity-[0.04] [background-image:linear-gradient(rgba(255,255,255,.65)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.65)_1px,transparent_1px)] [background-size:42px_42px]" />
 
-      <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-[#0b1118]/90 px-4 shadow-lg shadow-black/30 backdrop-blur-xl lg:hidden">
+      {/* Mobile Header */}
+      <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-[#0b1118]/95 px-4 shadow-lg shadow-black/30 backdrop-blur-xl lg:hidden">
         <BrandLogo small />
 
         <button
@@ -72,6 +73,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </button>
       </header>
 
+      {/* Mobile Sidebar */}
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
@@ -79,7 +81,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             onClick={() => setOpen(false)}
           />
 
-          <aside className="fixed bottom-0 left-0 top-0 h-screen w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/95 shadow-2xl shadow-black/50 backdrop-blur-xl">
+          <aside className="fixed bottom-0 left-0 top-0 h-dvh w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/95 shadow-2xl shadow-black/50 backdrop-blur-xl">
             <Sidebar
               pathname={pathname}
               logout={logout}
@@ -91,10 +93,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <aside className="fixed left-0 top-0 z-30 hidden h-screen w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/82 shadow-2xl shadow-black/40 backdrop-blur-xl lg:block">
+      {/* Desktop Sidebar */}
+      <aside className="fixed left-0 top-0 z-30 hidden h-dvh w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/90 shadow-2xl shadow-black/40 backdrop-blur-xl lg:block">
         <Sidebar pathname={pathname} logout={logout} userName={userName} role={role} />
       </aside>
 
+      {/* Main */}
       <main className="relative z-10 pt-16 lg:ml-[286px] lg:pt-0">
         <div className="mx-auto min-h-screen w-full max-w-7xl px-4 py-6 md:px-6 lg:px-8">
           {children}
@@ -118,57 +122,48 @@ function Sidebar({
   close?: () => void;
 }) {
   return (
-    <div className="flex h-screen min-h-0 flex-col text-slate-100">
+    <div className="flex h-dvh min-h-0 flex-col text-slate-100">
+      {/* Logo */}
       <div className="shrink-0 border-b border-white/10 px-5 py-5">
         <BrandLogo />
       </div>
 
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map((item) => {
-          const active = pathname === item.href;
+      {/* Navigation: darf scrollen, aber Account bleibt immer fix unten */}
+      <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="space-y-1">
+          {navItems.map((item) => {
+            const active = pathname === item.href;
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={close}
-              className={`flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-black transition ${
-                active
-                  ? "border-sky-300/25 bg-sky-300/12 text-white shadow-lg shadow-sky-950/20"
-                  : "border-transparent text-slate-300 hover:border-white/10 hover:bg-white/[0.06] hover:text-white"
-              }`}
-            >
-              <span
-                className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm ${
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={close}
+                className={`flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-black transition ${
                   active
-                    ? "border-sky-300/25 bg-sky-300/15 text-sky-100"
-                    : "border-white/10 bg-white/[0.045] text-slate-400"
+                    ? "border-sky-300/45 bg-sky-300/12 text-white shadow-lg shadow-sky-950/20"
+                    : "border-transparent text-slate-300 hover:border-white/10 hover:bg-white/[0.06] hover:text-white"
                 }`}
               >
-                {item.icon}
-              </span>
+                <span
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm ${
+                    active
+                      ? "border-sky-300/35 bg-sky-300/15 text-sky-100"
+                      : "border-white/10 bg-white/[0.045] text-slate-400"
+                  }`}
+                >
+                  {item.icon}
+                </span>
 
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
-      <div className="shrink-0 px-4 pb-4">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-4 shadow-lg shadow-black/20">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
-            System
-          </p>
-
-          <div className="mt-3 space-y-2 text-xs">
-            <SystemLine label="Version" value="ODZ. V1.1" />
-            <SystemLine label="Mandant" value="StahlFabrik" />
-            <SystemLine label="Status" value="Aktiv" positive />
-          </div>
-        </div>
-      </div>
-
-      <div className="shrink-0 border-t border-white/10 bg-black/15 px-4 py-4">
+      {/* Account fix unten */}
+      <div className="shrink-0 border-t border-white/10 bg-[#0b1118]/98 px-4 py-4">
         <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 shadow-lg shadow-black/25">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
             Angemeldet
@@ -199,25 +194,6 @@ function Sidebar({
           </p>
         </div>
       </div>
-    </div>
-  );
-}
-
-function SystemLine({
-  label,
-  value,
-  positive,
-}: {
-  label: string;
-  value: string;
-  positive?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-slate-500">{label}</span>
-      <span className={`font-black ${positive ? "text-green-300" : "text-slate-200"}`}>
-        {value}
-      </span>
     </div>
   );
 }
