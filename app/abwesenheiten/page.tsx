@@ -919,7 +919,7 @@ function KpiCard({
         {label}
       </div>
 
-      <div className={`mt-3 min-h-[42px] break-words text-2xl font-black leading-tight sm:text-3xl ${color}`}>
+      <div className={`mt-3 min-h-[38px] truncate whitespace-nowrap text-2xl font-black leading-tight sm:text-3xl ${color}`}>
         {value}
       </div>
 
@@ -1050,12 +1050,12 @@ function HeroMini({
     : "text-slate-100";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
-      <div className={`text-xl font-black leading-tight md:text-2xl ${color}`}>
+    <div className="flex h-[82px] min-w-[128px] flex-col justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+      <div className={`truncate whitespace-nowrap text-lg font-black leading-tight sm:text-xl md:text-2xl ${color}`}>
         {value}
       </div>
 
-      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
+      <div className="mt-1 truncate whitespace-nowrap text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
         {label}
       </div>
     </div>

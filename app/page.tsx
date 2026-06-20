@@ -607,9 +607,9 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="min-h-[82px] rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="flex h-[82px] min-w-[128px] flex-col justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
       <div
-        className={`min-h-[30px] text-xl font-black leading-tight md:text-2xl ${
+        className={`truncate whitespace-nowrap text-lg font-black leading-tight sm:text-xl md:text-2xl ${
           red
             ? "text-red-400"
             : green
@@ -621,7 +621,7 @@ function HeroMini({
       >
         {value}
       </div>
-      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
+      <div className="mt-1 truncate whitespace-nowrap text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
         {label}
       </div>
     </div>
@@ -644,7 +644,7 @@ function WorkTimeCard({
   differenz: number;
 }) {
   return (
-    <section className="min-h-[390px] rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
@@ -687,7 +687,7 @@ function OvertimeCard({
   abbau: number;
 }) {
   return (
-    <section className="min-h-[390px] rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
@@ -758,7 +758,7 @@ function ValueBox({
       <div className="text-xs font-black uppercase tracking-[0.18em] text-white/35">
         {label}
       </div>
-      <div className={`mt-2 min-h-[34px] text-2xl font-black leading-tight ${color}`}>{value}</div>
+      <div className={`mt-2 text-2xl font-black ${color}`}>{value}</div>
     </div>
   );
 }
