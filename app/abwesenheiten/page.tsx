@@ -64,6 +64,7 @@ function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
 
 export default function AbwesenheitenPage() {
   const [abwesenheiten, setAbwesenheiten] = useState<Abwesenheit[]>([]);
+  const [ready, setReady] = useState(false);
   const [konto, setKonto] = useState<Konto>({
   jahresurlaub: 0,
   genommenerUrlaub: 0,
@@ -244,7 +245,7 @@ export default function AbwesenheitenPage() {
       ueberstundenAktuell,
     });
 
-    
+    setReady(true);
   }
 
   function berechneTage() {
@@ -508,12 +509,12 @@ export default function AbwesenheitenPage() {
               <HeroMini label="Ferien" value={resturlaub} green={resturlaub >= 0} red={resturlaub < 0} />
               <HeroMini
                 label="Ü-Std."
-                value={formatStunden(konto.ueberstundenAktuell, true)}
+                value={ready ? formatStunden(konto.ueberstundenAktuell, true) : "+00 h 00 min"}
                 green={konto.ueberstundenAktuell >= 0}
                 red={konto.ueberstundenAktuell < 0}
               />
-              <HeroMini label="Offen" value={konto.offeneAntraege} blue={konto.offeneAntraege > 0} />
-              <HeroMini label="Krank" value={konto.kranktage} red={konto.kranktage > 0} />
+              <HeroMini label="Offen" value={ready ? konto.offeneAntraege : "00"} blue={konto.offeneAntraege > 0} />
+              <HeroMini label="Krank" value={ready ? konto.kranktage : "00"} red={konto.kranktage > 0} />
             </div>
           </div>
         </section>
@@ -545,7 +546,7 @@ export default function AbwesenheitenPage() {
           />
 
           <KpiCard
-            label="Ferien"
+            label="Resturlaub"
             value={resturlaub}
             subtext={resturlaub >= 0 ? "Noch verfügbar" : "Überzogen"}
             highlight={resturlaub >= 0 ? "green" : "red"}
@@ -560,14 +561,22 @@ export default function AbwesenheitenPage() {
 
           <KpiCard
             label="Ü-Std."
-            value={formatStunden(Number(konto.ueberstundenAktuell || 0), true)}
+            value={
+              loading
+                ? "..."
+                : formatStunden(Number(konto.ueberstundenAktuell || 0), true)
+            }
             subtext="Aktueller Stand"
             highlight={konto.ueberstundenAktuell >= 0 ? "green" : "red"}
           />
 
           <KpiCard
             label="Abbau"
-            value={formatStunden(Number(konto.ueberstundenabbauStunden || 0))}
+            value={
+              loading
+                ? "..."
+                : formatStunden(Number(konto.ueberstundenabbauStunden || 0))
+            }
             subtext="Genehmigte Abbaustunden"
           />
         </section>
@@ -914,12 +923,12 @@ function KpiCard({
       : "text-white";
 
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+    <div className="h-[230px] rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
       <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
         {label}
       </div>
 
-      <div className={`mt-4 break-words text-4xl font-black ${color}`}>
+      <div className={`mt-4 h-[96px] flex items-start break-words text-4xl font-black ${color}`}>
         {value}
       </div>
 
@@ -1050,12 +1059,12 @@ function HeroMini({
     : "text-slate-100";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
-      <div className={`text-xl font-black leading-tight md:text-2xl ${color}`}>
+    <div className="flex h-[84px] min-w-[132px] flex-col justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+      <div className={`truncate whitespace-nowrap text-xl font-black leading-tight md:text-2xl ${color}`}>
         {value}
       </div>
 
-      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
+      <div className="mt-1 truncate whitespace-nowrap text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
         {label}
       </div>
     </div>
