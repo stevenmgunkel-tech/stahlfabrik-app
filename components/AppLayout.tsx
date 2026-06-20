@@ -58,6 +58,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#070a0d] text-slate-100">
+      {/* Globaler Hintergrund */}
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.10),transparent_32%),radial-gradient(circle_at_top_right,rgba(148,163,184,0.08),transparent_30%),linear-gradient(135deg,#070a0d,#0d141c_48%,#050608)]" />
       <div className="pointer-events-none fixed inset-0 opacity-[0.04] [background-image:linear-gradient(rgba(255,255,255,.65)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.65)_1px,transparent_1px)] [background-size:42px_42px]" />
 
@@ -81,10 +82,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             onClick={() => setOpen(false)}
           />
 
-          <aside
-            className="fixed left-0 top-0 w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/95 shadow-2xl shadow-black/50 backdrop-blur-xl"
-            style={{ height: "100vh" }}
-          >
+          <aside className="fixed bottom-0 left-0 top-0 w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/95 shadow-2xl shadow-black/50 backdrop-blur-xl">
             <Sidebar
               pathname={pathname}
               logout={logout}
@@ -96,11 +94,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      <aside
-        className="fixed left-0 top-0 z-30 hidden w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/90 shadow-2xl shadow-black/40 backdrop-blur-xl lg:block"
-        style={{ height: "100vh" }}
-      >
+      {/* Desktop Sidebar: ZWANG von oben bis unten */}
+      <aside className="fixed bottom-0 left-0 top-0 z-30 hidden w-[286px] overflow-hidden border-r border-white/10 bg-[#0b1118]/95 shadow-2xl shadow-black/40 backdrop-blur-xl lg:block">
         <Sidebar pathname={pathname} logout={logout} userName={userName} role={role} />
       </aside>
 
@@ -128,20 +123,14 @@ function Sidebar({
   close?: () => void;
 }) {
   return (
-    <div className="relative h-full min-h-0 text-slate-100">
+    <div className="flex h-full min-h-0 flex-col text-slate-100">
       {/* Logo */}
-      <div className="border-b border-white/10 px-5 py-5">
+      <div className="shrink-0 border-b border-white/10 px-5 py-5">
         <BrandLogo />
       </div>
 
-      {/* Navigation */}
-      <nav
-        className="overflow-y-auto px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        style={{
-          height: "calc(100vh - 156px)",
-          paddingBottom: "250px",
-        }}
-      >
+      {/* Navigation nimmt den freien Platz */}
+      <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="space-y-1">
           {navItems.map((item) => {
             const active = pathname === item.href;
@@ -174,8 +163,8 @@ function Sidebar({
         </div>
       </nav>
 
-      {/* Account wirklich fix unten */}
-      <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 bg-[#0b1118] px-4 py-4">
+      {/* Account bleibt IMMER unten */}
+      <div className="shrink-0 border-t border-white/10 bg-[#0b1118] px-4 py-4">
         <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 shadow-lg shadow-black/25">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
             Angemeldet
