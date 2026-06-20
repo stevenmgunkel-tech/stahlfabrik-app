@@ -336,15 +336,11 @@ export default function DashboardPage() {
 
     setLoading(false);
   }
+  if (loading) {
+    return null;
+  }
 
-  const today = new Date().toLocaleDateString("de-CH", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-
-  
-  return (
+return (
     <main className="space-y-8 text-slate-100">
       <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
         <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
