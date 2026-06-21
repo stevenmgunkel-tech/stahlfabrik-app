@@ -281,9 +281,7 @@ export default function MitarbeiterPage() {
     await ladeMitarbeiter(false);
   }
 
-  if (!seiteGeprueft || initialLoading) {
-    return <main className="min-h-screen text-slate-100" />;
-  }
+  const pageLoading = !seiteGeprueft || initialLoading;
 
   return (
     <main className="space-y-8 text-slate-100">
@@ -317,16 +315,16 @@ export default function MitarbeiterPage() {
             <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
               <span className="h-3 w-3 rounded-full bg-green-400 shadow-lg shadow-green-400/40" />
               <span className="text-xs font-black uppercase tracking-widest text-white/70">
-                {aktive} aktive Mitarbeiter
+                Personalverwaltung
               </span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-4">
-            <HeroMini label="Team" value={String(mitarbeiter.length).padStart(2, "0")} />
-            <HeroMini label="Aktiv" value={String(aktive).padStart(2, "0")} green={aktive > 0} />
-            <HeroMini label="Probe" value={String(probezeit).padStart(2, "0")} blue={probezeit > 0} />
-            <HeroMini label="Admin" value={String(admins).padStart(2, "0")} />
+            <HeroMini label="Team" value={pageLoading ? "—" : String(mitarbeiter.length).padStart(2, "0")} />
+            <HeroMini label="Aktiv" value={pageLoading ? "—" : String(aktive).padStart(2, "0")} green={!pageLoading && aktive > 0} />
+            <HeroMini label="Probe" value={pageLoading ? "—" : String(probezeit).padStart(2, "0")} blue={!pageLoading && probezeit > 0} />
+            <HeroMini label="Admin" value={pageLoading ? "—" : String(admins).padStart(2, "0")} />
           </div>
         </div>
       </section>
@@ -367,8 +365,8 @@ export default function MitarbeiterPage() {
               />
             </div>
 
-            {loading ? (
-              <EmptyState text="Team wird geladen..." />
+            {pageLoading || loading ? (
+              <EmptyState text="Team wird vorbereitet..." />
             ) : gefilterteMitarbeiter.length === 0 ? (
               <EmptyState text="Keine Mitarbeiter gefunden." />
             ) : (
@@ -408,7 +406,11 @@ export default function MitarbeiterPage() {
           </div>
 
           <div className="space-y-6">
-            {!selected ? (
+            {pageLoading ? (
+              <div className="min-h-[420px] rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 text-sm font-bold text-white/45 shadow-xl shadow-black/20 backdrop-blur-xl">
+                Personalakte wird vorbereitet.
+              </div>
+            ) : !selected ? (
               <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 text-white/55 shadow-xl shadow-black/20 backdrop-blur-xl">
                 Wähle links einen Mitarbeiter aus.
               </div>
@@ -759,5 +761,5 @@ function Select({ value, onChange, options }: { value: string; onChange: (value:
 }
 
 function EmptyState({ text }: { text: string }) {
-  return <div className="p-6 text-sm font-bold text-white/55">{text}</div>;
+  return <div className="min-h-[360px] p-6 text-sm font-bold text-white/55">{text}</div>;
 }

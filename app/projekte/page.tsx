@@ -288,9 +288,7 @@ export default function ProjektePage() {
     );
   });
 
-  if (!seiteGeprueft || initialLoading) {
-    return <main className="min-h-screen text-slate-100" />;
-  }
+  const pageLoading = !seiteGeprueft || initialLoading;
 
   return (
     <main className="space-y-8 text-slate-100">
@@ -325,16 +323,16 @@ export default function ProjektePage() {
               <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
                 <span className="h-3 w-3 rounded-full bg-green-400 shadow-lg shadow-green-400/40" />
                 <span className="text-xs font-black uppercase tracking-widest text-white/70">
-                  Projektverwaltung bereit
+                  Projektverwaltung
                 </span>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3">
-            <HeroMini label="Aktiv" value={String(aktiveProjekte).padStart(2, "0")} green />
-            <HeroMini label="Pausiert" value={String(pausierteProjekte).padStart(2, "0")} blue />
-            <HeroMini label="Archiv" value={String(abgeschlosseneProjekte).padStart(2, "0")} />
+            <HeroMini label="Aktiv" value={pageLoading ? "—" : String(aktiveProjekte).padStart(2, "0")} green={!pageLoading && aktiveProjekte > 0} />
+            <HeroMini label="Pausiert" value={pageLoading ? "—" : String(pausierteProjekte).padStart(2, "0")} blue={!pageLoading && pausierteProjekte > 0} />
+            <HeroMini label="Archiv" value={pageLoading ? "—" : String(abgeschlosseneProjekte).padStart(2, "0")} />
           </div>
         </div>
       </section>
@@ -470,7 +468,7 @@ export default function ProjektePage() {
 
         <div className="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div className="text-sm text-white/50">
-            {gefilterteProjekte.length} angezeigt · {aktiveProjekte} aktiv · {pausierteProjekte} pausiert
+            {pageLoading ? "Daten werden vorbereitet" : `${gefilterteProjekte.length} angezeigt · ${aktiveProjekte} aktiv · ${pausierteProjekte} pausiert`}
           </div>
 
           <div className="rounded-full border border-slate-300/20 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-200">
@@ -478,70 +476,78 @@ export default function ProjektePage() {
           </div>
         </div>
 
-        {gefilterteProjekte.length === 0 && (
-          <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
-            Keine Projekte gefunden.
+        {pageLoading ? (
+          <div className="min-h-[360px] rounded-xl border border-white/10 bg-black/25 p-5 text-sm font-bold text-white/45">
+            Projektübersicht wird vorbereitet.
           </div>
-        )}
-
-        <div className="space-y-4 md:hidden">
-          {gefilterteProjekte.map((projekt) => (
-            <ProjektMobileCard
-              key={projekt.id}
-              projekt={projekt}
-              statusFarbe={statusFarbe}
-              onBearbeiten={bearbeitungStarten}
-              onLoeschen={projektLoeschen}
-            />
-          ))}
-        </div>
-
-        <div className="hidden overflow-hidden rounded-xl border border-white/10 md:block">
-          <div className="overflow-x-auto">
-            <div className="min-w-[1000px]">
-              <div className="grid grid-cols-5 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
-                <div>Kunde</div>
-                <div>Kommission</div>
-                <div>Projektname</div>
-                <div>Status</div>
-                <div>Aktion</div>
+        ) : (
+          <>
+            {gefilterteProjekte.length === 0 && (
+              <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
+                Keine Projekte gefunden.
               </div>
+            )}
 
+            <div className="space-y-4 md:hidden">
               {gefilterteProjekte.map((projekt) => (
-                <div
+                <ProjektMobileCard
                   key={projekt.id}
-                  className="grid grid-cols-5 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-sky-300/5 hover:text-white"
-                >
-                  <div className="font-black text-white">{projekt.kunde || "-"}</div>
-                  <div>{projekt.kommission || "-"}</div>
-                  <div>{projekt.projektname || projekt.name || "-"}</div>
-                  <div>
-                    <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(projekt.status)}`}>
-                      {projekt.status || "Aktiv"}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => bearbeitungStarten(projekt)}
-                      className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 font-bold text-white transition hover:border-sky-300/25 hover:bg-sky-300/10"
-                    >
-                      Bearbeiten
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => projektLoeschen(projekt.id)}
-                      className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 font-bold text-red-300 transition hover:bg-red-500/15"
-                    >
-                      Löschen
-                    </button>
-                  </div>
-                </div>
+                  projekt={projekt}
+                  statusFarbe={statusFarbe}
+                  onBearbeiten={bearbeitungStarten}
+                  onLoeschen={projektLoeschen}
+                />
               ))}
             </div>
-          </div>
-        </div>
+
+            <div className="hidden min-h-[360px] overflow-hidden rounded-xl border border-white/10 md:block">
+              <div className="overflow-x-auto">
+                <div className="min-w-[1000px]">
+                  <div className="grid grid-cols-5 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+                    <div>Kunde</div>
+                    <div>Kommission</div>
+                    <div>Projektname</div>
+                    <div>Status</div>
+                    <div>Aktion</div>
+                  </div>
+
+                  {gefilterteProjekte.map((projekt) => (
+                    <div
+                      key={projekt.id}
+                      className="grid grid-cols-5 items-center border-b border-white/10 px-5 py-4 text-white/80 transition-colors hover:bg-sky-300/5 hover:text-white"
+                    >
+                      <div className="font-black text-white">{projekt.kunde || "-"}</div>
+                      <div>{projekt.kommission || "-"}</div>
+                      <div>{projekt.projektname || projekt.name || "-"}</div>
+                      <div>
+                        <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(projekt.status)}`}>
+                          {projekt.status || "Aktiv"}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => bearbeitungStarten(projekt)}
+                          className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 font-bold text-white transition-colors hover:border-sky-300/25 hover:bg-sky-300/10"
+                        >
+                          Bearbeiten
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => projektLoeschen(projekt.id)}
+                          className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 font-bold text-red-300 transition-colors hover:bg-red-500/15"
+                        >
+                          Löschen
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </DropdownPanel>
 
       <style jsx global>{`
@@ -610,7 +616,7 @@ function ProjektMobileCard({
         <button
           type="button"
           onClick={() => onBearbeiten(projekt)}
-          className="rounded-xl border border-white/10 bg-white/[0.06] p-3 font-bold text-white transition hover:border-sky-300/25 hover:bg-sky-300/10"
+          className="rounded-xl border border-white/10 bg-white/[0.06] p-3 font-bold text-white transition-colors hover:border-sky-300/25 hover:bg-sky-300/10"
         >
           Bearbeiten
         </button>
@@ -618,7 +624,7 @@ function ProjektMobileCard({
         <button
           type="button"
           onClick={() => onLoeschen(projekt.id)}
-          className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 font-bold text-red-300 transition hover:bg-red-500/15"
+          className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 font-bold text-red-300 transition-colors hover:bg-red-500/15"
         >
           Löschen
         </button>
@@ -662,7 +668,7 @@ function DropdownPanel({
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-sky-300/5 lg:flex-row lg:items-center lg:p-7"
+        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition-colors hover:bg-sky-300/5 lg:flex-row lg:items-center lg:p-7"
       >
         <div>
           <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">{eyebrow}</div>
@@ -693,7 +699,7 @@ function HeroMini({ label, value, blue, green }: { label: string; value: string 
   const color = blue ? "text-sky-200" : green ? "text-green-400" : "text-slate-100";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition-colors hover:border-sky-300/25 hover:bg-sky-300/5">
       <div className={`text-xl font-black leading-tight md:text-2xl ${color}`}>{value}</div>
       <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">{label}</div>
     </div>
