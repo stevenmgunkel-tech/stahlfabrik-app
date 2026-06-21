@@ -459,7 +459,7 @@ export default function MitarbeiterPage() {
 
                     <div className="space-y-5">
                       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        <InfoCard label="Wochenstunden" value={formatWochenstunden(selected.wochenstunden)} />
+                        <InfoCard label="Woche" value={formatWochenstunden(selected.wochenstunden)} />
                         <InfoCard label="Ferienwochen" value={`${selected.ferienwochen || 4} Wochen`} />
                         <InfoCard label="Urlaubstage" value={selected.urlaubstage || 0} />
                         <InfoCard label="Ü-Start" value={formatStunden(selected.ueberstunden_start)} />
@@ -709,12 +709,26 @@ function MiniStat({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-function InfoCard({ label, value, tone }: { label: string; value: string | number; tone?: "red" }) {
+function InfoCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string | number;
+  tone?: "red";
+}) {
   const color = tone === "red" ? "text-red-200" : "text-sky-100";
+
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-black/25 p-4 transition-colors hover:border-sky-300/25 hover:bg-sky-300/5">
-      <div className="text-xs font-black uppercase tracking-[0.2em] text-white/35">{label}</div>
-      <div className={`mt-3 break-words text-2xl font-black ${color}`}>{value}</div>
+    <div className="min-w-0 rounded-[1.5rem] border border-white/10 bg-black/25 p-4 transition-colors hover:border-sky-300/25 hover:bg-sky-300/5">
+      <div className="truncate text-[10px] font-black uppercase tracking-[0.14em] text-white/35">
+        {label}
+      </div>
+
+      <div className={`mt-3 truncate text-2xl font-black ${color}`}>
+        {value}
+      </div>
     </div>
   );
 }
