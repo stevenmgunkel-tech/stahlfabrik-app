@@ -37,7 +37,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [userName, setUserName] = useState("StahlFabrik");
   const [role, setRole] = useState("ERP");
-  const [routeShield, setRouteShield] = useState(true);
+  const [initialSplash, setInitialSplash] = useState(true);
 
   const isLogin = pathname === "/login";
 
@@ -66,38 +66,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [pathname, router, isLogin]);
 
   useEffect(() => {
-    if (isLogin) return;
+    if (isLogin || !initialSplash) return;
 
-    setRouteShield(true);
-    const timer = window.setTimeout(() => setRouteShield(false), 720);
+    const timer = window.setTimeout(() => setInitialSplash(false), 900);
 
     return () => window.clearTimeout(timer);
-  }, [pathname, isLogin]);
-
-  useEffect(() => {
-    if (isLogin) return;
-
-    function handleClick(event: MouseEvent) {
-      const target = event.target as HTMLElement | null;
-      const link = target?.closest?.("a[href]") as HTMLAnchorElement | null;
-
-      if (!link) return;
-      if (link.target === "_blank") return;
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
-      const url = new URL(link.href, window.location.href);
-
-      if (url.origin !== window.location.origin) return;
-      if (url.pathname === window.location.pathname && url.hash) return;
-
-      setRouteShield(true);
-      window.setTimeout(() => setRouteShield(false), 1200);
-    }
-
-    document.addEventListener("click", handleClick, true);
-
-    return () => document.removeEventListener("click", handleClick, true);
-  }, [isLogin]);
+  }, [isLogin, initialSplash]);
 
   async function logout() {
     await supabase.auth.signOut();
@@ -149,7 +123,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Sidebar pathname={pathname} logout={logout} userName={userName} role={role} />
       </aside>
 
-      <ODZRouteShield active={routeShield} />
+      <ODZInitialSplash active={initialSplash} />
 
       {/* Main */}
       <main className="relative z-10 pt-16 lg:ml-[286px] lg:pt-0">
@@ -429,91 +403,78 @@ function BrandLogo({ small = false }: { small?: boolean }) {
 }
 
 
-function ODZRouteShield({ active }: { active: boolean }) {
+
+function ODZInitialSplash({ active }: { active: boolean }) {
+  if (!active) return null;
+
   return (
     <>
-      <div className={`odz-route-shield ${active ? "is-active" : ""}`}>
-        <div className="odz-route-shield-card">
-          <div className="odz-route-shield-logo">ODZ.</div>
-          <div className="odz-route-shield-line" />
+      <div className="odz-initial-splash">
+        <div className="odz-initial-splash-card">
+          <div className="odz-initial-splash-logo">ODZ.</div>
+          <div className="odz-initial-splash-subline">StahlFabrik · V1.1</div>
         </div>
       </div>
 
       <style jsx global>{`
-        .odz-route-shield {
+        .odz-initial-splash {
           position: fixed;
           inset: 0;
           z-index: 2147483647;
           display: grid;
           place-items: center;
           pointer-events: none;
-          opacity: 0;
           background:
             radial-gradient(circle at 50% 20%, rgba(125, 211, 252, 0.08), transparent 34%),
-            linear-gradient(135deg, rgba(7, 16, 24, 0.94), rgba(10, 14, 20, 0.92));
+            linear-gradient(135deg, rgba(7, 16, 24, 0.96), rgba(10, 14, 20, 0.95));
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
-          transition: opacity 180ms ease;
+          animation: odz-initial-splash-out 900ms ease forwards;
         }
 
-        .odz-route-shield.is-active {
-          opacity: 1;
-        }
-
-        .odz-route-shield-card {
+        .odz-initial-splash-card {
           width: min(260px, 70vw);
           border-radius: 2rem;
           border: 1px solid rgba(255, 255, 255, 0.1);
           background: rgba(255, 255, 255, 0.045);
-          padding: 1.25rem;
+          padding: 1.35rem 1.25rem;
           box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
         }
 
-        .odz-route-shield-logo {
+        .odz-initial-splash-logo {
           text-align: center;
-          font-size: 1.65rem;
+          font-size: 1.8rem;
           font-weight: 900;
           letter-spacing: 0.22em;
-          color: rgba(255, 255, 255, 0.92);
+          color: rgba(255, 255, 255, 0.94);
         }
 
-        .odz-route-shield-line {
-          margin-top: 1rem;
-          height: 0.3rem;
-          overflow: hidden;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.08);
+        .odz-initial-splash-subline {
+          margin-top: 0.65rem;
+          text-align: center;
+          font-size: 0.58rem;
+          font-weight: 900;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: rgba(148, 163, 184, 0.72);
         }
 
-        .odz-route-shield-line::after {
-          display: block;
-          width: 42%;
-          height: 100%;
-          border-radius: inherit;
-          background: linear-gradient(
-            90deg,
-            rgba(125, 211, 252, 0.25),
-            rgba(255, 255, 255, 0.85),
-            rgba(74, 222, 128, 0.35)
-          );
-          content: "";
-          animation: odz-route-shield-move 720ms ease-in-out infinite alternate;
-        }
-
-        @keyframes odz-route-shield-move {
-          from {
-            transform: translateX(0%);
+        @keyframes odz-initial-splash-out {
+          0% {
+            opacity: 1;
           }
 
-          to {
-            transform: translateX(138%);
+          70% {
+            opacity: 1;
+          }
+
+          100% {
+            opacity: 0;
           }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .odz-route-shield,
-          .odz-route-shield-line::after {
-            transition: none;
+          .odz-initial-splash {
             animation: none;
           }
         }
@@ -521,4 +482,3 @@ function ODZRouteShield({ active }: { active: boolean }) {
     </>
   );
 }
-
