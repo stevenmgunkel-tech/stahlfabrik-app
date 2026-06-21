@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "../../lib/supabase";
 
@@ -11,6 +12,7 @@ export default function ProjektePage() {
   const [status, setStatus] = useState("Aktiv");
   const [ausgewaehlteBereiche, setAusgewaehlteBereiche] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [meldung, setMeldung] = useState("");
   const [bearbeitenId, setBearbeitenId] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -50,13 +52,18 @@ export default function ProjektePage() {
     }
 
     setIsAdmin(true);
-    setSeiteGeprueft(true);
     return true;
   }
 
-  async function ladeProjekte() {
+  async function ladeProjekte(initial = false) {
+    if (initial) setInitialLoading(true);
+
     const erlaubt = await pruefeAdmin();
-    if (!erlaubt) return;
+
+    if (!erlaubt) {
+      if (initial) setInitialLoading(false);
+      return;
+    }
 
     const { data, error } = await supabase
       .from("projekte")
@@ -67,14 +74,19 @@ export default function ProjektePage() {
     if (error) {
       setMeldung(error.message);
       console.log(error);
+      setSeiteGeprueft(true);
+      if (initial) setInitialLoading(false);
       return;
     }
 
     setProjekte((data || []).filter((projekt) => projekt.status !== "Abgeschlossen"));
+    setSeiteGeprueft(true);
+
+    if (initial) setInitialLoading(false);
   }
 
   useEffect(() => {
-    ladeProjekte();
+    ladeProjekte(true);
   }, []);
 
   function anzeigeBauen(kundeWert: string, kommissionWert: string) {
@@ -208,7 +220,7 @@ export default function ProjektePage() {
 
     setMeldung("Projekt aktualisiert.");
     bearbeitungAbbrechen();
-    await ladeProjekte();
+    await ladeProjekte(false);
     setLoading(false);
   }
 
@@ -229,7 +241,7 @@ export default function ProjektePage() {
       return;
     }
 
-    await ladeProjekte();
+    await ladeProjekte(false);
     setMeldung("Projekt gelöscht.");
   }
 
@@ -241,7 +253,7 @@ export default function ProjektePage() {
     setStatus(projekt.status || "Aktiv");
     setBearbeitungOffen(true);
     await projektBereicheLaden(Number(projekt.id));
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    document.getElementById("bearbeiten")?.scrollIntoView({ behavior: "auto", block: "start" });
   }
 
   function bearbeitungAbbrechen() {
@@ -276,14 +288,8 @@ export default function ProjektePage() {
     );
   });
 
-  if (!seiteGeprueft) {
-    return (
-      <main className="space-y-6 text-slate-100">
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 font-bold text-white shadow-2xl shadow-black/30">
-          Berechtigung wird geprüft...
-        </div>
-      </main>
-    );
+  if (!seiteGeprueft || initialLoading) {
+    return <main className="min-h-screen text-slate-100" />;
   }
 
   return (
@@ -399,9 +405,9 @@ export default function ProjektePage() {
                       key={bereich}
                       type="button"
                       onClick={() => bereichUmschalten(bereich)}
-                      className={`rounded-xl border px-4 py-3 text-sm font-black transition-all duration-300 hover:-translate-y-1 ${
+                      className={`rounded-xl border px-4 py-3 text-sm font-black transition-colors ${
                         aktiv
-                          ? "border-sky-300/40 bg-sky-300/10 text-sky-100 shadow-lg shadow-sky-300/10"
+                          ? "border-sky-300/40 bg-sky-300/10 text-sky-100"
                           : "border-white/10 bg-white/[0.04] text-white/60 hover:border-sky-300/25 hover:bg-sky-300/5 hover:text-sky-100"
                       }`}
                     >
@@ -423,7 +429,7 @@ export default function ProjektePage() {
                 type="button"
                 onClick={projektSpeichern}
                 disabled={loading}
-                className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/10 hover:shadow-sky-300/10 disabled:opacity-50"
+                className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 font-black text-slate-100 transition-colors hover:border-sky-300/35 hover:bg-sky-300/10 disabled:opacity-50"
               >
                 {loading ? "Speichern..." : "Änderung speichern"}
               </button>
@@ -431,7 +437,7 @@ export default function ProjektePage() {
               <button
                 type="button"
                 onClick={bearbeitungAbbrechen}
-                className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/5 hover:text-sky-200"
+                className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 font-bold text-white transition-colors hover:border-sky-300/35 hover:bg-sky-300/5 hover:text-sky-200"
               >
                 Bearbeiten abbrechen
               </button>
@@ -587,7 +593,7 @@ function ProjektMobileCard({
   onLoeschen: (id: number) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
+    <div className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-colors hover:border-sky-300/25 hover:bg-sky-300/5">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-xl font-black text-white">{projekt.kunde || "-"}</div>
@@ -623,14 +629,14 @@ function ProjektMobileCard({
 
 function ActionCard({ href, label, title, onClick }: { href: string; label: string; title: string; onClick?: () => void }) {
   return (
-    <a
+    <Link
       href={href}
       onClick={onClick}
-      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-colors hover:border-sky-300/25 hover:bg-sky-300/5"
     >
       <div className="text-sm text-white/50">{label}</div>
       <div className="mt-2 text-lg font-black text-white">{title}</div>
-    </a>
+    </Link>
   );
 }
 
