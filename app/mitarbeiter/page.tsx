@@ -29,6 +29,17 @@ function formatStunden(value: number | string | null | undefined) {
   return `${stunden} h ${minuten} min`;
 }
 
+function formatWochenstunden(value: number | string | null | undefined) {
+  const zahl = Number(value || 0);
+
+  if (!zahl) return "-";
+
+  return `${zahl.toLocaleString("de-CH", {
+    minimumFractionDigits: Number.isInteger(zahl) ? 0 : 1,
+    maximumFractionDigits: 2,
+  })} Std.`;
+}
+
 function formatDatum(value: string | null | undefined) {
   if (!value) return "-";
   return new Date(value).toLocaleDateString("de-CH");
@@ -394,7 +405,7 @@ export default function MitarbeiterPage() {
                       </div>
 
                       <div className="mt-4 grid grid-cols-3 gap-2">
-                        <MiniStat label="Woche" value={formatStunden(person.wochenstunden)} />
+                        <MiniStat label="Woche" value={formatWochenstunden(person.wochenstunden)} />
                         <MiniStat label="Ferien" value={`${person.ferienwochen || 4} W`} />
                         <MiniStat label="Status" value={istInProbezeit(person.probezeit_bis) ? "Probe" : "Aktiv"} />
                       </div>
@@ -448,7 +459,7 @@ export default function MitarbeiterPage() {
 
                     <div className="space-y-5">
                       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        <InfoCard label="Wochenstunden" value={formatStunden(selected.wochenstunden)} />
+                        <InfoCard label="Wochenstunden" value={formatWochenstunden(selected.wochenstunden)} />
                         <InfoCard label="Ferienwochen" value={`${selected.ferienwochen || 4} Wochen`} />
                         <InfoCard label="Urlaubstage" value={selected.urlaubstage || 0} />
                         <InfoCard label="Ü-Start" value={formatStunden(selected.ueberstunden_start)} />
