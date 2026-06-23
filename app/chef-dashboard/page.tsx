@@ -24,6 +24,7 @@ const [freigabeSeite, setFreigabeSeite] = useState(1);
     "Werkstatt",
     "Montage",
   ]);
+  const [projektBearbeitenId, setProjektBearbeitenId] = useState<string | number | null>(null);
 
   const [verwaltungsModus, setVerwaltungsModus] = useState<"projekt" | "mitarbeiter">("projekt");
   const [abwesenheitOffen, setAbwesenheitOffen] = useState(false);
@@ -37,6 +38,11 @@ const [freigabeSeite, setFreigabeSeite] = useState(1);
   const [mitarbeiterFerienwochen, setMitarbeiterFerienwochen] = useState("5");
   const [mitarbeiterUrlaubstage, setMitarbeiterUrlaubstage] = useState("25");
   const [mitarbeiterVertragsart, setMitarbeiterVertragsart] = useState("Festangestellt");
+  const [mitarbeiterBearbeitenId, setMitarbeiterBearbeitenId] = useState<string | number | null>(null);
+  const [mitarbeiterUeberstundenStart, setMitarbeiterUeberstundenStart] = useState("0");
+  const [mitarbeiterEintrittsdatum, setMitarbeiterEintrittsdatum] = useState("");
+  const [mitarbeiterProbezeitBis, setMitarbeiterProbezeitBis] = useState("");
+  const [mitarbeiterAustrittsdatum, setMitarbeiterAustrittsdatum] = useState("");
 
 const monat = new Date().toISOString().slice(0, 7);
 
@@ -55,6 +61,26 @@ const monat = new Date().toISOString().slice(0, 7);
     "Aufräumen",
     "Sonstiges",
   ];
+
+  function projektTitel(projekt: any) {
+    return (
+      projekt?.name ||
+      projekt?.projektname ||
+      projekt?.projekt_name ||
+      "Ohne Projekt"
+    );
+  }
+
+  function projektBereicheAuslesen(projekt: any) {
+    if (Array.isArray(projekt?.erlaubte_bereiche)) return projekt.erlaubte_bereiche;
+    if (Array.isArray(projekt?.bereiche)) return projekt.bereiche;
+    return ["Werkstatt", "Montage"];
+  }
+
+  function formatDatumInput(wert?: string | null) {
+    if (!wert) return "";
+    return String(wert).slice(0, 10);
+  }
 
   function formatStunden(wert: number, mitVorzeichen = false) {
     if (!Number.isFinite(wert)) return "0 min";
@@ -240,16 +266,19 @@ const gepruefteTage = tageszeiten.filter(
     .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
   const projektStunden = projekte.map((projekt) => {
+    const name = projektTitel(projekt);
     const stunden = arbeitszeiten
-      .filter((zeit) => zeit.projekt === projekt.name)
+      .filter((zeit) => zeit.projekt === name)
       .reduce((sum, zeit) => sum + Number(zeit.stunden || 0), 0);
 
     return {
+      ...projekt,
       id: projekt.id,
-      name: projekt.name,
+      name,
       kunde: projekt.kunde,
       kommission: projekt.kommission,
       status: projekt.status || "Aktiv",
+      erlaubte_bereiche: projektBereicheAuslesen(projekt),
       stunden,
     };
   });
@@ -358,7 +387,27 @@ function toggleProjektBereich(bereich: string) {
   );
 }
 
-async function projektErstellen() {
+function projektFormZuruecksetzen() {
+  setProjektBearbeitenId(null);
+  setProjektKunde("");
+  setProjektKommission("");
+  setProjektName("");
+  setProjektStatus("Aktiv");
+  setProjektBereiche(["Werkstatt", "Montage"]);
+}
+
+function projektZumBearbeitenLaden(projekt: any) {
+  setVerwaltungsModus("projekt");
+  setProjektBearbeitenId(projekt.id);
+  setProjektKunde(projekt.kunde || "");
+  setProjektKommission(projekt.kommission || "");
+  setProjektName(projektTitel(projekt));
+  setProjektStatus(projekt.status || "Aktiv");
+  setProjektBereiche(projektBereicheAuslesen(projekt));
+  setMeldung("Projekt ist im Bearbeitungsmodus.");
+}
+
+async function projektSpeichern() {
   setMeldung("");
 
   if (!projektName.trim()) {
@@ -366,55 +415,172 @@ async function projektErstellen() {
     return;
   }
 
-  const payload: any = {
-    kunde: projektKunde.trim() || "Intern",
-    kommission: projektKommission.trim() || null,
-    name: projektName.trim(),
-    status: projektStatus,
-    erlaubte_bereiche: projektBereiche,
-  };
+  const kunde = projektKunde.trim() || "Intern";
+  const kommission = projektKommission.trim() || null;
+  const name = projektName.trim();
 
-  let { data, error } = await supabase
-    .from("projekte")
-    .insert(payload)
-    .select()
-    .single();
+  const payloadVarianten: any[] = [
+    {
+      kunde,
+      kommission,
+      name,
+      status: projektStatus,
+      erlaubte_bereiche: projektBereiche,
+    },
+    {
+      kunde,
+      kommission,
+      name,
+      status: projektStatus,
+      bereiche: projektBereiche,
+    },
+    {
+      kunde,
+      kommission,
+      name,
+      status: projektStatus,
+    },
+    {
+      kunde,
+      kommission,
+      projektname: name,
+      status: projektStatus,
+      erlaubte_bereiche: projektBereiche,
+    },
+    {
+      kunde,
+      kommission,
+      projektname: name,
+      status: projektStatus,
+      bereiche: projektBereiche,
+    },
+    {
+      kunde,
+      kommission,
+      projektname: name,
+      status: projektStatus,
+    },
+  ];
 
-  if (error && error.message.toLowerCase().includes("erlaubte_bereiche")) {
-    const fallbackPayload = { ...payload };
-    delete fallbackPayload.erlaubte_bereiche;
+  let data: any = null;
+  let letzterFehler: any = null;
 
-    const fallback = await supabase
-      .from("projekte")
-      .insert(fallbackPayload)
-      .select()
-      .single();
+  for (const payload of payloadVarianten) {
+    const query = projektBearbeitenId
+      ? supabase
+          .from("projekte")
+          .update(payload)
+          .eq("id", projektBearbeitenId)
+          .select()
+          .single()
+      : supabase.from("projekte").insert(payload).select().single();
 
-    data = fallback.data;
-    error = fallback.error;
+    const result = await query;
+
+    if (!result.error) {
+      data = result.data;
+      letzterFehler = null;
+      break;
+    }
+
+    letzterFehler = result.error;
   }
 
-  if (error) {
-    setMeldung(error.message);
-    console.log(error);
+  if (letzterFehler) {
+    setMeldung(letzterFehler.message || "Projekt konnte nicht gespeichert werden.");
+    console.log(letzterFehler);
     return;
   }
 
-  if (data) setProjekte((aktuell) => [data, ...aktuell]);
+  if (data) {
+    setProjekte((aktuell) =>
+      projektBearbeitenId
+        ? aktuell.map((projekt) => (projekt.id === projektBearbeitenId ? data : projekt))
+        : [data, ...aktuell]
+    );
+  }
 
-  setProjektKunde("");
-  setProjektKommission("");
-  setProjektName("");
-  setProjektStatus("Aktiv");
-  setProjektBereiche(["Werkstatt", "Montage"]);
-  setMeldung("Projekt wurde erstellt.");
+  projektFormZuruecksetzen();
+  setMeldung(projektBearbeitenId ? "Projekt wurde aktualisiert." : "Projekt wurde erstellt.");
 }
 
-async function mitarbeiterErstellen() {
+function mitarbeiterFormZuruecksetzen() {
+  setMitarbeiterBearbeitenId(null);
+  setMitarbeiterName("");
+  setMitarbeiterEmail("");
+  setMitarbeiterPasswort("");
+  setMitarbeiterRolle("Mitarbeiter");
+  setMitarbeiterWochenstunden("42.5");
+  setMitarbeiterFerienwochen("5");
+  setMitarbeiterUrlaubstage("25");
+  setMitarbeiterVertragsart("Festangestellt");
+  setMitarbeiterUeberstundenStart("0");
+  setMitarbeiterEintrittsdatum("");
+  setMitarbeiterProbezeitBis("");
+  setMitarbeiterAustrittsdatum("");
+}
+
+function mitarbeiterZumBearbeitenLaden(person: any) {
+  setVerwaltungsModus("mitarbeiter");
+  setMitarbeiterBearbeitenId(person.id);
+  setMitarbeiterName(person.name || "");
+  setMitarbeiterEmail(person.email || "");
+  setMitarbeiterPasswort("");
+  setMitarbeiterRolle(person.rolle || "Mitarbeiter");
+  setMitarbeiterWochenstunden(String(person.wochenstunden ?? "42.5"));
+  setMitarbeiterFerienwochen(String(person.ferienwochen ?? "5"));
+  setMitarbeiterUrlaubstage(String(person.urlaubstage ?? "25"));
+  setMitarbeiterVertragsart(person.vertragsart || "Festangestellt");
+  setMitarbeiterUeberstundenStart(String(person.ueberstunden_start ?? "0"));
+  setMitarbeiterEintrittsdatum(formatDatumInput(person.eintrittsdatum));
+  setMitarbeiterProbezeitBis(formatDatumInput(person.probezeit_bis));
+  setMitarbeiterAustrittsdatum(formatDatumInput(person.austrittsdatum));
+  setMeldung("Mitarbeiter ist im Bearbeitungsmodus.");
+}
+
+async function mitarbeiterSpeichern() {
   setMeldung("");
 
   if (!mitarbeiterName.trim()) {
     setMeldung("Bitte Mitarbeiternamen eintragen.");
+    return;
+  }
+
+  if (mitarbeiterBearbeitenId) {
+    const payload = {
+      name: mitarbeiterName.trim(),
+      rolle: mitarbeiterRolle,
+      wochenstunden: Number(mitarbeiterWochenstunden || 0),
+      ferienwochen: Number(mitarbeiterFerienwochen || 0),
+      urlaubstage: Number(mitarbeiterUrlaubstage || 0),
+      vertragsart: mitarbeiterVertragsart,
+      ueberstunden_start: Number(mitarbeiterUeberstundenStart || 0),
+      eintrittsdatum: mitarbeiterEintrittsdatum || null,
+      probezeit_bis: mitarbeiterProbezeitBis || null,
+      austrittsdatum: mitarbeiterAustrittsdatum || null,
+    };
+
+    const { data, error } = await supabase
+      .from("mitarbeiter")
+      .update(payload)
+      .eq("id", mitarbeiterBearbeitenId)
+      .select()
+      .single();
+
+    if (error) {
+      setMeldung(error.message);
+      console.log(error);
+      return;
+    }
+
+    if (data) {
+      setMitarbeiter((aktuell) =>
+        aktuell.map((person) => (person.id === mitarbeiterBearbeitenId ? data : person))
+      );
+    }
+
+    mitarbeiterFormZuruecksetzen();
+    setMeldung("Mitarbeiter wurde aktualisiert.");
     return;
   }
 
@@ -438,6 +604,10 @@ async function mitarbeiterErstellen() {
     ferienwochen: Number(mitarbeiterFerienwochen || 0),
     urlaubstage: Number(mitarbeiterUrlaubstage || 0),
     vertragsart: mitarbeiterVertragsart,
+    ueberstunden_start: Number(mitarbeiterUeberstundenStart || 0),
+    eintrittsdatum: mitarbeiterEintrittsdatum || null,
+    probezeit_bis: mitarbeiterProbezeitBis || null,
+    austrittsdatum: mitarbeiterAustrittsdatum || null,
   };
 
   const response = await fetch("/api/create-user", {
@@ -461,14 +631,7 @@ async function mitarbeiterErstellen() {
     .order("id", { ascending: false });
 
   setMitarbeiter(neueMitarbeiter || []);
-  setMitarbeiterName("");
-  setMitarbeiterEmail("");
-  setMitarbeiterPasswort("");
-  setMitarbeiterRolle("Mitarbeiter");
-  setMitarbeiterWochenstunden("42.5");
-  setMitarbeiterFerienwochen("5");
-  setMitarbeiterUrlaubstage("25");
-  setMitarbeiterVertragsart("Festangestellt");
+  mitarbeiterFormZuruecksetzen();
   setMeldung("Mitarbeiter wurde erstellt.");
 }
 
@@ -758,14 +921,14 @@ const systemStatus =
 
         <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
           <label className="block">
-            <span className="text-sm font-black text-white/65">Was möchtest du erstellen?</span>
+            <span className="text-sm font-black text-white/65">Was möchtest du verwalten?</span>
             <select
               value={verwaltungsModus}
               onChange={(event) => setVerwaltungsModus(event.target.value as "projekt" | "mitarbeiter")}
               className="mt-2 w-full rounded-2xl border border-slate-200/25 bg-slate-200/10 px-4 py-4 font-black text-slate-100 outline-none transition focus:border-slate-200/50 focus:bg-slate-200/15"
             >
-              <option value="projekt">🏗️ Projekt erstellen</option>
-              <option value="mitarbeiter">👤 Mitarbeiter erstellen</option>
+              <option value="projekt">🏗️ Projekt erstellen / bearbeiten</option>
+              <option value="mitarbeiter">👤 Mitarbeiter erstellen / bearbeiten</option>
             </select>
           </label>
 
@@ -874,16 +1037,82 @@ const systemStatus =
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-white/45">
-                Ziel: Chef bleibt im Dashboard. Keine doppelte Projektverwaltung mehr.
+                {projektBearbeitenId
+                  ? "Bearbeitungsmodus aktiv. Änderungen werden direkt am bestehenden Projekt gespeichert."
+                  : "Ziel: Chef bleibt im Dashboard. Keine doppelte Projektverwaltung mehr."}
               </p>
 
-              <button
-                type="button"
-                onClick={projektErstellen}
-                className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-6 py-4 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/50 hover:bg-slate-200/15 hover:shadow-sky-300/10"
-              >
-                + Projekt speichern
-              </button>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                {projektBearbeitenId && (
+                  <button
+                    type="button"
+                    onClick={projektFormZuruecksetzen}
+                    className="rounded-2xl border border-white/10 bg-black/25 px-6 py-4 font-black text-white/60 transition-all duration-300 hover:-translate-y-1 hover:border-white/25 hover:text-white"
+                  >
+                    Abbrechen
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={projektSpeichern}
+                  className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-6 py-4 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/50 hover:bg-slate-200/15 hover:shadow-sky-300/10"
+                >
+                  {projektBearbeitenId ? "✓ Projekt aktualisieren" : "+ Projekt speichern"}
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-white/10 bg-black/20 p-5">
+              <div className="mb-4 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+                <div>
+                  <div className="text-lg font-black text-white">Projekte bearbeiten</div>
+                  <p className="mt-1 text-sm text-white/45">
+                    Bestehende Projekte direkt ins Formular laden, anpassen und speichern.
+                  </p>
+                </div>
+
+                <div className="text-xs font-black uppercase tracking-widest text-white/35">
+                  {projekte.length} Projekte
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                {projekte.length === 0 ? (
+                  <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-white/45">
+                    Noch keine Projekte vorhanden.
+                  </div>
+                ) : (
+                  projekte.map((projekt) => (
+                    <div
+                      key={projekt.id}
+                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-sky-300/25 hover:bg-sky-300/5"
+                    >
+                      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                        <div>
+                          <div className="text-lg font-black text-white">
+                            {projektTitel(projekt)}
+                          </div>
+                          <div className="mt-1 text-sm text-white/45">
+                            {projekt.kunde || "Intern"} · {projekt.kommission || "Keine Kommission"}
+                          </div>
+                          <div className="mt-2 text-xs font-black uppercase tracking-widest text-slate-200">
+                            {projekt.status || "Aktiv"}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => projektZumBearbeitenLaden(projekt)}
+                          className="rounded-xl border border-slate-200/25 bg-slate-200/10 px-4 py-3 font-black text-slate-100 transition hover:-translate-y-1 hover:border-sky-300/40 hover:bg-sky-300/5"
+                        >
+                          Bearbeiten
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </>
         ) : (
@@ -900,24 +1129,26 @@ const systemStatus =
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">E-Mail</span>
+                <span className="text-sm font-black text-white/65">{mitarbeiterBearbeitenId ? "E-Mail nur bei neuem Login" : "E-Mail"}</span>
                 <input
                   value={mitarbeiterEmail}
                   onChange={(event) => setMitarbeiterEmail(event.target.value)}
-                  placeholder="max@firma.ch"
+                  placeholder={mitarbeiterBearbeitenId ? "Bei Bearbeitung nicht nötig" : "max@firma.ch"}
                   type="email"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-sky-300/40 focus:bg-black/40"
+                  disabled={!!mitarbeiterBearbeitenId}
+                  className={`mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-sky-300/40 focus:bg-black/40 ${mitarbeiterBearbeitenId ? "cursor-not-allowed opacity-50" : ""}`}
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Startpasswort</span>
+                <span className="text-sm font-black text-white/65">{mitarbeiterBearbeitenId ? "Passwort unverändert" : "Startpasswort"}</span>
                 <input
                   value={mitarbeiterPasswort}
                   onChange={(event) => setMitarbeiterPasswort(event.target.value)}
-                  placeholder="mind. 6 Zeichen"
+                  placeholder={mitarbeiterBearbeitenId ? "Nur über Supabase Auth ändern" : "mind. 6 Zeichen"}
                   type="password"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-sky-300/40 focus:bg-black/40"
+                  disabled={!!mitarbeiterBearbeitenId}
+                  className={`mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-sky-300/40 focus:bg-black/40 ${mitarbeiterBearbeitenId ? "cursor-not-allowed opacity-50" : ""}`}
                 />
               </label>
             </div>
@@ -983,18 +1214,126 @@ const systemStatus =
               </label>
             </div>
 
+            <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-4">
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Eintrittsdatum</span>
+                <input
+                  value={mitarbeiterEintrittsdatum}
+                  onChange={(event) => setMitarbeiterEintrittsdatum(event.target.value)}
+                  type="date"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Probezeit bis</span>
+                <input
+                  value={mitarbeiterProbezeitBis}
+                  onChange={(event) => setMitarbeiterProbezeitBis(event.target.value)}
+                  type="date"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Austrittsdatum</span>
+                <input
+                  value={mitarbeiterAustrittsdatum}
+                  onChange={(event) => setMitarbeiterAustrittsdatum(event.target.value)}
+                  type="date"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Überstunden Start</span>
+                <input
+                  value={mitarbeiterUeberstundenStart}
+                  onChange={(event) => setMitarbeiterUeberstundenStart(event.target.value)}
+                  inputMode="decimal"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                />
+              </label>
+            </div>
+
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-white/45">
-                Mitarbeiter wird mit Login erstellt. Die Detailpflege bleibt später in der Mitarbeiterverwaltung.
+                {mitarbeiterBearbeitenId
+                  ? "Bearbeitungsmodus aktiv. Es wird kein neuer Login erstellt."
+                  : "Mitarbeiter wird mit Login erstellt. Details können direkt hier bearbeitet werden."}
               </p>
 
-              <button
-                type="button"
-                onClick={mitarbeiterErstellen}
-                className="rounded-2xl border border-slate-200/25 bg-slate-200/10 px-6 py-4 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/40 hover:bg-sky-300/5 hover:shadow-sky-300/10"
-              >
-                + Mitarbeiter speichern
-              </button>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                {mitarbeiterBearbeitenId && (
+                  <button
+                    type="button"
+                    onClick={mitarbeiterFormZuruecksetzen}
+                    className="rounded-2xl border border-white/10 bg-black/25 px-6 py-4 font-black text-white/60 transition-all duration-300 hover:-translate-y-1 hover:border-white/25 hover:text-white"
+                  >
+                    Abbrechen
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={mitarbeiterSpeichern}
+                  className="rounded-2xl border border-slate-200/25 bg-slate-200/10 px-6 py-4 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/40 hover:bg-sky-300/5 hover:shadow-sky-300/10"
+                >
+                  {mitarbeiterBearbeitenId ? "✓ Mitarbeiter aktualisieren" : "+ Mitarbeiter speichern"}
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-white/10 bg-black/20 p-5">
+              <div className="mb-4 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+                <div>
+                  <div className="text-lg font-black text-white">Mitarbeiter bearbeiten</div>
+                  <p className="mt-1 text-sm text-white/45">
+                    Bestehende Mitarbeiter direkt ins Formular laden und aktualisieren.
+                  </p>
+                </div>
+
+                <div className="text-xs font-black uppercase tracking-widest text-white/35">
+                  {mitarbeiter.length} Personen
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                {mitarbeiter.length === 0 ? (
+                  <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-white/45">
+                    Noch keine Mitarbeiter vorhanden.
+                  </div>
+                ) : (
+                  mitarbeiter.map((person) => (
+                    <div
+                      key={person.id}
+                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-sky-300/25 hover:bg-sky-300/5"
+                    >
+                      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                        <div>
+                          <div className="text-lg font-black text-white">
+                            {person.name}
+                          </div>
+                          <div className="mt-1 text-sm text-white/45">
+                            {person.rolle || "Mitarbeiter"} · {Number(person.wochenstunden || 0)} h/Woche
+                          </div>
+                          <div className="mt-2 text-xs font-black uppercase tracking-widest text-slate-200">
+                            {person.vertragsart || "Festangestellt"}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => mitarbeiterZumBearbeitenLaden(person)}
+                          className="rounded-xl border border-slate-200/25 bg-slate-200/10 px-4 py-3 font-black text-slate-100 transition hover:-translate-y-1 hover:border-sky-300/40 hover:bg-sky-300/5"
+                        >
+                          Bearbeiten
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </>
         )}
