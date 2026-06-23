@@ -46,6 +46,7 @@ const [freigabeSeite, setFreigabeSeite] = useState(1);
   const [mitarbeiterEintrittsdatum, setMitarbeiterEintrittsdatum] = useState("");
   const [mitarbeiterProbezeitBis, setMitarbeiterProbezeitBis] = useState("");
   const [mitarbeiterAustrittsdatum, setMitarbeiterAustrittsdatum] = useState("");
+  const [mitarbeiterZeiterfassungAb, setMitarbeiterZeiterfassungAb] = useState("");
 
 const monat = new Date().toISOString().slice(0, 7);
 
@@ -368,12 +369,19 @@ const gepruefteTage = tageszeiten.filter(
   });
 
   const mitarbeiterStats = mitarbeiter.map((person) => {
+    const berechnungAb =
+      person.zeiterfassung_ab || person.eintrittsdatum || null;
+
     const personArbeitszeiten = arbeitszeiten.filter(
-      (eintrag) => eintrag.user_id === person.user_id
+      (eintrag) =>
+        eintrag.user_id === person.user_id &&
+        (!berechnungAb || !eintrag.datum || eintrag.datum >= berechnungAb)
     );
 
     const personUrlaub = urlaub.filter(
-      (eintrag) => eintrag.user_id === person.user_id
+      (eintrag) =>
+        eintrag.user_id === person.user_id &&
+        (!berechnungAb || !eintrag.bis || eintrag.bis >= berechnungAb)
     );
 
     const bruttoStunden = personArbeitszeiten.reduce(
@@ -408,7 +416,7 @@ const iststunden = bruttoStunden - pauseStunden;
 
     const tagesSoll = Number(person.wochenstunden || 0) / 5;
 
-    const personArbeitstage = berechneArbeitstageAbDatum();
+    const personArbeitstage = berechneArbeitstageAbDatum(berechnungAb || undefined);
 
     const sollstunden = tagesSoll * personArbeitstage;
     const urlaubStunden = urlaubstagePerson * tagesSoll;
@@ -434,6 +442,7 @@ const gesamtUeberstunden =
   kranktagePerson,
   ueberstundenAbbauStunden,
   personArbeitstage,
+  berechnungAb,
 };
 
   });
@@ -740,6 +749,7 @@ function mitarbeiterFormZuruecksetzen() {
   setMitarbeiterEintrittsdatum("");
   setMitarbeiterProbezeitBis("");
   setMitarbeiterAustrittsdatum("");
+  setMitarbeiterZeiterfassungAb("");
 }
 
 function mitarbeiterZumBearbeitenLaden(person: any) {
@@ -757,6 +767,7 @@ function mitarbeiterZumBearbeitenLaden(person: any) {
   setMitarbeiterEintrittsdatum(formatDatumInput(person.eintrittsdatum));
   setMitarbeiterProbezeitBis(formatDatumInput(person.probezeit_bis));
   setMitarbeiterAustrittsdatum(formatDatumInput(person.austrittsdatum));
+  setMitarbeiterZeiterfassungAb(formatDatumInput(person.zeiterfassung_ab));
   setMeldung("Mitarbeiter ist im Bearbeitungsmodus.");
 }
 
@@ -785,6 +796,7 @@ async function mitarbeiterSpeichern() {
       eintrittsdatum: mitarbeiterEintrittsdatum || null,
       probezeit_bis: mitarbeiterProbezeitBis || null,
       austrittsdatum: mitarbeiterAustrittsdatum || null,
+      zeiterfassung_ab: mitarbeiterZeiterfassungAb || null,
     };
 
     const { data, error } = await supabase
@@ -835,6 +847,7 @@ async function mitarbeiterSpeichern() {
     eintrittsdatum: mitarbeiterEintrittsdatum || null,
     probezeit_bis: mitarbeiterProbezeitBis || null,
     austrittsdatum: mitarbeiterAustrittsdatum || null,
+    zeiterfassung_ab: mitarbeiterZeiterfassungAb || null,
   };
 
   const response = await fetch("/api/create-user", {
@@ -850,6 +863,21 @@ async function mitarbeiterSpeichern() {
   if (!response.ok) {
     setMeldung(result?.error || result?.message || "Mitarbeiter konnte nicht erstellt werden.");
     return;
+  }
+
+  if (result?.mitarbeiter?.id && mitarbeiterZeiterfassungAb) {
+    const { error: zeiterfassungError } = await supabase
+      .from("mitarbeiter")
+      .update({ zeiterfassung_ab: mitarbeiterZeiterfassungAb })
+      .eq("id", result.mitarbeiter.id);
+
+    if (zeiterfassungError) {
+      setMeldung(
+        `Mitarbeiter wurde erstellt, aber "Zeiterfassung ab" konnte nicht gespeichert werden: ${zeiterfassungError.message}`
+      );
+      console.log(zeiterfassungError);
+      return;
+    }
   }
 
   const { data: neueMitarbeiter } = await supabase
@@ -1500,12 +1528,22 @@ const systemStatus =
               </label>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-4">
+            <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-5">
               <label className="block">
                 <span className="text-sm font-black text-white/65">Eintrittsdatum</span>
                 <input
                   value={mitarbeiterEintrittsdatum}
                   onChange={(event) => setMitarbeiterEintrittsdatum(event.target.value)}
+                  type="date"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Zeiterfassung ab</span>
+                <input
+                  value={mitarbeiterZeiterfassungAb}
+                  onChange={(event) => setMitarbeiterZeiterfassungAb(event.target.value)}
                   type="date"
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
                 />
@@ -1602,6 +1640,9 @@ const systemStatus =
                           </div>
                           <div className="mt-1 text-sm text-white/45">
                             {person.rolle || "Mitarbeiter"} · {Number(person.wochenstunden || 0)} h/Woche
+                          </div>
+                          <div className="mt-1 text-xs font-bold text-white/35">
+                            Zeiterfassung ab: {formatDatumInput(person.zeiterfassung_ab) || "Eintrittsdatum"}
                           </div>
                           <div className="mt-2 text-xs font-black uppercase tracking-widest text-slate-200">
                             {person.vertragsart || "Festangestellt"}
