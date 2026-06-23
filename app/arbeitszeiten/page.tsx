@@ -50,6 +50,55 @@ export default function ArbeitszeitenPage() {
   const [zusammenfassungOffen, setZusammenfassungOffen] = useState(true);
   const [datumSuche, setDatumSuche] = useState(heuteDatum());
 
+  const standardBereiche = [
+    "Werkstatt",
+    "Montage",
+    "Logistik",
+    "Planung",
+    "Lieferung",
+    "Aufräumen",
+    "Sonstiges",
+  ];
+
+  function projektNameWert(projektItem: any) {
+    return (
+      projektItem?.name ||
+      projektItem?.projektname ||
+      projektItem?.projekt_name ||
+      projektItem?.titel ||
+      ""
+    );
+  }
+
+  function projektBereicheAusProjekt(projektItem: any) {
+    const rawBereiche =
+      projektItem?.erlaubte_bereiche ||
+      projektItem?.bereiche ||
+      projektItem?.projekt_bereiche ||
+      [];
+
+    if (!Array.isArray(rawBereiche) || rawBereiche.length === 0) {
+      return standardBereiche.map((name, index) => ({
+        id: `standard-${index}-${name}`,
+        bereich: name,
+      }));
+    }
+
+    return rawBereiche
+      .map((eintrag: any, index: number) => {
+        const name =
+          typeof eintrag === "string"
+            ? eintrag
+            : eintrag?.bereich || eintrag?.name || eintrag?.titel || "";
+
+        return {
+          id: eintrag?.id || `projekt-${projektItem?.id || "x"}-${index}-${name}`,
+          bereich: name,
+        };
+      })
+      .filter((eintrag) => Boolean(eintrag.bereich));
+  }
+
   async function ladeDaten() {
     const userData = await supabase.auth.getUser();
     const user = userData.data.user;
@@ -88,7 +137,7 @@ export default function ArbeitszeitenPage() {
     const { data: projektData, error: projektError } = await supabase
       .from("projekte")
       .select("*")
-      .order("name", { ascending: true });
+      .order("id", { ascending: false });
 
     if (projektError) {
       setMeldung(projektError.message);
@@ -96,14 +145,21 @@ export default function ArbeitszeitenPage() {
     }
 
     if (projektData) {
-  const aktiveProjekte = projektData.filter(
-    (p) =>
-      p.status !== "Abgeschlossen" &&
-      p.name !== "Betriebsunterhalt"
-  );
+      const aktiveProjekte = projektData
+        .filter((p) => {
+          const name = projektNameWert(p);
 
-  setProjekte(aktiveProjekte);
-}
+          return (
+            p.status !== "Abgeschlossen" &&
+            name !== "Betriebsunterhalt"
+          );
+        })
+        .sort((a, b) =>
+          projektAnzeige(a).localeCompare(projektAnzeige(b), "de")
+        );
+
+      setProjekte(aktiveProjekte);
+    }
   }
 
   useEffect(() => {
@@ -143,9 +199,9 @@ export default function ArbeitszeitenPage() {
   }
 
   function projektAnzeige(projektItem: any) {
-    const name = projektItem.name || "";
-    const kommission = projektItem.kommission || "";
-    const kunde = projektItem.kunde || "";
+    const name = projektNameWert(projektItem);
+    const kommission = projektItem?.kommission || "";
+    const kunde = projektItem?.kunde || "";
 
     if (!name && kunde && kommission) return `${kunde} - ${kommission}`;
     if (!name) return kommission || kunde || "Ohne Projekt";
@@ -168,16 +224,21 @@ export default function ArbeitszeitenPage() {
   }
 
   function kundeFuerProjekt(projektName: string) {
-  if (projektName === "Betriebsunterhalt") {
-    return "Intern";
+    if (projektName === "Betriebsunterhalt") {
+      return "Intern";
+    }
+
+    const gefunden = projekte.find((p) => {
+      const name = projektNameWert(p);
+
+      return (
+        name === projektName ||
+        projektAnzeige(p) === projektName
+      );
+    });
+
+    return gefunden?.kunde || "Kein Kunde hinterlegt";
   }
-
-  const gefunden = projekte.find(
-    (p) => p.name === projektName || projektAnzeige(p) === projektName
-  );
-
-  return gefunden?.kunde || "Kein Kunde hinterlegt";
-}
 
 
   async function ladeProjektBereicheById(projektIdWert: number | null) {
@@ -188,6 +249,9 @@ export default function ArbeitszeitenPage() {
       return;
     }
 
+    const projektObj = projekte.find((p) => Number(p.id) === Number(projektIdWert));
+    const fallbackBereiche = projektBereicheAusProjekt(projektObj);
+
     const { data, error } = await supabase
       .from("projekt_bereiche")
       .select("*")
@@ -195,13 +259,17 @@ export default function ArbeitszeitenPage() {
       .order("bereich", { ascending: true });
 
     if (error) {
-      console.log("PROJEKT BEREICHE FEHLER:", error);
-      setMeldung(error.message);
-      setProjektBereiche([]);
+      console.log("PROJEKT BEREICHE FALLBACK:", error);
+      setProjektBereiche(fallbackBereiche);
       return;
     }
 
-    setProjektBereiche(data || []);
+    if (data && data.length > 0) {
+      setProjektBereiche(data);
+      return;
+    }
+
+    setProjektBereiche(fallbackBereiche);
   }
 
   async function betriebsunterhaltSpeichern(
@@ -750,9 +818,14 @@ setBisZeit("");
       setMeldung("Automatisch berechneter Betriebsunterhalt kann nicht bearbeitet werden.");
       return;
     }
-    const projektObj = projekte.find(
-      (p) => projektAnzeige(p) === (zeit.projekt || "") || p.name === (zeit.projekt || "")
-    );
+    const projektObj = projekte.find((p) => {
+      const name = projektNameWert(p);
+
+      return (
+        projektAnzeige(p) === (zeit.projekt || "") ||
+        name === (zeit.projekt || "")
+      );
+    });
 
     const id = projektObj ? Number(projektObj.id) : null;
 
@@ -1066,16 +1139,25 @@ setBisZeit("");
                 const id = e.target.value ? Number(e.target.value) : null;
                 const projektObj = id ? projekte.find((p) => Number(p.id) === id) : null;
                 setProjektId(id);
-                setProjekt(projektObj ? projektAnzeige(projektObj) : "");
+                setProjekt(projektObj ? projektNameWert(projektObj) : "");
                 setBereich("");
                 ladeProjektBereicheById(id);
               }}
               className="dark-input"
             >
               <option value="">Projekt auswählen</option>
-              {projekte.map((projektItem) => (
-                <option key={projektItem.id} value={projektItem.id}>{projektAnzeige(projektItem)}</option>
-              ))}
+              {projekte.map((projektItem) => {
+                const name = projektNameWert(projektItem);
+                const anzeige = projektAnzeige(projektItem);
+
+                if (!name && !anzeige) return null;
+
+                return (
+                  <option key={projektItem.id} value={projektItem.id}>
+                    {anzeige}
+                  </option>
+                );
+              })}
             </select>
           </Field>
 
