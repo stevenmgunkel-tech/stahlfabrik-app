@@ -823,7 +823,7 @@ const systemStatus =
             </h1>
 
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-white/65 sm:text-base">
-              Premium Betriebssystem für Zeit, Projekte, Team und Kontrolle.
+              TEST VERASION 23.06
             </p>
 
             <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
