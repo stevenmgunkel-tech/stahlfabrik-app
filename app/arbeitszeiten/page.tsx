@@ -1382,12 +1382,6 @@ setBisZeit("");
           background: #111315;
           color: white;
         }
-
-        .dark-input::-webkit-calendar-picker-indicator {
-          filter: brightness(0) invert(1);
-          opacity: 1;
-          cursor: pointer;
-        }
       `}</style>
     </main>
   );
