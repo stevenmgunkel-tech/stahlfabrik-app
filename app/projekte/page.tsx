@@ -179,6 +179,57 @@ export default function ProjektePage() {
     return "border-slate-300/30 bg-slate-300/10 text-slate-200";
   }
 
+  async function projektAbschliessen(projekt: Projekt) {
+    if (!isAdmin) {
+      setMeldung("Keine Berechtigung.");
+      return;
+    }
+
+    if (!projekt.id) {
+      setMeldung("Projekt konnte nicht gefunden werden.");
+      return;
+    }
+
+    const aktuellerStatus = statusWert(projekt);
+
+    if (aktuellerStatus === "Abgeschlossen") {
+      setMeldung("Projekt ist bereits abgeschlossen.");
+      return;
+    }
+
+    const titel = projektTitel(projekt);
+    const bestaetigt = window.confirm(`Projekt "${titel}" wirklich auf abgeschlossen setzen?`);
+
+    if (!bestaetigt) return;
+
+    setLoading(true);
+    setMeldung("");
+
+    const { error } = await supabase
+      .from("projekte")
+      .update({ status: "Abgeschlossen" })
+      .eq("id", projekt.id);
+
+    if (error) {
+      setLoading(false);
+      setMeldung(error.message || "Projekt konnte nicht abgeschlossen werden.");
+      console.log(error);
+      return;
+    }
+
+    setProjekte((aktuell) =>
+      aktuell.map((eintrag) =>
+        String(eintrag.id) === String(projekt.id)
+          ? { ...eintrag, status: "Abgeschlossen" }
+          : eintrag
+      )
+    );
+
+    setStatusFilter("Alle");
+    setLoading(false);
+    setMeldung(`Projekt "${titel}" wurde abgeschlossen.`);
+  }
+
   const aktiveProjekte = useMemo(
     () => projekte.filter((projekt) => statusWert(projekt) === "Aktiv").length,
     [projekte]
@@ -250,14 +301,14 @@ export default function ProjektePage() {
             </h1>
 
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-white/65 sm:text-base">
-              Saubere Übersicht über aktive, pausierte und abgeschlossene Projekte. Erstellen und Bearbeiten läuft zentral im Chef Dashboard.
+              Saubere Übersicht über aktive, pausierte und abgeschlossene Projekte. Projekte können hier schnell abgeschlossen werden, alles andere bleibt im Chef Dashboard.
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
                 <span className="h-3 w-3 rounded-full bg-green-400 shadow-lg shadow-green-400/40" />
                 <span className="text-xs font-black uppercase tracking-widest text-white/70">
-                  Nur Übersicht · Chef Dashboard bleibt Zentrale
+                  Übersicht · Schnell abschließen
                 </span>
               </div>
             </div>
@@ -288,7 +339,7 @@ export default function ProjektePage() {
         id="uebersicht"
         title="Projektübersicht"
         eyebrow="Aktiv · Pausiert · Archiv"
-        description="Diese Seite zeigt den Überblick. Änderungen an Projekten, Status und erlaubten Bereichen machst du im Chef Dashboard."
+        description="Diese Seite zeigt den Überblick. Projekte kannst du hier per Klick abschließen, alles Weitere machst du im Chef Dashboard."
         open={uebersichtOffen}
         onToggle={() => setUebersichtOffen(!uebersichtOffen)}
       >
@@ -329,7 +380,7 @@ export default function ProjektePage() {
         </div>
 
         <div className="rounded-2xl border border-sky-300/20 bg-sky-300/5 p-4 text-sm font-bold text-sky-100">
-          Hinweis: Diese Seite ist bewusst nur Übersicht. Projekt erstellen, bearbeiten, löschen und Bereiche ändern läuft im Chef Dashboard.
+          Hinweis: Projekt abschließen ist hier erlaubt. Projekt erstellen, bearbeiten, löschen und Bereiche ändern läuft im Chef Dashboard.
         </div>
 
         {pageLoading ? (
@@ -346,19 +397,22 @@ export default function ProjektePage() {
                   bereiche={bereicheFuerProjekt(projekt)}
                   projektTitel={projektTitel}
                   statusFarbe={statusFarbe}
+                  onAbschliessen={projektAbschliessen}
+                  loading={loading}
                 />
               ))}
             </div>
 
             <div className="hidden overflow-hidden rounded-2xl border border-white/10 bg-black/25 md:block">
               <div className="overflow-x-auto">
-                <div className="min-w-[1050px]">
-                  <div className="grid grid-cols-[1.1fr_1.1fr_1.3fr_1fr_1.4fr] border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+                <div className="min-w-[1180px]">
+                  <div className="grid grid-cols-[1.1fr_1.1fr_1.3fr_1fr_1.4fr_0.9fr] border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
                     <div>Kunde</div>
                     <div>Kommission</div>
                     <div>Projekt</div>
                     <div>Status</div>
                     <div>Bereiche</div>
+                    <div>Aktion</div>
                   </div>
 
                   {gefilterteProjekte.map((projekt) => {
@@ -368,7 +422,7 @@ export default function ProjektePage() {
                     return (
                       <div
                         key={projekt.id}
-                        className="grid grid-cols-[1.1fr_1.1fr_1.3fr_1fr_1.4fr] items-center border-b border-white/10 px-5 py-4 text-white/80 transition-colors last:border-b-0 hover:bg-sky-300/5 hover:text-white"
+                        className="grid grid-cols-[1.1fr_1.1fr_1.3fr_1fr_1.4fr_0.9fr] items-center border-b border-white/10 px-5 py-4 text-white/80 transition-colors last:border-b-0 hover:bg-sky-300/5 hover:text-white"
                       >
                         <div className="font-black text-white">{projekt.kunde || "Intern"}</div>
                         <div>{projekt.kommission || "-"}</div>
@@ -390,6 +444,22 @@ export default function ProjektePage() {
                                 {bereich}
                               </span>
                             ))
+                          )}
+                        </div>
+                        <div>
+                          {status === "Abgeschlossen" ? (
+                            <span className="inline-flex rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-black uppercase tracking-widest text-white/35">
+                              Erledigt
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => projektAbschliessen(projekt)}
+                              disabled={loading}
+                              className="rounded-xl border border-emerald-300/25 bg-emerald-400/10 px-4 py-2 text-sm font-black text-emerald-200 transition hover:-translate-y-1 hover:border-emerald-200/45 hover:bg-emerald-400/15 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              ✓ Abschließen
+                            </button>
                           )}
                         </div>
                       </div>
@@ -433,11 +503,15 @@ function ProjektMobileCard({
   bereiche,
   projektTitel,
   statusFarbe,
+  onAbschliessen,
+  loading,
 }: {
   projekt: Projekt;
   bereiche: string[];
   projektTitel: (projekt: Projekt) => string;
   statusFarbe: (status: string) => string;
+  onAbschliessen: (projekt: Projekt) => void;
+  loading: boolean;
 }) {
   const status = projekt.status || "Aktiv";
 
@@ -467,6 +541,23 @@ function ProjektMobileCard({
               {bereich}
             </span>
           ))
+        )}
+      </div>
+
+      <div className="mt-5">
+        {status === "Abgeschlossen" ? (
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center text-sm font-black uppercase tracking-widest text-white/35">
+            Erledigt
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onAbschliessen(projekt)}
+            disabled={loading}
+            className="w-full rounded-xl border border-emerald-300/25 bg-emerald-400/10 px-4 py-3 font-black text-emerald-200 transition hover:-translate-y-1 hover:border-emerald-200/45 hover:bg-emerald-400/15 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            ✓ Projekt abschließen
+          </button>
         )}
       </div>
     </div>
