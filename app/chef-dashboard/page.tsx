@@ -11,6 +11,8 @@ export default function ChefDashboardPage() {
   const [projekte, setProjekte] = useState<any[]>([]);
   const [tagespausen, setTagespausen] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [zugriffGeprueft, setZugriffGeprueft] = useState(false);
+  const [istAdmin, setIstAdmin] = useState(false);
   const [meldung, setMeldung] = useState("");
   const [tageszeiten, setTageszeiten] = useState<any[]>([]);
   const [gepruefteOffen, setGepruefteOffen] = useState(false);
@@ -106,6 +108,9 @@ const monat = new Date().toISOString().slice(0, 7);
       const user = userData.data.user;
 
       if (!user) {
+        setIstAdmin(false);
+        setZugriffGeprueft(true);
+        setLoading(false);
         window.location.href = "/login";
         return;
       }
@@ -117,16 +122,25 @@ const monat = new Date().toISOString().slice(0, 7);
         .single();
 
       if (adminError) {
+        setIstAdmin(false);
+        setZugriffGeprueft(true);
         setMeldung(adminError.message);
         setLoading(false);
         return;
       }
 
-      if (adminCheck?.rolle !== "Admin") {
+      const aktuelleRolle = String(adminCheck?.rolle || "").trim().toLowerCase();
+
+      if (aktuelleRolle !== "admin") {
+        setIstAdmin(false);
+        setZugriffGeprueft(true);
+        setLoading(false);
         window.location.href = "/";
         return;
       }
 
+      setIstAdmin(true);
+      setZugriffGeprueft(true);
       setAdminName(adminCheck?.name || "Chef");
 
       const start = `${monat}-01`;
@@ -410,6 +424,11 @@ function projektZumBearbeitenLaden(projekt: any) {
 async function projektSpeichern() {
   setMeldung("");
 
+  if (!istAdmin) {
+    setMeldung("Kein Zugriff auf den Chefbereich.");
+    return;
+  }
+
   if (!projektName.trim()) {
     setMeldung("Bitte Projektname eintragen.");
     return;
@@ -507,6 +526,11 @@ async function projektSpeichern() {
 async function projektLoeschen(projekt: any) {
   setMeldung("");
 
+  if (!istAdmin) {
+    setMeldung("Kein Zugriff auf den Chefbereich.");
+    return;
+  }
+
   if (!projekt?.id) {
     setMeldung("Projekt konnte nicht gefunden werden.");
     return;
@@ -581,6 +605,11 @@ function mitarbeiterZumBearbeitenLaden(person: any) {
 
 async function mitarbeiterSpeichern() {
   setMeldung("");
+
+  if (!istAdmin) {
+    setMeldung("Kein Zugriff auf den Chefbereich.");
+    return;
+  }
 
   if (!mitarbeiterName.trim()) {
     setMeldung("Bitte Mitarbeiternamen eintragen.");
@@ -678,6 +707,11 @@ async function mitarbeiterSpeichern() {
 
 async function tagAlsGeprueftMarkieren(id: string) {
   setMeldung("");
+
+  if (!istAdmin) {
+    setMeldung("Kein Zugriff auf den Chefbereich.");
+    return;
+  }
 
   const userData = await supabase.auth.getUser();
 const user = userData.data.user;
@@ -836,6 +870,26 @@ const systemStatus =
   offeneTage > 0 || abgeschlosseneTage > 0 || offeneAntraege > 0
     ? "Prüfung erforderlich"
     : "Alles im grünen Bereich";
+
+  if (!zugriffGeprueft || loading) {
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center text-slate-100">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-5 font-black shadow-2xl shadow-black/30">
+          Zugriff wird geprüft...
+        </div>
+      </main>
+    );
+  }
+
+  if (!istAdmin) {
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center text-slate-100">
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-6 py-5 font-black text-red-300 shadow-2xl shadow-black/30">
+          Kein Zugriff auf den Chefbereich.
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="space-y-8 text-slate-100">
