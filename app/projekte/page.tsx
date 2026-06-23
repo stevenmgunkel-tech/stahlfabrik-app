@@ -1,35 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "../../lib/supabase";
 
+type ProjektStatus = "Alle" | "Aktiv" | "Pausiert" | "Abgeschlossen";
+
+type Projekt = {
+  id: number | string;
+  kunde?: string | null;
+  kommission?: string | null;
+  projektname?: string | null;
+  name?: string | null;
+  projekt_name?: string | null;
+  status?: string | null;
+  erlaubte_bereiche?: string[] | string | null;
+  bereiche?: string[] | string | null;
+};
+
+type ProjektBereich = {
+  projekt_id: number | string | null;
+  bereich: string | null;
+};
+
 export default function ProjektePage() {
-  const [projekte, setProjekte] = useState<any[]>([]);
-  const [kunde, setKunde] = useState("");
-  const [kommission, setKommission] = useState("");
-  const [projektname, setProjektname] = useState("");
-  const [status, setStatus] = useState("Aktiv");
-  const [ausgewaehlteBereiche, setAusgewaehlteBereiche] = useState<string[]>([]);
+  const [projekte, setProjekte] = useState<Projekt[]>([]);
+  const [projektBereiche, setProjektBereiche] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [meldung, setMeldung] = useState("");
-  const [bearbeitenId, setBearbeitenId] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [seiteGeprueft, setSeiteGeprueft] = useState(false);
   const [uebersichtOffen, setUebersichtOffen] = useState(true);
-  const [bearbeitungOffen, setBearbeitungOffen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<ProjektStatus>("Alle");
   const [suche, setSuche] = useState("");
 
-  const alleBereiche = [
-    "Werkstatt",
-    "Montage",
-    "Logistik",
-    "Planung",
-    "Lieferung",
-    "Aufräumen",
-    "Sonstiges",
-  ];
+  useEffect(() => {
+    ladeProjekte(true);
+  }, []);
 
   async function pruefeAdmin() {
     const userData = await supabase.auth.getUser();
@@ -46,7 +54,7 @@ export default function ProjektePage() {
       .eq("user_id", user.id)
       .single();
 
-    if (error || data?.rolle !== "Admin") {
+    if (error || String(data?.rolle || "").trim().toLowerCase() !== "admin") {
       window.location.href = "/";
       return false;
     }
@@ -57,212 +65,111 @@ export default function ProjektePage() {
 
   async function ladeProjekte(initial = false) {
     if (initial) setInitialLoading(true);
+    setLoading(true);
+    setMeldung("");
 
     const erlaubt = await pruefeAdmin();
 
     if (!erlaubt) {
+      setLoading(false);
       if (initial) setInitialLoading(false);
       return;
     }
 
-    const { data, error } = await supabase
+    const { data: projektData, error: projektError } = await supabase
       .from("projekte")
       .select("*")
       .order("kunde", { ascending: true })
       .order("kommission", { ascending: true });
 
-    if (error) {
-      setMeldung(error.message);
-      console.log(error);
+    if (projektError) {
+      setMeldung(projektError.message);
+      console.log(projektError);
       setSeiteGeprueft(true);
+      setLoading(false);
       if (initial) setInitialLoading(false);
       return;
     }
 
-    setProjekte((data || []).filter((projekt) => projekt.status !== "Abgeschlossen"));
-    setSeiteGeprueft(true);
+    const { data: bereicheData, error: bereicheError } = await supabase
+      .from("projekt_bereiche")
+      .select("projekt_id, bereich");
 
+    if (bereicheError) {
+      console.log("PROJEKT BEREICHE LADEN FEHLER:", bereicheError);
+    }
+
+    const map: Record<string, string[]> = {};
+
+    ((bereicheData || []) as ProjektBereich[]).forEach((eintrag) => {
+      const id = String(eintrag.projekt_id || "");
+      const bereich = String(eintrag.bereich || "").trim();
+
+      if (!id || !bereich) return;
+      if (!map[id]) map[id] = [];
+      if (!map[id].includes(bereich)) map[id].push(bereich);
+    });
+
+    setProjekte((projektData || []) as Projekt[]);
+    setProjektBereiche(map);
+    setSeiteGeprueft(true);
+    setLoading(false);
     if (initial) setInitialLoading(false);
   }
 
-  useEffect(() => {
-    ladeProjekte(true);
-  }, []);
-
-  function anzeigeBauen(kundeWert: string, kommissionWert: string) {
-    const saubererKunde = kundeWert.trim();
-    const saubereKommission = kommissionWert.trim();
-
-    if (!saubererKunde && !saubereKommission) return "";
-    if (!saubererKunde) return saubereKommission;
-    if (!saubereKommission) return saubererKunde;
-    if (saubererKunde === "Intern") return saubereKommission;
-
-    return `${saubererKunde} - ${saubereKommission}`;
-  }
-
-  function bereichUmschalten(bereich: string) {
-    setAusgewaehlteBereiche((aktuell) =>
-      aktuell.includes(bereich)
-        ? aktuell.filter((item) => item !== bereich)
-        : [...aktuell, bereich]
+  function projektTitel(projekt: Projekt) {
+    return (
+      projekt.name ||
+      projekt.projektname ||
+      projekt.projekt_name ||
+      projekt.kommission ||
+      "Ohne Projekt"
     );
   }
 
-  async function projektBereicheSpeichern(projektId: number) {
-    const { error: deleteError } = await supabase
-      .from("projekt_bereiche")
-      .delete()
-      .eq("projekt_id", projektId);
-
-    if (deleteError) {
-      setMeldung(deleteError.message);
-      console.log(deleteError);
-      return false;
+  function bereicheNormalisieren(wert: unknown): string[] {
+    if (Array.isArray(wert)) {
+      return wert.map((eintrag) => String(eintrag || "").trim()).filter(Boolean);
     }
 
-    if (ausgewaehlteBereiche.length === 0) return true;
+    if (typeof wert === "string") {
+      const sauber = wert.trim();
+      if (!sauber) return [];
 
-    const datensaetze = ausgewaehlteBereiche.map((bereich) => ({
-      projekt_id: projektId,
-      bereich,
-    }));
+      try {
+        const parsed = JSON.parse(sauber);
+        if (Array.isArray(parsed)) {
+          return parsed.map((eintrag) => String(eintrag || "").trim()).filter(Boolean);
+        }
+      } catch {
+        // Normale Komma-Liste
+      }
 
-    const { error: insertError } = await supabase
-      .from("projekt_bereiche")
-      .insert(datensaetze);
-
-    if (insertError) {
-      setMeldung(insertError.message);
-      console.log(insertError);
-      return false;
+      return sauber
+        .split(",")
+        .map((eintrag) => eintrag.trim())
+        .filter(Boolean);
     }
 
-    return true;
+    return [];
   }
 
-  async function projektBereicheLaden(projektId: number) {
-    const { data, error } = await supabase
-      .from("projekt_bereiche")
-      .select("bereich")
-      .eq("projekt_id", projektId);
+  function bereicheFuerProjekt(projekt: Projekt) {
+    const id = String(projekt.id || "");
+    const ausTabelle = id ? projektBereiche[id] || [] : [];
+    if (ausTabelle.length > 0) return ausTabelle;
 
-    if (error) {
-      setMeldung(error.message);
-      console.log(error);
-      setAusgewaehlteBereiche([]);
-      return;
-    }
+    const erlaubte = bereicheNormalisieren(projekt.erlaubte_bereiche);
+    if (erlaubte.length > 0) return erlaubte;
 
-    setAusgewaehlteBereiche((data || []).map((eintrag) => eintrag.bereich));
+    const bereiche = bereicheNormalisieren(projekt.bereiche);
+    if (bereiche.length > 0) return bereiche;
+
+    return [];
   }
 
-  async function projektSpeichern() {
-    if (!isAdmin) {
-      setMeldung("Keine Berechtigung.");
-      return;
-    }
-
-    setMeldung("");
-
-    if (!bearbeitenId) {
-      setMeldung("Bitte zuerst ein bestehendes Projekt aus der Übersicht zum Bearbeiten auswählen. Neue Projekte werden im Chef Dashboard erstellt.");
-      return;
-    }
-
-    if (!kunde.trim()) {
-      setMeldung("Bitte Kunde eingeben.");
-      return;
-    }
-
-    if (!kommission.trim()) {
-      setMeldung("Bitte Kommission eingeben.");
-      return;
-    }
-
-    if (!projektname.trim()) {
-      setMeldung("Bitte Projektname eingeben.");
-      return;
-    }
-
-    if (ausgewaehlteBereiche.length === 0) {
-      setMeldung("Bitte mindestens einen Bereich auswählen.");
-      return;
-    }
-
-    const name = anzeigeBauen(kunde, kommission);
-    setLoading(true);
-
-    const { error } = await supabase
-      .from("projekte")
-      .update({
-        name,
-        kunde: kunde.trim(),
-        kommission: kommission.trim(),
-        projektname: projektname.trim(),
-        status,
-      })
-      .eq("id", bearbeitenId);
-
-    if (error) {
-      setLoading(false);
-      setMeldung(error.message);
-      console.log(error);
-      return;
-    }
-
-    const bereicheOk = await projektBereicheSpeichern(bearbeitenId);
-
-    if (!bereicheOk) {
-      setLoading(false);
-      return;
-    }
-
-    setMeldung("Projekt aktualisiert.");
-    bearbeitungAbbrechen();
-    await ladeProjekte(false);
-    setLoading(false);
-  }
-
-  async function projektLoeschen(id: number) {
-    if (!isAdmin) {
-      setMeldung("Keine Berechtigung.");
-      return;
-    }
-
-    const bestaetigen = confirm("Projekt wirklich löschen?");
-    if (!bestaetigen) return;
-
-    const { error } = await supabase.from("projekte").delete().eq("id", id);
-
-    if (error) {
-      setMeldung(error.message);
-      console.log(error);
-      return;
-    }
-
-    await ladeProjekte(false);
-    setMeldung("Projekt gelöscht.");
-  }
-
-  async function bearbeitungStarten(projekt: any) {
-    setBearbeitenId(projekt.id);
-    setKunde(projekt.kunde || "");
-    setKommission(projekt.kommission || "");
-    setProjektname(projekt.projektname || projekt.name || "");
-    setStatus(projekt.status || "Aktiv");
-    setBearbeitungOffen(true);
-    await projektBereicheLaden(Number(projekt.id));
-    document.getElementById("bearbeiten")?.scrollIntoView({ behavior: "auto", block: "start" });
-  }
-
-  function bearbeitungAbbrechen() {
-    setBearbeitenId(null);
-    setKunde("");
-    setKommission("");
-    setProjektname("");
-    setStatus("Aktiv");
-    setAusgewaehlteBereiche([]);
+  function statusWert(projekt: Projekt) {
+    return projekt.status || "Aktiv";
   }
 
   function statusFarbe(status: string) {
@@ -272,21 +179,48 @@ export default function ProjektePage() {
     return "border-slate-300/30 bg-slate-300/10 text-slate-200";
   }
 
-  const aktiveProjekte = projekte.filter((p) => p.status === "Aktiv").length;
-  const pausierteProjekte = projekte.filter((p) => p.status === "Pausiert").length;
-  const abgeschlosseneProjekte = projekte.filter((p) => p.status === "Abgeschlossen").length;
+  const aktiveProjekte = useMemo(
+    () => projekte.filter((projekt) => statusWert(projekt) === "Aktiv").length,
+    [projekte]
+  );
 
-  const gefilterteProjekte = projekte.filter((projekt) => {
-    const suchText = suche.toLowerCase();
+  const pausierteProjekte = useMemo(
+    () => projekte.filter((projekt) => statusWert(projekt) === "Pausiert").length,
+    [projekte]
+  );
 
-    return (
-      projekt.kunde?.toLowerCase().includes(suchText) ||
-      projekt.kommission?.toLowerCase().includes(suchText) ||
-      projekt.projektname?.toLowerCase().includes(suchText) ||
-      projekt.name?.toLowerCase().includes(suchText) ||
-      projekt.status?.toLowerCase().includes(suchText)
-    );
-  });
+  const abgeschlosseneProjekte = useMemo(
+    () => projekte.filter((projekt) => statusWert(projekt) === "Abgeschlossen").length,
+    [projekte]
+  );
+
+  const gefilterteProjekte = useMemo(() => {
+    const suchText = suche.trim().toLowerCase();
+
+    return projekte.filter((projekt) => {
+      const status = statusWert(projekt);
+      const passtStatus = statusFilter === "Alle" || status === statusFilter;
+
+      if (!passtStatus) return false;
+      if (!suchText) return true;
+
+      const bereiche = bereicheFuerProjekt(projekt).join(" ");
+      const text = [
+        projekt.kunde,
+        projekt.kommission,
+        projekt.name,
+        projekt.projektname,
+        projekt.projekt_name,
+        status,
+        bereiche,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return text.includes(suchText);
+    });
+  }, [projekte, projektBereiche, suche, statusFilter]);
 
   const pageLoading = !seiteGeprueft || initialLoading;
 
@@ -316,14 +250,14 @@ export default function ProjektePage() {
             </h1>
 
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-white/65 sm:text-base">
-              Projekte werden im Chef Dashboard erstellt. Hier werden bestehende Projekte verwaltet, geprüft und angepasst.
+              Saubere Übersicht über aktive, pausierte und abgeschlossene Projekte. Erstellen und Bearbeiten läuft zentral im Chef Dashboard.
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
                 <span className="h-3 w-3 rounded-full bg-green-400 shadow-lg shadow-green-400/40" />
                 <span className="text-xs font-black uppercase tracking-widest text-white/70">
-                  Projektverwaltung
+                  Nur Übersicht · Chef Dashboard bleibt Zentrale
                 </span>
               </div>
             </div>
@@ -339,9 +273,9 @@ export default function ProjektePage() {
 
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <ActionCard href="#uebersicht" label="Übersicht" title="📋 Projekte" onClick={() => setUebersichtOffen(true)} />
-        <ActionCard href="#bearbeiten" label="Bearbeiten" title="✏️ Projekte" onClick={() => setBearbeitungOffen(true)} />
-        <ActionCard href="/chef-dashboard" label="Erstellen" title="➕ Chef Dash" />
-        <ActionCard href="/projektarchiv" label="Archiv" title="🗄️ Archiv" />
+        <ActionCard href="/chef-dashboard" label="Zentrale" title="➕ Chef Dash" />
+        <ActionCard href="/projektanalyse" label="Auswertung" title="📊 Analyse" />
+        <ActionCard href="#uebersicht" label="Refresh" title={loading ? "⏳ Lädt" : "↻ Aktualisieren"} onClick={() => ladeProjekte(false)} />
       </section>
 
       {meldung && (
@@ -351,198 +285,116 @@ export default function ProjektePage() {
       )}
 
       <DropdownPanel
-        id="bearbeiten"
-        title="Projekt bearbeiten"
-        eyebrow="Bestehende Projekte · Status · Bereiche"
-        description="Neue Projekte werden im Chef Dashboard erstellt. Hier bearbeitest du bestehende Projektinformationen und erlaubte Bereiche."
-        open={bearbeitungOffen}
-        onToggle={() => setBearbeitungOffen(!bearbeitungOffen)}
-      >
-        {bearbeitenId ? (
-          <>
-            <div className="mb-5 rounded-xl border border-sky-300/25 bg-sky-300/10 px-4 py-3 text-sm font-black text-sky-200">
-              Bearbeitungsmodus aktiv · {anzeigeBauen(kunde, kommission) || projektname || "Projekt"}
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-              <Field label="Kunde">
-                <input type="text" placeholder="z.B. Firma" value={kunde} onChange={(e) => setKunde(e.target.value)} className="dark-input" />
-              </Field>
-
-              <Field label="Kommission">
-                <input type="text" placeholder="z.B. Baustelle" value={kommission} onChange={(e) => setKommission(e.target.value)} className="dark-input" />
-              </Field>
-
-              <Field label="Projektname">
-                <input type="text" placeholder="z.B. Zaunanlage" value={projektname} onChange={(e) => setProjektname(e.target.value)} className="dark-input" />
-              </Field>
-
-              <Field label="Status">
-                <select value={status} onChange={(e) => setStatus(e.target.value)} className="dark-input">
-                  <option value="Aktiv">Aktiv</option>
-                  <option value="Pausiert">Pausiert</option>
-                  <option value="Abgeschlossen">Abgeschlossen</option>
-                </select>
-              </Field>
-            </div>
-
-            <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-5">
-              <div className="mb-4">
-                <h3 className="text-lg font-black text-white">Erlaubte Bereiche</h3>
-                <p className="mt-1 text-sm text-white/50">
-                  Diese Bereiche erscheinen später in der Zeiterfassung für dieses Projekt.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-7">
-                {alleBereiche.map((bereich) => {
-                  const aktiv = ausgewaehlteBereiche.includes(bereich);
-
-                  return (
-                    <button
-                      key={bereich}
-                      type="button"
-                      onClick={() => bereichUmschalten(bereich)}
-                      className={`rounded-xl border px-4 py-3 text-sm font-black transition-colors ${
-                        aktiv
-                          ? "border-sky-300/40 bg-sky-300/10 text-sky-100"
-                          : "border-white/10 bg-white/[0.04] text-white/60 hover:border-sky-300/25 hover:bg-sky-300/5 hover:text-sky-100"
-                      }`}
-                    >
-                      {aktiv ? "✓ " : ""}
-                      {bereich}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="mt-5 rounded-xl border border-white/10 bg-black/25 p-4 text-sm text-white/60">
-              Anzeige in Arbeitszeiten:{" "}
-              <span className="font-black text-sky-200">{anzeigeBauen(kunde, kommission) || "-"}</span>
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={projektSpeichern}
-                disabled={loading}
-                className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 font-black text-slate-100 transition-colors hover:border-sky-300/35 hover:bg-sky-300/10 disabled:opacity-50"
-              >
-                {loading ? "Speichern..." : "Änderung speichern"}
-              </button>
-
-              <button
-                type="button"
-                onClick={bearbeitungAbbrechen}
-                className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 font-bold text-white transition-colors hover:border-sky-300/35 hover:bg-sky-300/5 hover:text-sky-200"
-              >
-                Bearbeiten abbrechen
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="rounded-xl border border-sky-300/20 bg-sky-300/5 px-4 py-3 text-sm font-bold text-sky-100">
-            Wähle ein Projekt aus der Projektübersicht aus, um Status, Kunde, Kommission, Projektname oder erlaubte Bereiche zu bearbeiten. Neue Projekte werden im Chef Dashboard angelegt.
-          </div>
-        )}
-      </DropdownPanel>
-
-      <DropdownPanel
         id="uebersicht"
         title="Projektübersicht"
-        eyebrow="Aktiv · Pausiert · Bearbeiten"
-        description="Alle aktiven und pausierten Projekte. Abgeschlossene Projekte gehören ins Projektarchiv."
+        eyebrow="Aktiv · Pausiert · Archiv"
+        description="Diese Seite zeigt den Überblick. Änderungen an Projekten, Status und erlaubten Bereichen machst du im Chef Dashboard."
         open={uebersichtOffen}
         onToggle={() => setUebersichtOffen(!uebersichtOffen)}
       >
-        <div className="mb-6">
-          <input
-            type="text"
-            value={suche}
-            onChange={(e) => setSuche(e.target.value)}
-            placeholder="🔍 Projekt suchen..."
-            className="dark-input"
-          />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+          <label className="block">
+            <span className="mb-2 block text-sm font-black text-white/65">Suche</span>
+            <input
+              type="text"
+              value={suche}
+              onChange={(event) => setSuche(event.target.value)}
+              placeholder="🔍 Kunde, Projekt, Kommission, Bereich suchen..."
+              className="dark-input"
+            />
+          </label>
+
+          <div className="flex flex-wrap gap-2">
+            {(["Alle", "Aktiv", "Pausiert", "Abgeschlossen"] as ProjektStatus[]).map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setStatusFilter(status)}
+                className={`rounded-2xl border px-4 py-3 text-sm font-black transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10 ${
+                  statusFilter === status
+                    ? "border-sky-300/30 bg-sky-300/10 text-sky-100"
+                    : "border-white/10 bg-white/[0.04] text-white/55"
+                }`}
+              >
+                {status === "Abgeschlossen" ? "Archiv" : status}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-end">
-          <div className="text-sm text-white/50">
-            {pageLoading ? "Daten werden vorbereitet" : `${gefilterteProjekte.length} angezeigt · ${aktiveProjekte} aktiv · ${pausierteProjekte} pausiert`}
-          </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <KpiCard label="Aktiv" value={aktiveProjekte} subvalue="laufende Projekte" green />
+          <KpiCard label="Pausiert" value={pausierteProjekte} subvalue="wartet / gestoppt" blue />
+          <KpiCard label="Archiv" value={abgeschlosseneProjekte} subvalue="abgeschlossen" />
+        </div>
 
-          <div className="rounded-full border border-slate-300/20 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-200">
-            Erstellen nur im Chef Dashboard
-          </div>
+        <div className="rounded-2xl border border-sky-300/20 bg-sky-300/5 p-4 text-sm font-bold text-sky-100">
+          Hinweis: Diese Seite ist bewusst nur Übersicht. Projekt erstellen, bearbeiten, löschen und Bereiche ändern läuft im Chef Dashboard.
         </div>
 
         {pageLoading ? (
-          <div className="min-h-[360px] rounded-xl border border-white/10 bg-black/25 p-5 text-sm font-bold text-white/45">
-            Projektübersicht wird vorbereitet.
-          </div>
+          <EmptyState text="Projektübersicht wird vorbereitet." />
+        ) : gefilterteProjekte.length === 0 ? (
+          <EmptyState text="Keine Projekte gefunden." />
         ) : (
           <>
-            {gefilterteProjekte.length === 0 && (
-              <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
-                Keine Projekte gefunden.
-              </div>
-            )}
-
             <div className="space-y-4 md:hidden">
               {gefilterteProjekte.map((projekt) => (
                 <ProjektMobileCard
                   key={projekt.id}
                   projekt={projekt}
+                  bereiche={bereicheFuerProjekt(projekt)}
+                  projektTitel={projektTitel}
                   statusFarbe={statusFarbe}
-                  onBearbeiten={bearbeitungStarten}
-                  onLoeschen={projektLoeschen}
                 />
               ))}
             </div>
 
-            <div className="hidden min-h-[360px] overflow-hidden rounded-xl border border-white/10 md:block">
+            <div className="hidden overflow-hidden rounded-2xl border border-white/10 bg-black/25 md:block">
               <div className="overflow-x-auto">
-                <div className="min-w-[1000px]">
-                  <div className="grid grid-cols-5 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+                <div className="min-w-[1050px]">
+                  <div className="grid grid-cols-[1.1fr_1.1fr_1.3fr_1fr_1.4fr] border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
                     <div>Kunde</div>
                     <div>Kommission</div>
-                    <div>Projektname</div>
+                    <div>Projekt</div>
                     <div>Status</div>
-                    <div>Aktion</div>
+                    <div>Bereiche</div>
                   </div>
 
-                  {gefilterteProjekte.map((projekt) => (
-                    <div
-                      key={projekt.id}
-                      className="grid grid-cols-5 items-center border-b border-white/10 px-5 py-4 text-white/80 transition-colors hover:bg-sky-300/5 hover:text-white"
-                    >
-                      <div className="font-black text-white">{projekt.kunde || "-"}</div>
-                      <div>{projekt.kommission || "-"}</div>
-                      <div>{projekt.projektname || projekt.name || "-"}</div>
-                      <div>
-                        <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(projekt.status)}`}>
-                          {projekt.status || "Aktiv"}
-                        </span>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => bearbeitungStarten(projekt)}
-                          className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 font-bold text-white transition-colors hover:border-sky-300/25 hover:bg-sky-300/10"
-                        >
-                          Bearbeiten
-                        </button>
+                  {gefilterteProjekte.map((projekt) => {
+                    const bereiche = bereicheFuerProjekt(projekt);
+                    const status = statusWert(projekt);
 
-                        <button
-                          type="button"
-                          onClick={() => projektLoeschen(projekt.id)}
-                          className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 font-bold text-red-300 transition-colors hover:bg-red-500/15"
-                        >
-                          Löschen
-                        </button>
+                    return (
+                      <div
+                        key={projekt.id}
+                        className="grid grid-cols-[1.1fr_1.1fr_1.3fr_1fr_1.4fr] items-center border-b border-white/10 px-5 py-4 text-white/80 transition-colors last:border-b-0 hover:bg-sky-300/5 hover:text-white"
+                      >
+                        <div className="font-black text-white">{projekt.kunde || "Intern"}</div>
+                        <div>{projekt.kommission || "-"}</div>
+                        <div className="font-bold text-sky-100">{projektTitel(projekt)}</div>
+                        <div>
+                          <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(status)}`}>
+                            {status}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {bereiche.length === 0 ? (
+                            <span className="text-sm font-bold text-white/35">Keine Bereiche</span>
+                          ) : (
+                            bereiche.map((bereich) => (
+                              <span
+                                key={`${projekt.id}-${bereich}`}
+                                className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-black text-white/60"
+                              >
+                                {bereich}
+                              </span>
+                            ))
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -571,17 +423,6 @@ export default function ProjektePage() {
         .dark-input::placeholder {
           color: rgba(255, 255, 255, 0.35);
         }
-
-        .dark-input option {
-          background: #111315;
-          color: white;
-        }
-
-        .dark-input::-webkit-calendar-picker-indicator {
-          filter: brightness(0) invert(1);
-          opacity: 1;
-          cursor: pointer;
-        }
       `}</style>
     </main>
   );
@@ -589,56 +430,65 @@ export default function ProjektePage() {
 
 function ProjektMobileCard({
   projekt,
+  bereiche,
+  projektTitel,
   statusFarbe,
-  onBearbeiten,
-  onLoeschen,
 }: {
-  projekt: any;
+  projekt: Projekt;
+  bereiche: string[];
+  projektTitel: (projekt: Projekt) => string;
   statusFarbe: (status: string) => string;
-  onBearbeiten: (projekt: any) => void;
-  onLoeschen: (id: number) => void;
 }) {
+  const status = projekt.status || "Aktiv";
+
   return (
     <div className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-colors hover:border-sky-300/25 hover:bg-sky-300/5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-xl font-black text-white">{projekt.kunde || "-"}</div>
-          <div className="mt-2 text-sm text-white/60">Kommission: {projekt.kommission || "-"}</div>
-          <div className="mt-3 text-lg font-black text-sky-200">{projekt.projektname || projekt.name || "-"}</div>
+          <div className="text-xl font-black text-white">{projektTitel(projekt)}</div>
+          <div className="mt-2 text-sm text-white/60">Kunde: {projekt.kunde || "Intern"}</div>
+          <div className="mt-1 text-sm text-white/45">Kommission: {projekt.kommission || "-"}</div>
         </div>
 
-        <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(projekt.status)}`}>
-          {projekt.status || "Aktiv"}
+        <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(status)}`}>
+          {status}
         </span>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => onBearbeiten(projekt)}
-          className="rounded-xl border border-white/10 bg-white/[0.06] p-3 font-bold text-white transition-colors hover:border-sky-300/25 hover:bg-sky-300/10"
-        >
-          Bearbeiten
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onLoeschen(projekt.id)}
-          className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 font-bold text-red-300 transition-colors hover:bg-red-500/15"
-        >
-          Löschen
-        </button>
+      <div className="mt-5 flex flex-wrap gap-2">
+        {bereiche.length === 0 ? (
+          <span className="text-sm font-bold text-white/35">Keine Bereiche</span>
+        ) : (
+          bereiche.map((bereich) => (
+            <span
+              key={`${projekt.id}-${bereich}`}
+              className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-black text-white/60"
+            >
+              {bereich}
+            </span>
+          ))
+        )}
       </div>
     </div>
   );
 }
 
-function ActionCard({ href, label, title, onClick }: { href: string; label: string; title: string; onClick?: () => void }) {
+function ActionCard({
+  href,
+  label,
+  title,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  title: string;
+  onClick?: () => void;
+}) {
   return (
     <Link
       href={href}
       onClick={onClick}
-      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-colors hover:border-sky-300/25 hover:bg-sky-300/5"
+      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
     >
       <div className="text-sm text-white/50">{label}</div>
       <div className="mt-2 text-lg font-black text-white">{title}</div>
@@ -686,16 +536,51 @@ function DropdownPanel({
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function KpiCard({
+  label,
+  value,
+  subvalue,
+  blue,
+  green,
+}: {
+  label: string;
+  value: string | number;
+  subvalue?: string;
+  blue?: boolean;
+  green?: boolean;
+}) {
+  const valueColor = green ? "text-green-300" : blue ? "text-sky-200" : "text-slate-100";
+
   return (
-    <div>
-      <label className="mb-2 block text-sm font-bold text-white/70">{label}</label>
-      {children}
+    <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-6 shadow-2xl shadow-black/30 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
+      <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
+        {label}
+      </div>
+
+      <div className={`mt-4 break-words text-4xl font-black leading-tight ${valueColor}`}>
+        {value}
+      </div>
+
+      {subvalue && (
+        <div className="mt-2 break-words text-sm font-bold text-white/45">
+          {subvalue}
+        </div>
+      )}
     </div>
   );
 }
 
-function HeroMini({ label, value, blue, green }: { label: string; value: string | number; blue?: boolean; green?: boolean }) {
+function HeroMini({
+  label,
+  value,
+  blue,
+  green,
+}: {
+  label: string;
+  value: string | number;
+  blue?: boolean;
+  green?: boolean;
+}) {
   const color = blue ? "text-sky-200" : green ? "text-green-400" : "text-slate-100";
 
   return (
@@ -706,3 +591,10 @@ function HeroMini({ label, value, blue, green }: { label: string; value: string 
   );
 }
 
+function EmptyState({ text }: { text: string }) {
+  return (
+    <div className="min-h-[220px] rounded-xl border border-white/10 bg-black/25 p-5 text-sm font-bold text-white/45">
+      {text}
+    </div>
+  );
+}
