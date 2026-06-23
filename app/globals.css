@@ -126,8 +126,8 @@ table {
 
 }
 /* =========================
-   ODZ DARK FORM FIX
-   Date / Time / Select Icons
+   ODZ DARK INPUT ICON FIX
+   Kalender / Uhr / Dropdown sichtbar
 ========================= */
 
 input[type="date"],
@@ -135,15 +135,15 @@ input[type="time"],
 input[type="datetime-local"],
 input[type="month"],
 select {
-  color-scheme: dark;
+  color-scheme: dark !important;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator,
 input[type="month"]::-webkit-calendar-picker-indicator {
-  filter: invert(1) brightness(1.8);
-  opacity: 0.85;
+  filter: invert(1) brightness(2.4) contrast(1.15) !important;
+  opacity: 0.95 !important;
   cursor: pointer;
 }
 
@@ -151,10 +151,24 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover,
 input[type="time"]::-webkit-calendar-picker-indicator:hover,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
 input[type="month"]::-webkit-calendar-picker-indicator:hover {
-  opacity: 1;
+  opacity: 1 !important;
+}
+
+input[type="date"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit,
+input[type="datetime-local"]::-webkit-datetime-edit,
+input[type="month"]::-webkit-datetime-edit {
+  color: #ffffff !important;
+}
+
+input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+input[type="time"]::-webkit-datetime-edit-fields-wrapper,
+input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper,
+input[type="month"]::-webkit-datetime-edit-fields-wrapper {
+  color: #ffffff !important;
 }
 
 select option {
-  background: #020617;
-  color: #ffffff;
+  background: #020617 !important;
+  color: #ffffff !important;
 }
