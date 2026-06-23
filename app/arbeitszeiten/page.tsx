@@ -370,6 +370,102 @@ export default function ArbeitszeitenPage() {
   await betriebsunterhaltSpeichern(userId, datumWert, betriebsunterhalt);
 }
 
+async function tagesabschlussAusBuchungenAktualisieren(
+  userId: string,
+  datumWert: string
+) {
+  const { data: buchungenData, error: buchungenError } = await supabase
+    .from("arbeitszeiten")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("datum", datumWert);
+
+  if (buchungenError) {
+    console.log("TAGESABSCHLUSS BUCHUNGEN FEHLER:", buchungenError);
+    setMeldung(buchungenError.message);
+    return;
+  }
+
+  const buchungen = (buchungenData || []).filter(
+    (eintrag) =>
+      eintrag.projekt !== "Betriebsunterhalt" && !eintrag.auto_generiert
+  );
+
+  const { data: vorhandenerTag, error: tagError } = await supabase
+    .from("tageszeiten")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("datum", datumWert)
+    .maybeSingle();
+
+  if (tagError) {
+    console.log("TAGESABSCHLUSS SUCHE FEHLER:", tagError);
+    setMeldung(tagError.message);
+    return;
+  }
+
+  if (buchungen.length === 0) {
+    await betriebsunterhaltNeuBerechnen(userId, datumWert);
+    return;
+  }
+
+  if (vorhandenerTag?.status === "Offen" || vorhandenerTag?.status === "Geprüft") {
+    await betriebsunterhaltNeuBerechnen(userId, datumWert);
+    return;
+  }
+
+  const startzeiten = buchungen
+    .map((eintrag) => eintrag.startzeit)
+    .filter(Boolean)
+    .sort();
+
+  const endzeiten = buchungen
+    .map((eintrag) => eintrag.endzeit)
+    .filter(Boolean)
+    .sort();
+
+  const projektStunden = buchungen.reduce(
+    (sum, eintrag) => sum + Number(eintrag.stunden || 0),
+    0
+  );
+
+  const payload = {
+    startzeit: startzeiten[0] || "07:00",
+    endzeit: endzeiten[endzeiten.length - 1] || startzeiten[0] || "07:00",
+    pause: 0,
+    zusatzpause_minuten: 0,
+    netto_stunden: Number(projektStunden.toFixed(2)),
+    status: "Abgeschlossen",
+  };
+
+  if (vorhandenerTag) {
+    const { error } = await supabase
+      .from("tageszeiten")
+      .update(payload)
+      .eq("id", vorhandenerTag.id);
+
+    if (error) {
+      console.log("TAGESABSCHLUSS UPDATE FEHLER:", error);
+      setMeldung(error.message);
+      return;
+    }
+  } else {
+    const { error } = await supabase.from("tageszeiten").insert({
+      user_id: userId,
+      datum: datumWert,
+      ...payload,
+    });
+
+    if (error) {
+      console.log("TAGESABSCHLUSS INSERT FEHLER:", error);
+      setMeldung(error.message);
+      return;
+    }
+  }
+
+  await betriebsunterhaltNeuBerechnen(userId, datumWert);
+}
+
   async function startArbeitstag() {
     setMeldung("");
 
@@ -754,10 +850,10 @@ setBisZeit("");
     setBearbeitenId(null);
 
     if (alteDatumVorBearbeitung && alteDatumVorBearbeitung !== datum) {
-      await betriebsunterhaltNeuBerechnen(user.id, alteDatumVorBearbeitung);
+      await tagesabschlussAusBuchungenAktualisieren(user.id, alteDatumVorBearbeitung);
     }
 
-    await betriebsunterhaltNeuBerechnen(user.id, datum);
+    await tagesabschlussAusBuchungenAktualisieren(user.id, datum);
     await ladeDaten();
     setSaving(false);
   }
@@ -806,7 +902,7 @@ setBisZeit("");
     }
 
     if (zuLoeschendeZeit?.datum) {
-      await betriebsunterhaltNeuBerechnen(user.id, zuLoeschendeZeit.datum);
+      await tagesabschlussAusBuchungenAktualisieren(user.id, zuLoeschendeZeit.datum);
     }
 
     await ladeDaten();
