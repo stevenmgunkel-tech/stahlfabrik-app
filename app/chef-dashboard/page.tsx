@@ -27,6 +27,7 @@ const [freigabeSeite, setFreigabeSeite] = useState(1);
     "Montage",
   ]);
   const [projektBearbeitenId, setProjektBearbeitenId] = useState<string | number | null>(null);
+  const [projektBereichMap, setProjektBereichMap] = useState<Record<string, string[]>>({});
 
   const [verwaltungsModus, setVerwaltungsModus] = useState<"projekt" | "mitarbeiter">("projekt");
   const [abwesenheitOffen, setAbwesenheitOffen] = useState(false);
@@ -73,9 +74,55 @@ const monat = new Date().toISOString().slice(0, 7);
     );
   }
 
+  function bereicheNormalisieren(wert: any): string[] {
+    if (Array.isArray(wert)) {
+      return wert.map((eintrag) => String(eintrag || "").trim()).filter(Boolean);
+    }
+
+    if (typeof wert === "string") {
+      const sauber = wert.trim();
+      if (!sauber) return [];
+
+      try {
+        const parsed = JSON.parse(sauber);
+        if (Array.isArray(parsed)) {
+          return parsed.map((eintrag) => String(eintrag || "").trim()).filter(Boolean);
+        }
+      } catch {
+        // Normale Textspalte: Werkstatt, Montage, Logistik
+      }
+
+      return sauber
+        .split(",")
+        .map((eintrag) => eintrag.trim())
+        .filter(Boolean);
+    }
+
+    return [];
+  }
+
+  function bereicheEinzigartig(bereiche: string[]) {
+    return Array.from(
+      new Set(
+        bereiche
+          .map((bereich) => String(bereich || "").trim())
+          .filter(Boolean)
+      )
+    );
+  }
+
   function projektBereicheAuslesen(projekt: any) {
-    if (Array.isArray(projekt?.erlaubte_bereiche)) return projekt.erlaubte_bereiche;
-    if (Array.isArray(projekt?.bereiche)) return projekt.bereiche;
+    const projektId = projekt?.id ? String(projekt.id) : "";
+    const ausBereichTabelle = projektId ? projektBereichMap[projektId] || [] : [];
+
+    if (ausBereichTabelle.length > 0) return ausBereichTabelle;
+
+    const erlaubteBereiche = bereicheNormalisieren(projekt?.erlaubte_bereiche);
+    if (erlaubteBereiche.length > 0) return erlaubteBereiche;
+
+    const bereiche = bereicheNormalisieren(projekt?.bereiche);
+    if (bereiche.length > 0) return bereiche;
+
     return ["Werkstatt", "Montage"];
   }
 
@@ -194,6 +241,28 @@ const monat = new Date().toISOString().slice(0, 7);
         .from("projekte")
         .select("*");
 
+      const { data: projektBereicheData, error: projektBereicheError } = await supabase
+        .from("projekt_bereiche")
+        .select("projekt_id, bereich");
+
+      if (projektBereicheError) {
+        console.log("PROJEKT BEREICHE LADEN FEHLER:", projektBereicheError);
+      }
+
+      const neueProjektBereichMap: Record<string, string[]> = {};
+
+      (projektBereicheData || []).forEach((eintrag: any) => {
+        const key = String(eintrag.projekt_id || "");
+        const bereich = String(eintrag.bereich || "").trim();
+
+        if (!key || !bereich) return;
+
+        if (!neueProjektBereichMap[key]) neueProjektBereichMap[key] = [];
+        if (!neueProjektBereichMap[key].includes(bereich)) {
+          neueProjektBereichMap[key].push(bereich);
+        }
+      });
+
       const fehler =
   mitarbeiterError ||
   arbeitszeitenError ||
@@ -213,6 +282,7 @@ const monat = new Date().toISOString().slice(0, 7);
       setTageszeiten(tageszeitenData || []);
       setUrlaub(urlaubData || []);
       setProjekte(projekteData || []);
+      setProjektBereichMap(neueProjektBereichMap);
       setLoading(false);
     }
 
@@ -421,6 +491,46 @@ function projektZumBearbeitenLaden(projekt: any) {
   setMeldung("Projekt ist im Bearbeitungsmodus.");
 }
 
+async function projektBereicheSynchronisieren(
+  projektIdWert: string | number | null | undefined,
+  bereicheWert: string[]
+) {
+  const projektIdNummer = Number(projektIdWert);
+  const bereicheSauber = bereicheEinzigartig(bereicheWert);
+
+  if (!Number.isFinite(projektIdNummer) || !projektIdNummer) {
+    return { error: { message: "Projekt-ID für Bereichsspeicherung fehlt." } };
+  }
+
+  const { error: deleteError } = await supabase
+    .from("projekt_bereiche")
+    .delete()
+    .eq("projekt_id", projektIdNummer);
+
+  if (deleteError) {
+    console.log("PROJEKT BEREICHE DELETE FEHLER:", deleteError);
+    return { error: deleteError };
+  }
+
+  if (bereicheSauber.length === 0) return { error: null };
+
+  const neueBereiche = bereicheSauber.map((bereich) => ({
+    projekt_id: projektIdNummer,
+    bereich,
+  }));
+
+  const { error: insertError } = await supabase
+    .from("projekt_bereiche")
+    .insert(neueBereiche);
+
+  if (insertError) {
+    console.log("PROJEKT BEREICHE INSERT FEHLER:", insertError);
+    return { error: insertError };
+  }
+
+  return { error: null };
+}
+
 async function projektSpeichern() {
   setMeldung("");
 
@@ -511,11 +621,42 @@ async function projektSpeichern() {
     return;
   }
 
+  const projektIdZumSync = data?.id || projektBearbeitenId;
+  const bereicheSauber = bereicheEinzigartig(projektBereiche);
+
+  const { error: bereicheSyncError } = await projektBereicheSynchronisieren(
+    projektIdZumSync,
+    bereicheSauber
+  );
+
+  if (bereicheSyncError) {
+    setMeldung(
+      `Projekt wurde gespeichert, aber die Bereichsauswahl konnte nicht gespeichert werden: ${bereicheSyncError.message}`
+    );
+    return;
+  }
+
+  if (projektIdZumSync) {
+    const key = String(projektIdZumSync);
+    setProjektBereichMap((aktuell) => ({
+      ...aktuell,
+      [key]: bereicheSauber,
+    }));
+  }
+
   if (data) {
+    const projektMitBereichen = {
+      ...data,
+      erlaubte_bereiche: bereicheSauber,
+      bereiche: bereicheSauber,
+    };
+
     setProjekte((aktuell) =>
       projektBearbeitenId
-        ? aktuell.map((projekt) => (projekt.id === projektBearbeitenId ? data : projekt))
-        : [data, ...aktuell]
+        ? aktuell.map((projekt) =>
+            String(projekt.id) === String(projektBearbeitenId) ? projektMitBereichen : projekt
+          )
+        : [projektMitBereichen, ...aktuell]
     );
   }
 
@@ -549,6 +690,17 @@ async function projektLoeschen(projekt: any) {
 
   if (!bestaetigt) return;
 
+  const { error: bereicheDeleteError } = await supabase
+    .from("projekt_bereiche")
+    .delete()
+    .eq("projekt_id", projekt.id);
+
+  if (bereicheDeleteError) {
+    console.log("PROJEKT BEREICHE DELETE FEHLER:", bereicheDeleteError);
+    setMeldung(bereicheDeleteError.message || "Projektbereiche konnten nicht gelöscht werden.");
+    return;
+  }
+
   const { error } = await supabase
     .from("projekte")
     .delete()
@@ -561,6 +713,11 @@ async function projektLoeschen(projekt: any) {
   }
 
   setProjekte((aktuell) => aktuell.filter((eintrag) => eintrag.id !== projekt.id));
+  setProjektBereichMap((aktuell) => {
+    const next = { ...aktuell };
+    delete next[String(projekt.id)];
+    return next;
+  });
 
   if (projektBearbeitenId === projekt.id) {
     projektFormZuruecksetzen();
