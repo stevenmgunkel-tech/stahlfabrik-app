@@ -290,7 +290,20 @@ const monat = new Date().toISOString().slice(0, 7);
     ladeDaten();
   }, [monat, aktuellerMonat]);
 
-  function berechneArbeitstageAbDatum(startDatum?: string) {
+  function parseDatumLokal(wert?: string | null) {
+    if (!wert) return null;
+
+    const [jahr, monatWert, tag] = String(wert)
+      .slice(0, 10)
+      .split("-")
+      .map(Number);
+
+    if (!jahr || !monatWert || !tag) return null;
+
+    return new Date(jahr, monatWert - 1, tag);
+  }
+
+  function berechneArbeitstageAbDatum(startDatum?: string | null) {
     const jahr = Number(monat.slice(0, 4));
     const monatNummer = Number(monat.slice(5, 7));
 
@@ -299,7 +312,7 @@ const monat = new Date().toISOString().slice(0, 7);
       : new Date(jahr, monatNummer, 0).getDate();
 
     let arbeitstage = 0;
-    const start = startDatum ? new Date(startDatum) : null;
+    const start = parseDatumLokal(startDatum);
 
     for (let tag = 1; tag <= tageImMonat; tag++) {
       const datum = new Date(jahr, monatNummer - 1, tag);
@@ -390,7 +403,11 @@ const gepruefteTage = tageszeiten.filter(
 );
 
 const pauseStunden = tagespausen
-  .filter((pause) => pause.user_id === person.user_id)
+  .filter(
+    (pause) =>
+      pause.user_id === person.user_id &&
+      (!berechnungAb || !pause.datum || pause.datum >= berechnungAb)
+  )
   .reduce((sum, pause) => sum + Number(pause.pause || 0) / 60, 0);
 
 const iststunden = bruttoStunden - pauseStunden;
