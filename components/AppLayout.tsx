@@ -30,6 +30,45 @@ const navGroups = [
   },
 ];
 
+const restrictedRoutes = [
+  "/chef-dashboard",
+  "/mitarbeiter",
+  "/projekte",
+  "/projektanalyse",
+  "/admin",
+  "/monatsansicht",
+];
+
+function isAdminRole(role: string) {
+  return String(role || "").trim().toLowerCase() === "admin";
+}
+
+function getNavGroupsForRole(role: string) {
+  if (isAdminRole(role)) return navGroups;
+
+  return [
+    {
+      title: "Betrieb",
+      items: [
+        { href: "/", label: "Dashboard", icon: "▦" },
+        { href: "/arbeitszeiten", label: "Arbeitszeiten", icon: "◷" },
+      ],
+    },
+    {
+      title: "Personal",
+      items: [
+        { href: "/abwesenheiten", label: "Abwesenheiten", icon: "◈" },
+      ],
+    },
+  ];
+}
+
+function isRestrictedPath(pathname: string) {
+  return restrictedRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -37,15 +76,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [userName, setUserName] = useState("StahlFabrik");
   const [role, setRole] = useState("ERP");
+  const [roleLoaded, setRoleLoaded] = useState(false);
   const [initialSplash, setInitialSplash] = useState(true);
 
   const isLogin = pathname === "/login";
 
   useEffect(() => {
     async function loadUser() {
+      setRoleLoaded(false);
+
       const { data: authData } = await supabase.auth.getUser();
 
       if (!authData.user) {
+        setRoleLoaded(true);
+
         if (!isLogin) router.push("/login");
         return;
       }
@@ -56,9 +100,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         .eq("user_id", authData.user.id)
         .single();
 
+      const currentRole = mitarbeiter?.rolle || "Mitarbeiter";
+
       if (mitarbeiter) {
         setUserName(mitarbeiter.name || "StahlFabrik");
-        setRole(mitarbeiter.rolle || "ERP");
+        setRole(currentRole);
+      } else {
+        setUserName("StahlFabrik");
+        setRole("Mitarbeiter");
+      }
+
+      setRoleLoaded(true);
+
+      if (!isAdminRole(currentRole) && isRestrictedPath(pathname)) {
+        router.replace("/");
       }
     }
 
@@ -112,6 +167,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               logout={logout}
               userName={userName}
               role={role}
+              roleLoaded={roleLoaded}
               close={() => setOpen(false)}
             />
           </aside>
@@ -120,7 +176,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Desktop Sidebar: läuft fix von oben bis unten */}
       <aside className="fixed bottom-0 left-0 top-0 z-30 hidden w-[286px] overflow-hidden rounded-r-3xl border-r border-white/10 bg-[#0b1118]/95 shadow-2xl shadow-black/40 backdrop-blur-xl lg:block">
-        <Sidebar pathname={pathname} logout={logout} userName={userName} role={role} />
+        <Sidebar
+          pathname={pathname}
+          logout={logout}
+          userName={userName}
+          role={role}
+          roleLoaded={roleLoaded}
+        />
       </aside>
 
       <ODZInitialSplash active={initialSplash} />
@@ -178,22 +240,29 @@ function Sidebar({
   logout,
   userName,
   role,
+  roleLoaded,
   close,
 }: {
   pathname: string;
   logout: () => void;
   userName: string;
   role: string;
+  roleLoaded: boolean;
   close?: () => void;
 }) {
+  const visibleNavGroups = useMemo(
+    () => getNavGroupsForRole(roleLoaded ? role : "Mitarbeiter"),
+    [role, roleLoaded]
+  );
+
   const initialOpenGroups = useMemo(() => {
     const groups: Record<string, boolean> = {};
-    navGroups.forEach((group) => {
+    visibleNavGroups.forEach((group) => {
       groups[group.title] = group.items.some((item) => item.href === pathname);
     });
 
     return groups;
-  }, [pathname]);
+  }, [pathname, visibleNavGroups]);
 
   const [openGroups, setOpenGroups] =
     useState<Record<string, boolean>>(initialOpenGroups);
@@ -202,7 +271,7 @@ function Sidebar({
     setOpenGroups((current) => {
       const next = { ...current };
 
-      navGroups.forEach((group) => {
+      visibleNavGroups.forEach((group) => {
         if (group.items.some((item) => item.href === pathname)) {
           next[group.title] = true;
         }
@@ -210,7 +279,7 @@ function Sidebar({
 
       return next;
     });
-  }, [pathname]);
+  }, [pathname, visibleNavGroups]);
 
   function toggleGroup(title: string) {
     setOpenGroups((current) => ({
@@ -229,7 +298,7 @@ function Sidebar({
       {/* Navigation nimmt den freien Platz */}
       <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="space-y-3">
-          {navGroups.map((group) => {
+          {visibleNavGroups.map((group) => {
             const groupOpen = openGroups[group.title];
             const activeInGroup = group.items.some((item) => item.href === pathname);
 
