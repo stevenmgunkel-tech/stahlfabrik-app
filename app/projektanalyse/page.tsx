@@ -20,6 +20,16 @@ type Arbeitszeit = {
   projekt: string | null;
   bereich?: string | null;
   stunden: number | string | null;
+  startzeit?: string | null;
+  endzeit?: string | null;
+  user_id?: string | null;
+};
+
+type Mitarbeiter = {
+  id: number | string;
+  user_id: string | null;
+  name: string | null;
+  rolle?: string | null;
 };
 
 type BereichStat = {
@@ -59,10 +69,34 @@ function prozent(wert: number, total: number) {
   return Math.min((wert / total) * 100, 100);
 }
 
+function formatDatum(wert?: string | null) {
+  if (!wert) return "-";
+
+  const [jahr, monat, tag] = String(wert).slice(0, 10).split("-");
+
+  if (!jahr || !monat || !tag) return wert;
+
+  return `${tag}.${monat}.${jahr}`;
+}
+
+function formatZeit(wert?: string | null) {
+  if (!wert) return "--:--";
+  return String(wert).slice(0, 5);
+}
+
+function formatVonBis(startzeit?: string | null, endzeit?: string | null) {
+  const start = formatZeit(startzeit);
+  const ende = formatZeit(endzeit);
+
+  if (start === "--:--" && ende === "--:--") return "Keine Zeit";
+  return `${start} - ${ende}`;
+}
+
 export default function ProjektanalysePage() {
   const [ansicht, setAnsicht] = useState<Ansicht>("aktiv");
   const [projekte, setProjekte] = useState<Projekt[]>([]);
   const [zeiten, setZeiten] = useState<Arbeitszeit[]>([]);
+  const [mitarbeiter, setMitarbeiter] = useState<Mitarbeiter[]>([]);
   const [loading, setLoading] = useState(true);
   const [meldung, setMeldung] = useState<string | null>(null);
   const [offen, setOffen] = useState<number | string | null>(null);
@@ -106,8 +140,20 @@ export default function ProjektanalysePage() {
       return;
     }
 
+    const { data: mitarbeiterData, error: mitarbeiterError } = await supabase
+      .from("mitarbeiter")
+      .select("id, user_id, name, rolle")
+      .order("name", { ascending: true });
+
+    if (mitarbeiterError) {
+      setMeldung(mitarbeiterError.message);
+      setLoading(false);
+      return;
+    }
+
     setProjekte((projektData || []) as Projekt[]);
     setZeiten((zeitenData || []) as Arbeitszeit[]);
+    setMitarbeiter((mitarbeiterData || []) as Mitarbeiter[]);
     setProjektSeite(1);
     setOffen(null);
     setLoading(false);
@@ -214,6 +260,18 @@ export default function ProjektanalysePage() {
 
   const topProjekt = projektDaten[0];
   const topBereich = bereichDaten[0];
+
+  const mitarbeiterMap = useMemo(() => {
+    const map: Record<string, string> = {};
+
+    mitarbeiter.forEach((person) => {
+      if (person.user_id) {
+        map[String(person.user_id)] = person.name || "Unbekannt";
+      }
+    });
+
+    return map;
+  }, [mitarbeiter]);
 
   const gesamtProjektSeiten = Math.max(
     1,
@@ -460,6 +518,7 @@ export default function ProjektanalysePage() {
                 projekt={projekt}
                 rang={(projektSeite - 1) * PROJEKTE_PRO_SEITE + index + 1}
                 gesamtStunden={gesamtStunden}
+                mitarbeiterMap={mitarbeiterMap}
                 istOffen={offen === projekt.projekt.id}
                 onToggle={() =>
                   setOffen(
@@ -581,12 +640,14 @@ function ProjektBlock({
   projekt,
   rang,
   gesamtStunden,
+  mitarbeiterMap,
   istOffen,
   onToggle,
 }: {
   projekt: ProjektStat;
   rang: number;
   gesamtStunden: number;
+  mitarbeiterMap: Record<string, string>;
   istOffen: boolean;
   onToggle: () => void;
 }) {
@@ -663,19 +724,42 @@ function ProjektBlock({
         {istOffen ? "▲ Schließen" : "▼ Öffnen"}
       </button>
 
-      {istOffen && <DetailsBlock buchungen={projekt.buchungen} />}
+      {istOffen && (
+        <DetailsBlock
+          buchungen={projekt.buchungen}
+          mitarbeiterMap={mitarbeiterMap}
+        />
+      )}
     </article>
   );
 }
 
-function DetailsBlock({ buchungen }: { buchungen: Arbeitszeit[] }) {
+function DetailsBlock({
+  buchungen,
+  mitarbeiterMap,
+}: {
+  buchungen: Arbeitszeit[];
+  mitarbeiterMap: Record<string, string>;
+}) {
+  const sortierteBuchungen = [...buchungen].sort((a, b) => {
+    const datumA = `${a.datum || ""} ${a.startzeit || ""}`;
+    const datumB = `${b.datum || ""} ${b.startzeit || ""}`;
+    return datumB.localeCompare(datumA);
+  });
+
+  const mitarbeiterAnzahl = new Set(
+    sortierteBuchungen
+      .map((zeit) => (zeit.user_id ? String(zeit.user_id) : ""))
+      .filter(Boolean),
+  ).size;
+
   return (
     <div className="mt-5 rounded-3xl border border-white/10 bg-black/25 p-5">
       <div className="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div>
           <h3 className="text-xl font-black text-white">Detailbuchungen</h3>
           <p className="mt-1 text-sm text-white/50">
-            {buchungen.length} Arbeitszeiten auf diesem Projekt
+            {buchungen.length} Arbeitszeiten · {mitarbeiterAnzahl} Mitarbeiter · mit Von-Bis Übersicht
           </p>
         </div>
       </div>
@@ -685,38 +769,107 @@ function DetailsBlock({ buchungen }: { buchungen: Arbeitszeit[] }) {
           Keine Arbeitszeiten zu diesem Projekt gefunden.
         </div>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2">
-          {buchungen.map((zeit) => (
-            <div
-              key={zeit.id}
-              className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="font-black text-white">
-                    {zeit.datum || "-"}
-                  </div>
-                  <div className="mt-1 text-sm text-white/45">
-                    {zeit.bereich || "Ohne Bereich"}
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-xl font-black text-sky-100">
-                    {formatStunden(Number(zeit.stunden || 0))}
-                  </div>
-                  <div className="mt-1 text-xs font-bold text-white/35">
-                    {formatDezimal(Number(zeit.stunden || 0))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-3 text-xs font-bold text-white/35">
-                {zeit.projekt || "-"}
-              </div>
+        <>
+          <div className="hidden overflow-hidden rounded-2xl border border-white/10 lg:block">
+            <div className="grid grid-cols-[1fr_1.2fr_1.3fr_1fr_0.8fr] border-b border-white/10 bg-black/30 px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-white/40">
+              <div>Datum</div>
+              <div>Mitarbeiter</div>
+              <div>Auftrag / Bereich</div>
+              <div>Von - Bis</div>
+              <div className="text-right">Stunden</div>
             </div>
-          ))}
-        </div>
+
+            {sortierteBuchungen.map((zeit) => {
+              const mitarbeiterName = zeit.user_id
+                ? mitarbeiterMap[String(zeit.user_id)] || "Unbekannt"
+                : "Unbekannt";
+
+              return (
+                <div
+                  key={zeit.id}
+                  className="grid grid-cols-[1fr_1.2fr_1.3fr_1fr_0.8fr] items-center border-b border-white/10 px-4 py-4 text-sm text-white/75 transition last:border-b-0 hover:bg-sky-300/5"
+                >
+                  <div className="font-black text-white">
+                    {formatDatum(zeit.datum)}
+                  </div>
+
+                  <div className="font-bold text-white/75">
+                    {mitarbeiterName}
+                  </div>
+
+                  <div>
+                    <div className="font-black text-slate-100">
+                      {zeit.projekt || "-"}
+                    </div>
+                    <div className="mt-1 text-xs font-bold text-white/40">
+                      {zeit.bereich || "Ohne Bereich"}
+                    </div>
+                  </div>
+
+                  <div className="font-black text-sky-100">
+                    {formatVonBis(zeit.startzeit, zeit.endzeit)}
+                  </div>
+
+                  <div className="text-right">
+                    <div className="font-black text-slate-100">
+                      {formatStunden(Number(zeit.stunden || 0))}
+                    </div>
+                    <div className="mt-1 text-xs font-bold text-white/35">
+                      {formatDezimal(Number(zeit.stunden || 0))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="grid gap-3 lg:hidden">
+            {sortierteBuchungen.map((zeit) => {
+              const mitarbeiterName = zeit.user_id
+                ? mitarbeiterMap[String(zeit.user_id)] || "Unbekannt"
+                : "Unbekannt";
+
+              return (
+                <div
+                  key={zeit.id}
+                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="font-black text-white">
+                        {formatDatum(zeit.datum)}
+                      </div>
+                      <div className="mt-1 text-sm font-bold text-white/55">
+                        {mitarbeiterName}
+                      </div>
+                      <div className="mt-3 rounded-xl border border-sky-300/20 bg-sky-300/5 px-3 py-2 text-sm font-black text-sky-100">
+                        {formatVonBis(zeit.startzeit, zeit.endzeit)}
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-xl font-black text-sky-100">
+                        {formatStunden(Number(zeit.stunden || 0))}
+                      </div>
+                      <div className="mt-1 text-xs font-bold text-white/35">
+                        {formatDezimal(Number(zeit.stunden || 0))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3">
+                    <div className="text-sm font-black text-white">
+                      {zeit.projekt || "-"}
+                    </div>
+                    <div className="mt-1 text-xs font-bold text-white/45">
+                      {zeit.bereich || "Ohne Bereich"}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );
