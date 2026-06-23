@@ -252,20 +252,7 @@ export default function AbwesenheitenPage() {
 
     if (ende < start) return 0;
 
-    let tage = 0;
-    const aktuell = new Date(start);
-
-    while (aktuell <= ende) {
-      const wochentag = aktuell.getDay();
-
-      if (wochentag !== 0 && wochentag !== 6) {
-        tage++;
-      }
-
-      aktuell.setDate(aktuell.getDate() + 1);
-    }
-
-    return tage;
+    return zaehleArbeitstage(start, ende);
   }
 
   function formatStunden(wert: number, mitVorzeichen = false) {
@@ -366,12 +353,11 @@ export default function AbwesenheitenPage() {
     await ladeDaten();
 
     setSaving(false);
-    setMeldung("Abwesenheit gespeichert.");
+    setMeldung("Antrag wurde gespeichert.");
   }
 
   async function abwesenheitLoeschen(id: number) {
-    const bestaetigen = confirm("Abwesenheit wirklich löschen?");
-    if (!bestaetigen) return;
+    setMeldung("");
 
     const userData = await supabase.auth.getUser();
     const user = userData.data.user;
@@ -381,6 +367,27 @@ export default function AbwesenheitenPage() {
       window.location.href = "/login";
       return;
     }
+
+    const { data: eintrag, error: leseError } = await supabase
+      .from("urlaub")
+      .select("id, status, user_id")
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .single();
+
+    if (leseError || !eintrag) {
+      setMeldung(leseError?.message || "Abwesenheit konnte nicht gefunden werden.");
+      console.log(leseError);
+      return;
+    }
+
+    if (eintrag.status !== "Beantragt") {
+      setMeldung("Nur offene Anträge können gelöscht werden. Genehmigte oder abgelehnte Einträge bleiben als Verlauf erhalten.");
+      return;
+    }
+
+    const bestaetigen = confirm("Offenen Antrag wirklich löschen?");
+    if (!bestaetigen) return;
 
     const { error } = await supabase
       .from("urlaub")
@@ -395,7 +402,7 @@ export default function AbwesenheitenPage() {
     }
 
     await ladeDaten();
-    setMeldung("Abwesenheit gelöscht.");
+    setMeldung("Offener Antrag wurde gelöscht.");
   }
 
   function typFarbe(eintragTyp: string) {
@@ -440,6 +447,10 @@ export default function AbwesenheitenPage() {
     }
 
     return `${eintrag.tage || 0} Arbeitstage`;
+  }
+
+  function darfLoeschen(eintrag: Abwesenheit) {
+    return eintrag.status === "Beantragt";
   }
 
   const resturlaub = konto.jahresurlaub - konto.genommenerUrlaub;
@@ -741,6 +752,7 @@ export default function AbwesenheitenPage() {
               eintragZeitraum={eintragZeitraum}
               eintragMenge={eintragMenge}
               onDelete={() => abwesenheitLoeschen(eintrag.id)}
+              canDelete={darfLoeschen(eintrag)}
             />
           ))}
         </div>
@@ -795,13 +807,17 @@ export default function AbwesenheitenPage() {
                   </div>
 
                   <div>
-                    <button
-                      type="button"
-                      onClick={() => abwesenheitLoeschen(eintrag.id)}
-                      className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 font-bold text-red-300 transition hover:bg-red-500/15"
-                    >
-                      Löschen
-                    </button>
+                    {darfLoeschen(eintrag) ? (
+                      <button
+                        type="button"
+                        onClick={() => abwesenheitLoeschen(eintrag.id)}
+                        className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 font-bold text-red-300 transition hover:bg-red-500/15"
+                      >
+                        Löschen
+                      </button>
+                    ) : (
+                      <span className="text-sm font-bold text-white/35">Verlauf</span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -837,10 +853,33 @@ export default function AbwesenheitenPage() {
           color: white;
         }
 
+        .dark-input[type="date"],
+        .dark-input[type="time"],
+        .dark-input[type="datetime-local"],
+        .dark-input[type="month"] {
+          color-scheme: dark !important;
+          color: #ffffff !important;
+          padding-right: 3rem !important;
+          background-repeat: no-repeat !important;
+          background-position: right 1rem center !important;
+          background-size: 1.15rem 1.15rem !important;
+        }
+
+        .dark-input[type="date"],
+        .dark-input[type="month"],
+        .dark-input[type="datetime-local"] {
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E") !important;
+        }
+
+        .dark-input[type="time"] {
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E") !important;
+        }
+
         .dark-input::-webkit-calendar-picker-indicator {
-          filter: brightness(0) invert(1);
-          opacity: 1;
-          cursor: pointer;
+          opacity: 0 !important;
+          cursor: pointer !important;
+          width: 2.75rem !important;
+          height: 100% !important;
         }
       `}</style>
     </main>
@@ -993,6 +1032,7 @@ function MobileEntry({
   eintragZeitraum,
   eintragMenge,
   onDelete,
+  canDelete,
 }: {
   eintrag: Abwesenheit;
   typFarbe: (typ: string) => string;
@@ -1000,6 +1040,7 @@ function MobileEntry({
   eintragZeitraum: (eintrag: Abwesenheit) => string;
   eintragMenge: (eintrag: Abwesenheit) => string;
   onDelete: () => void;
+  canDelete: boolean;
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-black/25 p-5 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
@@ -1031,13 +1072,19 @@ function MobileEntry({
         </span>
       </div>
 
-      <button
-        type="button"
-        onClick={onDelete}
-        className="mt-5 w-full rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 font-bold text-red-300 transition hover:bg-red-500/15"
-      >
-        Löschen
-      </button>
+      {canDelete ? (
+        <button
+          type="button"
+          onClick={onDelete}
+          className="mt-5 w-full rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 font-bold text-red-300 transition hover:bg-red-500/15"
+        >
+          Löschen
+        </button>
+      ) : (
+        <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center text-sm font-bold text-white/35">
+          Verlauf bleibt gespeichert
+        </div>
+      )}
     </div>
   );
 }
