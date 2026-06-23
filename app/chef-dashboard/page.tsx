@@ -961,6 +961,33 @@ const abgeschlosseneTageListe = tageszeiten
     };
   });
 
+function arbeitszeitenZurPruefung(tag: any) {
+  const alleEintraege = arbeitszeiten
+    .filter(
+      (zeit) =>
+        zeit.user_id === tag.user_id &&
+        zeit.datum === tag.datum
+    )
+    .sort((a, b) => String(a.startzeit || "").localeCompare(String(b.startzeit || "")));
+
+  const projektEintraege = alleEintraege.filter(
+    (zeit) => String(zeit.projekt || "").toLowerCase() !== "betriebsunterhalt"
+  );
+
+  return projektEintraege.length > 0 ? projektEintraege : alleEintraege;
+}
+
+function zeitVonBisText(eintrag: any) {
+  const start = String(eintrag.startzeit || "").slice(0, 5);
+  const ende = String(eintrag.endzeit || "").slice(0, 5);
+
+  if (start && ende) return `${start} - ${ende}`;
+  if (start) return `ab ${start}`;
+  if (ende) return `bis ${ende}`;
+
+  return "ohne Von/Bis";
+}
+
   const gepruefteTageListe = tageszeiten
   .filter((tag) => tag.status === "Geprüft")
   .map((tag) => {
@@ -1774,34 +1801,101 @@ const systemStatus =
     </div>
   ) : (
     <div className="space-y-3">
-      {abgeschlosseneTageListe.map((tag) => (
-        <div
-          key={tag.id}
-          className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200/20 bg-gradient-to-br from-slate-200/10 to-black/25 p-5 md:flex-row md:items-center"
-        >
-          <div>
-            <div className="text-lg font-black text-white">
-              {tag.mitarbeiterName}
+      {abgeschlosseneTageListe.map((tag) => {
+        const pruefEintraege = arbeitszeitenZurPruefung(tag);
+        const pruefSumme = pruefEintraege.reduce(
+          (sum, eintrag) => sum + Number(eintrag.stunden || 0),
+          0
+        );
+
+        return (
+          <div
+            key={tag.id}
+            className="rounded-2xl border border-slate-200/20 bg-gradient-to-br from-slate-200/10 to-black/25 p-5"
+          >
+            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
+              <div>
+                <div className="text-lg font-black text-white">
+                  {tag.mitarbeiterName}
+                </div>
+
+                <div className="mt-1 text-sm text-white/55">
+                  {tag.datum} · Tagesabschluss {formatStunden(Number(tag.netto_stunden || 0))}
+                </div>
+
+                <div className="mt-1 text-xs font-bold uppercase tracking-widest text-slate-200">
+                  Status: {tag.status}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => tagAlsGeprueftMarkieren(tag.id)}
+                className="rounded-xl border border-slate-200/25 bg-slate-200/10 px-5 py-3 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/40 hover:bg-sky-300/5 hover:shadow-sky-300/10"
+              >
+                ✓ Freigeben
+              </button>
             </div>
 
-            <div className="mt-1 text-sm text-white/55">
-              {tag.datum} · {formatStunden(Number(tag.netto_stunden || 0))}
-            </div>
+            <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-4">
+              <div className="mb-3 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+                <div>
+                  <div className="text-xs font-black uppercase tracking-[0.22em] text-sky-200">
+                    Aufträge zur Prüfung
+                  </div>
+                  <div className="mt-1 text-sm text-white/45">
+                    Nicht nur Gesamtzeit: Hier siehst du die gebuchten Aufträge, Bereiche und Zeiten.
+                  </div>
+                </div>
 
-            <div className="mt-1 text-xs font-bold uppercase tracking-widest text-slate-200">
-              Status: {tag.status}
+                <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-black uppercase tracking-widest text-slate-200">
+                  {pruefEintraege.length} Buchung{pruefEintraege.length === 1 ? "" : "en"} · {formatStunden(pruefSumme)}
+                </div>
+              </div>
+
+              {pruefEintraege.length === 0 ? (
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/45">
+                  Keine Projektbuchungen für diesen Tagesabschluss gefunden.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                  {pruefEintraege.map((eintrag) => (
+                    <div
+                      key={`${tag.id}-${eintrag.id}`}
+                      className="rounded-xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-sky-300/25 hover:bg-sky-300/5"
+                    >
+                      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+                        <div>
+                          <div className="text-base font-black text-white">
+                            {eintrag.projekt || "Ohne Auftrag"}
+                          </div>
+                          <div className="mt-1 text-sm text-white/50">
+                            Bereich: <span className="font-bold text-white/75">{eintrag.bereich || "Ohne Bereich"}</span>
+                          </div>
+                          {String(eintrag.projekt || "").toLowerCase() === "betriebsunterhalt" && (
+                            <div className="mt-2 inline-flex rounded-full border border-slate-200/20 bg-slate-200/10 px-3 py-1 text-xs font-black uppercase tracking-widest text-slate-200">
+                              Automatisch
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="text-left sm:text-right">
+                          <div className="text-xl font-black text-sky-200">
+                            {formatStunden(Number(eintrag.stunden || 0))}
+                          </div>
+                          <div className="mt-1 text-sm font-bold text-white/55">
+                            {zeitVonBisText(eintrag)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={() => tagAlsGeprueftMarkieren(tag.id)}
-            className="rounded-xl border border-slate-200/25 bg-slate-200/10 px-5 py-3 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/40 hover:bg-sky-300/5 hover:shadow-sky-300/10"
-          >
-            ✓ Freigeben
-          </button>
-        </div>
-      ))}
+        );
+      })}
     </div>
   )}
 </section>
