@@ -504,6 +504,47 @@ async function projektSpeichern() {
   setMeldung(projektBearbeitenId ? "Projekt wurde aktualisiert." : "Projekt wurde erstellt.");
 }
 
+async function projektLoeschen(projekt: any) {
+  setMeldung("");
+
+  if (!projekt?.id) {
+    setMeldung("Projekt konnte nicht gefunden werden.");
+    return;
+  }
+
+  const name = projektTitel(projekt);
+
+  if (name.toLowerCase() === "betriebsunterhalt") {
+    setMeldung("Betriebsunterhalt ist ein internes Systemprojekt und darf nicht gelöscht werden.");
+    return;
+  }
+
+  const bestaetigt = window.confirm(
+    `Projekt "${name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`
+  );
+
+  if (!bestaetigt) return;
+
+  const { error } = await supabase
+    .from("projekte")
+    .delete()
+    .eq("id", projekt.id);
+
+  if (error) {
+    setMeldung(error.message || "Projekt konnte nicht gelöscht werden.");
+    console.log(error);
+    return;
+  }
+
+  setProjekte((aktuell) => aktuell.filter((eintrag) => eintrag.id !== projekt.id));
+
+  if (projektBearbeitenId === projekt.id) {
+    projektFormZuruecksetzen();
+  }
+
+  setMeldung("Projekt wurde gelöscht.");
+}
+
 function mitarbeiterFormZuruecksetzen() {
   setMitarbeiterBearbeitenId(null);
   setMitarbeiterName("");
@@ -823,7 +864,7 @@ const systemStatus =
             </h1>
 
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-white/65 sm:text-base">
-              Premium Betriebssytem für Zeit, Projekte, Team und Kontrolle.
+              Premium Betriebssystem für Zeit, Projekte, Team und Kontrolle.
             </p>
 
             <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
@@ -1077,6 +1118,30 @@ const systemStatus =
                 </div>
               </div>
 
+              {projekte.length > 0 && (
+                <label className="mb-4 block">
+                  <span className="text-sm font-black text-white/65">Projekt auswählen</span>
+                  <select
+                    value={projektBearbeitenId ? String(projektBearbeitenId) : ""}
+                    onChange={(event) => {
+                      const projekt = projekte.find(
+                        (eintrag) => String(eintrag.id) === event.target.value
+                      );
+
+                      if (projekt) projektZumBearbeitenLaden(projekt);
+                    }}
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-black text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                  >
+                    <option value="">Projekt zum Bearbeiten wählen</option>
+                    {projekte.map((projekt) => (
+                      <option key={projekt.id} value={String(projekt.id)}>
+                        {projektTitel(projekt)} · {projekt.kunde || "Intern"} · {projekt.status || "Aktiv"}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                 {projekte.length === 0 ? (
                   <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-white/45">
@@ -1101,13 +1166,23 @@ const systemStatus =
                           </div>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => projektZumBearbeitenLaden(projekt)}
-                          className="rounded-xl border border-slate-200/25 bg-slate-200/10 px-4 py-3 font-black text-slate-100 transition hover:-translate-y-1 hover:border-sky-300/40 hover:bg-sky-300/5"
-                        >
-                          Bearbeiten
-                        </button>
+                        <div className="flex flex-col gap-2 sm:w-auto">
+                          <button
+                            type="button"
+                            onClick={() => projektZumBearbeitenLaden(projekt)}
+                            className="rounded-xl border border-slate-200/25 bg-slate-200/10 px-4 py-3 font-black text-slate-100 transition hover:-translate-y-1 hover:border-sky-300/40 hover:bg-sky-300/5"
+                          >
+                            Bearbeiten
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => projektLoeschen(projekt)}
+                            className="rounded-xl border border-red-400/25 bg-red-500/10 px-4 py-3 font-black text-red-200 transition hover:-translate-y-1 hover:border-red-300/45 hover:bg-red-500/15"
+                          >
+                            Löschen
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))
