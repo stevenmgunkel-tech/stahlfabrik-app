@@ -600,7 +600,13 @@ function projektZumBearbeitenLaden(projekt: any) {
   setProjektName(projektTitel(projekt));
   setProjektStatus(projekt.status || "Aktiv");
   setProjektBereiche(projektBereicheAuslesen(projekt));
-  setMeldung("Projekt ist im Bearbeitungsmodus.");
+  setMeldung("Projekt ist im Bearbeitungsmodus. Formular oben prüfen und speichern.");
+
+  window.setTimeout(() => {
+    document
+      .getElementById("kommandozentrale")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 80);
 }
 
 async function projektBereicheSynchronisieren(
@@ -1504,9 +1510,9 @@ const systemStatus =
             <div className="mt-8 rounded-2xl border border-white/10 bg-black/20 p-5">
               <div className="mb-4 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
                 <div>
-                  <div className="text-lg font-black text-white">Projekte bearbeiten</div>
+                  <div className="text-lg font-black text-white">Projekt auswählen</div>
                   <p className="mt-1 text-sm text-white/45">
-                    Bestehende Projekte direkt ins Formular laden, anpassen und speichern.
+                    Nur noch Dropdown: Projekt wählen, Formular springt nach oben, anpassen und speichern.
                   </p>
                 </div>
 
@@ -1515,9 +1521,13 @@ const systemStatus =
                 </div>
               </div>
 
-              {projekte.length > 0 && (
-                <label className="mb-4 block">
-                  <span className="text-sm font-black text-white/65">Projekt auswählen</span>
+              {projekte.length === 0 ? (
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-white/45">
+                  Noch keine Projekte vorhanden.
+                </div>
+              ) : (
+                <label className="block">
+                  <span className="text-sm font-black text-white/65">Projekt zum Bearbeiten wählen</span>
                   <select
                     value={projektBearbeitenId ? String(projektBearbeitenId) : ""}
                     onChange={(event) => {
@@ -1529,7 +1539,7 @@ const systemStatus =
                     }}
                     className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-black text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
                   >
-                    <option value="">Projekt zum Bearbeiten wählen</option>
+                    <option value="">Projekt auswählen</option>
                     {projekte.map((projekt) => (
                       <option key={projekt.id} value={String(projekt.id)}>
                         {projektTitel(projekt)} · {projekt.kunde || "Intern"} · {projekt.status || "Aktiv"}
@@ -1539,52 +1549,30 @@ const systemStatus =
                 </label>
               )}
 
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                {projekte.length === 0 ? (
-                  <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-white/45">
-                    Noch keine Projekte vorhanden.
-                  </div>
-                ) : (
-                  projekte.map((projekt) => (
-                    <div
-                      key={projekt.id}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-sky-300/25 hover:bg-sky-300/5"
-                    >
-                      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-                        <div>
-                          <div className="text-lg font-black text-white">
-                            {projektTitel(projekt)}
-                          </div>
-                          <div className="mt-1 text-sm text-white/45">
-                            {projekt.kunde || "Intern"} · {projekt.kommission || "Keine Kommission"}
-                          </div>
-                          <div className="mt-2 text-xs font-black uppercase tracking-widest text-slate-200">
-                            {projekt.status || "Aktiv"}
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col gap-2 sm:w-auto">
-                          <button
-                            type="button"
-                            onClick={() => projektZumBearbeitenLaden(projekt)}
-                            className="rounded-xl border border-slate-200/25 bg-slate-200/10 px-4 py-3 font-black text-slate-100 transition hover:-translate-y-1 hover:border-sky-300/40 hover:bg-sky-300/5"
-                          >
-                            Bearbeiten
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => projektLoeschen(projekt)}
-                            className="rounded-xl border border-red-400/25 bg-red-500/10 px-4 py-3 font-black text-red-200 transition hover:-translate-y-1 hover:border-red-300/45 hover:bg-red-500/15"
-                          >
-                            Löschen
-                          </button>
-                        </div>
-                      </div>
+              {projektBearbeitenId && (
+                <div className="mt-5 flex flex-col justify-between gap-3 rounded-2xl border border-sky-300/20 bg-sky-300/5 p-4 sm:flex-row sm:items-center">
+                  <div>
+                    <div className="text-sm font-black text-sky-100">Bearbeitung aktiv</div>
+                    <div className="mt-1 text-sm text-white/50">
+                      Das ausgewählte Projekt ist oben im Formular geladen.
                     </div>
-                  ))
-                )}
-              </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const projekt = projekte.find(
+                        (eintrag) => String(eintrag.id) === String(projektBearbeitenId)
+                      );
+
+                      if (projekt) projektLoeschen(projekt);
+                    }}
+                    className="rounded-xl border border-red-400/25 bg-red-500/10 px-4 py-3 font-black text-red-200 transition hover:-translate-y-1 hover:border-red-300/45 hover:bg-red-500/15"
+                  >
+                    Projekt löschen
+                  </button>
+                </div>
+              )}
             </div>
           </>
         ) : (
