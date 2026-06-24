@@ -12,6 +12,13 @@ const supabaseAdmin = createClient(
   }
 );
 
+function numericValue(value: unknown, fallback: number) {
+  if (value === null || value === undefined || value === "") return fallback;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -29,6 +36,10 @@ export async function POST(req: Request) {
       probezeit_bis,
       austrittsdatum,
       vertragsart,
+      zeiterfassung_ab,
+      pensum_prozent,
+      arbeitstage_pro_woche,
+      freier_wochentag,
     } = body;
 
     if (!email || !password || !name) {
@@ -37,6 +48,23 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    const wochenstundenAlsZahl = numericValue(wochenstunden, 42.5);
+    const pensumFallback = wochenstundenAlsZahl === 34 ? 80 : 100;
+    const pensum = numericValue(pensum_prozent, pensumFallback);
+
+    const wochenstundenFinal = numericValue(
+      wochenstunden,
+      pensum === 80 ? 34 : 42.5
+    );
+
+    const arbeitstageFinal = numericValue(
+      arbeitstage_pro_woche,
+      pensum === 80 ? 4 : 5
+    );
+
+    const freierWochentagFinal =
+      pensum === 80 ? freier_wochentag || "Freitag" : freier_wochentag || null;
 
     const { data: authData, error: authError } =
       await supabaseAdmin.auth.admin.createUser({
@@ -67,14 +95,18 @@ export async function POST(req: Request) {
         name,
         rolle: rolle || "Mitarbeiter",
         user_id: userId,
-        wochenstunden: wochenstunden || 42.5,
-        ferienwochen: ferienwochen || 5,
-        urlaubstage: urlaubstage || 25,
-        ueberstunden_start: ueberstunden_start || 0,
+        wochenstunden: wochenstundenFinal,
+        ferienwochen: numericValue(ferienwochen, 5),
+        urlaubstage: numericValue(urlaubstage, 25),
+        ueberstunden_start: numericValue(ueberstunden_start, 0),
         eintrittsdatum: eintrittsdatum || null,
         probezeit_bis: probezeit_bis || null,
         austrittsdatum: austrittsdatum || null,
-        vertragsart: vertragsart || "Unbefristet",
+        zeiterfassung_ab: zeiterfassung_ab || null,
+        vertragsart: vertragsart || "Festangestellt",
+        pensum_prozent: pensum,
+        arbeitstage_pro_woche: arbeitstageFinal,
+        freier_wochentag: freierWochentagFinal,
         status: "Aktiv",
       })
       .select()
