@@ -394,6 +394,71 @@ export default function ArbeitszeitenPage() {
   await betriebsunterhaltSpeichern(userId, datumWert, betriebsunterhalt);
 }
 
+async function pruefeProjektUeberbuchung({
+  userId,
+  datumWert,
+  neueStunden,
+  ausnahmeId,
+}: {
+  userId: string;
+  datumWert: string;
+  neueStunden: number;
+  ausnahmeId?: string | number | null;
+}) {
+  const { data: tag, error: tagError } = await supabase
+    .from("tageszeiten")
+    .select("netto_stunden")
+    .eq("user_id", userId)
+    .eq("datum", datumWert)
+    .maybeSingle();
+
+  if (tagError) {
+    console.log("UEBERBUCHUNG TAGESZEIT FEHLER:", tagError);
+    throw tagError;
+  }
+
+  // Ohne Tagesabschluss kennt die App die echte Nettozeit noch nicht.
+  // Dann darf die Buchung gespeichert werden und der Tagesabschluss wird aus Buchungen erzeugt.
+  if (!tag) return;
+
+  const nettoStunden = Number(tag.netto_stunden || 0);
+  if (!Number.isFinite(nettoStunden) || nettoStunden <= 0) return;
+
+  const { data: vorhandeneBuchungen, error: buchungenError } = await supabase
+    .from("arbeitszeiten")
+    .select("id, projekt, auto_generiert, stunden")
+    .eq("user_id", userId)
+    .eq("datum", datumWert);
+
+  if (buchungenError) {
+    console.log("UEBERBUCHUNG BUCHUNGEN FEHLER:", buchungenError);
+    throw buchungenError;
+  }
+
+  const bestehendeProjektStunden =
+    vorhandeneBuchungen
+      ?.filter(
+        (eintrag) =>
+          eintrag.projekt !== "Betriebsunterhalt" &&
+          !eintrag.auto_generiert &&
+          String(eintrag.id) !== String(ausnahmeId || "")
+      )
+      .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0) || 0;
+
+  const neueProjektSumme = bestehendeProjektStunden + Number(neueStunden || 0);
+  const differenz = neueProjektSumme - nettoStunden;
+
+  if (differenz > 0.01) {
+    throw new Error(
+      `Projektzeit überschreitet den Arbeitstag um ${formatStunden(differenz)}. Netto-Arbeitstag: ${formatStunden(
+        nettoStunden
+      )}, Projektzeiten neu: ${formatStunden(
+        neueProjektSumme
+      )}. Bitte Buchung korrigieren.`
+    );
+  }
+}
+
 async function tagesabschlussAusBuchungenAktualisieren(
   userId: string,
   datumWert: string
@@ -569,11 +634,26 @@ async function tagesabschlussAusBuchungenAktualisieren(
 
     const projektStunden =
       heutigeZeiten
-        ?.filter((eintrag) => eintrag.projekt !== "Betriebsunterhalt")
+        ?.filter(
+          (eintrag) =>
+            eintrag.projekt !== "Betriebsunterhalt" && !eintrag.auto_generiert
+        )
         .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0) || 0;
 
+    const differenzProjektZuTag = projektStunden - nettoStunden;
+
+    if (differenzProjektZuTag > 0.01) {
+      setMeldung(
+        `Arbeitstag kann nicht beendet werden: Projektzeit überschreitet die Nettozeit um ${formatStunden(
+          differenzProjektZuTag
+        )}. Netto: ${formatStunden(nettoStunden)}, Projektzeiten: ${formatStunden(
+          projektStunden
+        )}. Bitte Projektbuchungen oder Pause korrigieren.`
+      );
+      return;
+    }
+
     const betriebsunterhalt = Math.max(0, nettoStunden - projektStunden);
-    const projektWarnung = projektStunden > nettoStunden;
 
     const { error: updateError } = await supabase
       .from("tageszeiten")
@@ -603,15 +683,9 @@ async function tagesabschlussAusBuchungenAktualisieren(
     setZusammenfassungOffen(true);
 
     setMeldung(
-      projektWarnung
-        ? `Arbeitstag beendet. Netto: ${nettoStunden.toFixed(
-            2
-          )}h. Hinweis: Projektzeiten (${projektStunden.toFixed(
-            2
-          )}h) sind höher als Tageszeit. Betriebsunterhalt wurde auf 0.00h gesetzt.`
-        : `Arbeitstag beendet. Netto: ${nettoStunden.toFixed(
-            2
-          )}h · Betriebsunterhalt: ${betriebsunterhalt.toFixed(2)}h`
+      `Arbeitstag beendet. Netto: ${nettoStunden.toFixed(
+        2
+      )}h · Betriebsunterhalt: ${betriebsunterhalt.toFixed(2)}h`
     );
 
     setPauseStop("0");
@@ -679,11 +753,26 @@ const nettoStunden =
 
     const projektStunden =
       projektzeitenTag
-        ?.filter((eintrag) => eintrag.projekt !== "Betriebsunterhalt")
+        ?.filter(
+          (eintrag) =>
+            eintrag.projekt !== "Betriebsunterhalt" && !eintrag.auto_generiert
+        )
         .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0) || 0;
 
+    const differenzProjektZuTag = projektStunden - nettoStunden;
+
+    if (differenzProjektZuTag > 0.01) {
+      setMeldung(
+        `Arbeitstag kann nicht gespeichert werden: Projektzeit überschreitet die Nettozeit um ${formatStunden(
+          differenzProjektZuTag
+        )}. Netto: ${formatStunden(nettoStunden)}, Projektzeiten: ${formatStunden(
+          projektStunden
+        )}. Bitte Projektbuchungen oder Tageszeit korrigieren.`
+      );
+      return;
+    }
+
     const betriebsunterhalt = Math.max(0, nettoStunden - projektStunden);
-    const projektWarnung = projektStunden > nettoStunden;
 
     const { data: vorhandenerTag, error: tagError } = await supabase
       .from("tageszeiten")
@@ -744,15 +833,9 @@ status: "Abgeschlossen",
     setZusammenfassungOffen(true);
 
     setMeldung(
-      projektWarnung
-        ? `Arbeitstag manuell gespeichert. Netto: ${nettoStunden.toFixed(
-            2
-          )}h. Hinweis: Projektzeiten (${projektStunden.toFixed(
-            2
-          )}h) sind höher als Tageszeit. Betriebsunterhalt wurde auf 0.00h gesetzt.`
-        : `Arbeitstag manuell gespeichert. Netto: ${nettoStunden.toFixed(
-            2
-          )}h · Betriebsunterhalt: ${betriebsunterhalt.toFixed(2)}h`
+      `Arbeitstag manuell gespeichert. Netto: ${nettoStunden.toFixed(
+        2
+      )}h · Betriebsunterhalt: ${betriebsunterhalt.toFixed(2)}h`
     );
 
     setManuellDatum(heuteDatum());
@@ -822,6 +905,13 @@ status: "Abgeschlossen",
 
         alteDatumVorBearbeitung = alteZeit?.datum || null;
 
+        await pruefeProjektUeberbuchung({
+          userId: user.id,
+          datumWert: gespeichertesDatum,
+          neueStunden: Number(berechneteStunden.toFixed(2)),
+          ausnahmeId: bearbeitenId,
+        });
+
         const { data: gespeicherteZeit, error } = await supabase
           .from("arbeitszeiten")
           .update({
@@ -841,6 +931,13 @@ status: "Abgeschlossen",
         if (error) throw error;
         if (!gespeicherteZeit?.id) throw new Error("Arbeitszeit wurde nicht bestätigt gespeichert.");
       } else {
+        await pruefeProjektUeberbuchung({
+          userId: user.id,
+          datumWert: gespeichertesDatum,
+          neueStunden: Number(berechneteStunden.toFixed(2)),
+          ausnahmeId: null,
+        });
+
         const { data: gespeicherteZeit, error } = await supabase
           .from("arbeitszeiten")
           .insert({
