@@ -25,6 +25,34 @@ type Konto = {
   ueberstundenAktuell: number;
 };
 
+type Arbeitsmodell = {
+  pensumProzent: number;
+  wochenstunden: number;
+  arbeitstageProWoche: number;
+  tagesSoll: number;
+  freierWochentag: string;
+  zeiterfassungAb: string;
+};
+
+const initialArbeitsmodell: Arbeitsmodell = {
+  pensumProzent: 100,
+  wochenstunden: 42.5,
+  arbeitstageProWoche: 5,
+  tagesSoll: 8.5,
+  freierWochentag: "",
+  zeiterfassungAb: "",
+};
+
+const wochentagIndex: Record<string, number> = {
+  Sonntag: 0,
+  Montag: 1,
+  Dienstag: 2,
+  Mittwoch: 3,
+  Donnerstag: 4,
+  Freitag: 5,
+  Samstag: 6,
+};
+
 function formatDateLocal(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -38,7 +66,56 @@ function getErsterTagDieserMonat() {
   return new Date(heute.getFullYear(), heute.getMonth(), 1);
 }
 
-function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
+function parseDatumLokal(wert?: string | null) {
+  if (!wert) return null;
+
+  const [jahr, monat, tag] = String(wert)
+    .slice(0, 10)
+    .split("-")
+    .map(Number);
+
+  if (!jahr || !monat || !tag) return null;
+
+  const datum = new Date(jahr, monat - 1, tag);
+  datum.setHours(0, 0, 0, 0);
+
+  return datum;
+}
+
+function maxDatum(startDatum: Date, grenze?: Date | null) {
+  const start = new Date(startDatum);
+  start.setHours(0, 0, 0, 0);
+
+  if (!grenze) return start;
+
+  const limit = new Date(grenze);
+  limit.setHours(0, 0, 0, 0);
+
+  return limit > start ? limit : start;
+}
+
+function minDatum(startDatum: Date, grenze?: Date | null) {
+  const start = new Date(startDatum);
+  start.setHours(0, 0, 0, 0);
+
+  if (!grenze) return start;
+
+  const limit = new Date(grenze);
+  limit.setHours(0, 0, 0, 0);
+
+  return limit < start ? limit : start;
+}
+
+function istFreierWochentag(datum: Date, freierWochentag?: string | null) {
+  if (!freierWochentag) return false;
+
+  const index = wochentagIndex[String(freierWochentag).trim()];
+  if (index === undefined) return false;
+
+  return datum.getDay() === index;
+}
+
+function zaehleArbeitstage(startDatum: Date, endDatum: Date, freierWochentag?: string | null) {
   let tage = 0;
   const aktuell = new Date(startDatum);
   aktuell.setHours(0, 0, 0, 0);
@@ -50,8 +127,9 @@ function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
     const wochentag = aktuell.getDay();
     const istWochenende = wochentag === 0 || wochentag === 6;
     const istFeiertag = istFeiertagSG(aktuell);
+    const istFrei = istFreierWochentag(aktuell, freierWochentag);
 
-    if (!istWochenende && !istFeiertag) {
+    if (!istWochenende && !istFeiertag && !istFrei) {
       tage++;
     }
 
@@ -59,6 +137,34 @@ function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
   }
 
   return tage;
+}
+
+function abwesenheitstage(von?: string | null, bis?: string | null, freierWochentag?: string | null) {
+  const start = parseDatumLokal(von);
+  const ende = parseDatumLokal(bis);
+
+  if (!start || !ende || ende < start) return 0;
+
+  return zaehleArbeitstage(start, ende, freierWochentag);
+}
+
+function abwesenheitstageImZeitraum(
+  eintrag: Abwesenheit,
+  startGrenze: Date,
+  endeGrenze: Date,
+  freierWochentag?: string | null
+) {
+  const start = parseDatumLokal(eintrag.von);
+  const ende = parseDatumLokal(eintrag.bis);
+
+  if (!start || !ende) return 0;
+
+  const effektiverStart = maxDatum(start, startGrenze);
+  const effektivesEnde = minDatum(ende, endeGrenze);
+
+  if (effektivesEnde < effektiverStart) return 0;
+
+  return zaehleArbeitstage(effektiverStart, effektivesEnde, freierWochentag);
 }
 
 export default function AbwesenheitenPage() {
@@ -71,6 +177,8 @@ export default function AbwesenheitenPage() {
     ueberstundenabbauStunden: 0,
     ueberstundenAktuell: 0,
   });
+  const [arbeitsmodell, setArbeitsmodell] =
+    useState<Arbeitsmodell>(initialArbeitsmodell);
 
   const [typ, setTyp] = useState("Urlaub");
   const [von, setVon] = useState("");
@@ -146,18 +254,50 @@ export default function AbwesenheitenPage() {
     const jahresurlaub = Number(mitarbeiter?.urlaubstage || 0);
     const ueberstundenStart = Number(mitarbeiter?.ueberstunden_start || 0);
     const wochenstunden = Number(mitarbeiter?.wochenstunden || 42.5);
-    const tagesSoll = wochenstunden / 5;
+    const pensumProzent = Number(
+      mitarbeiter?.pensum_prozent || (wochenstunden === 34 ? 80 : 100)
+    );
+    const arbeitstageProWoche = Number(
+      mitarbeiter?.arbeitstage_pro_woche ||
+        (pensumProzent === 80 || wochenstunden === 34 ? 4 : 5)
+    );
+    const freierWochentag = String(
+      mitarbeiter?.freier_wochentag ||
+        (arbeitstageProWoche === 4 ? "Freitag" : "")
+    ).trim();
+    const tagesSoll =
+      arbeitstageProWoche > 0 ? wochenstunden / arbeitstageProWoche : 8.5;
+    const zeiterfassungAb = String(
+      mitarbeiter?.zeiterfassung_ab || mitarbeiter?.eintrittsdatum || ""
+    ).slice(0, 10);
+
+    setArbeitsmodell({
+      pensumProzent,
+      wochenstunden,
+      arbeitstageProWoche,
+      tagesSoll,
+      freierWochentag,
+      zeiterfassungAb,
+    });
 
     const genommenerUrlaub = eintraege
       .filter(
         (eintrag) =>
           eintrag.typ === "Urlaub" && eintrag.status === "Genehmigt"
       )
-      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+      .reduce(
+        (sum, eintrag) =>
+          sum + abwesenheitstage(eintrag.von, eintrag.bis, freierWochentag),
+        0
+      );
 
     const kranktage = eintraege
       .filter((eintrag) => eintrag.typ === "Krank")
-      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+      .reduce(
+        (sum, eintrag) =>
+          sum + abwesenheitstage(eintrag.von, eintrag.bis, freierWochentag),
+        0
+      );
 
     const ueberstundenabbauStunden = eintraege
       .filter(
@@ -168,13 +308,20 @@ export default function AbwesenheitenPage() {
       .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
 
     const heuteDate = new Date();
+    heuteDate.setHours(0, 0, 0, 0);
     const heute = formatDateLocal(heuteDate);
-    const monatsStartDate = getErsterTagDieserMonat();
+    const monatsStartBasisDate = getErsterTagDieserMonat();
+    const zeiterfassungAbDate = parseDatumLokal(zeiterfassungAb);
+    const monatsStartDate = maxDatum(monatsStartBasisDate, zeiterfassungAbDate);
     const monatsStart = formatDateLocal(monatsStartDate);
+    const monatNochNichtGestartet = monatsStartDate > heuteDate;
 
     const arbeitszeitenMonat =
       arbeitszeiten?.filter(
-        (item) => item.datum >= monatsStart && item.datum <= heute
+        (item) =>
+          item.datum >= monatsStart &&
+          item.datum <= heute &&
+          (!zeiterfassungAb || !item.datum || item.datum >= zeiterfassungAb)
       ) || [];
 
     const monatBrutto = arbeitszeitenMonat.reduce(
@@ -184,11 +331,18 @@ export default function AbwesenheitenPage() {
 
     const pausenMonat =
       tagespausen
-        ?.filter((pause) => pause.datum >= monatsStart && pause.datum <= heute)
+        ?.filter(
+          (pause) =>
+            pause.datum >= monatsStart &&
+            pause.datum <= heute &&
+            (!zeiterfassungAb || !pause.datum || pause.datum >= zeiterfassungAb)
+        )
         .reduce((sum, pause) => sum + Number(pause.pause || 0) / 60, 0) || 0;
 
     const monatIst = monatBrutto - pausenMonat;
-    const monatTage = zaehleArbeitstage(monatsStartDate, heuteDate);
+    const monatTage = monatNochNichtGestartet
+      ? 0
+      : zaehleArbeitstage(monatsStartDate, heuteDate, freierWochentag);
     const monatSoll = tagesSoll * monatTage;
 
     const urlaubstageMonat = eintraege
@@ -196,19 +350,39 @@ export default function AbwesenheitenPage() {
         (eintrag) =>
           eintrag.typ === "Urlaub" &&
           eintrag.status === "Genehmigt" &&
-          eintrag.von >= monatsStart &&
-          eintrag.bis <= heute
+          eintrag.bis >= monatsStart &&
+          eintrag.von <= heute
       )
-      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+      .reduce(
+        (sum, eintrag) =>
+          sum +
+          abwesenheitstageImZeitraum(
+            eintrag,
+            monatsStartDate,
+            heuteDate,
+            freierWochentag
+          ),
+        0
+      );
 
     const kranktageMonat = eintraege
       .filter(
         (eintrag) =>
           eintrag.typ === "Krank" &&
-          eintrag.von >= monatsStart &&
-          eintrag.bis <= heute
+          eintrag.bis >= monatsStart &&
+          eintrag.von <= heute
       )
-      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+      .reduce(
+        (sum, eintrag) =>
+          sum +
+          abwesenheitstageImZeitraum(
+            eintrag,
+            monatsStartDate,
+            heuteDate,
+            freierWochentag
+          ),
+        0
+      );
 
     const ueberstundenabbauStundenMonat = eintraege
       .filter(
@@ -216,7 +390,7 @@ export default function AbwesenheitenPage() {
           eintrag.typ === "Überstundenabbau" &&
           eintrag.status === "Genehmigt" &&
           eintrag.von >= monatsStart &&
-          eintrag.bis <= heute
+          eintrag.von <= heute
       )
       .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
 
@@ -247,12 +421,7 @@ export default function AbwesenheitenPage() {
     if (typ === "Überstundenabbau") return 0;
     if (!von || !bis) return 0;
 
-    const start = new Date(von);
-    const ende = new Date(bis);
-
-    if (ende < start) return 0;
-
-    return zaehleArbeitstage(start, ende);
+    return abwesenheitstage(von, bis, arbeitsmodell.freierWochentag);
   }
 
   function formatStunden(wert: number, mitVorzeichen = false) {
@@ -446,7 +615,13 @@ export default function AbwesenheitenPage() {
       return formatStunden(Number(eintrag.stunden || 0));
     }
 
-    return `${eintrag.tage || 0} Arbeitstage`;
+    const tage = abwesenheitstage(
+      eintrag.von,
+      eintrag.bis,
+      arbeitsmodell.freierWochentag
+    );
+
+    return `${tage || Number(eintrag.tage || 0)} Arbeitstage`;
   }
 
   function darfLoeschen(eintrag: Abwesenheit) {
@@ -540,13 +715,18 @@ export default function AbwesenheitenPage() {
         open={kontoOffen}
         onToggle={() => setKontoOffen(!kontoOffen)}
       >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <InfoBox label="Jahresurlaub" value={`${konto.jahresurlaub} Tage`} />
           <InfoBox label="Genommen" value={`${konto.genommenerUrlaub} Tage`} />
           <InfoBox
             label="Resturlaub"
             value={`${resturlaub} Tage`}
             highlight={resturlaub >= 0 ? "green" : "red"}
+          />
+          <InfoBox
+            label="Arbeitsmodell"
+            value={`${arbeitsmodell.pensumProzent}% · ${arbeitsmodell.arbeitstageProWoche} Tage`}
+            highlight="blue"
           />
         </div>
 
