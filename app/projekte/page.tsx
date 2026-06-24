@@ -127,6 +127,20 @@ export default function ProjektePage() {
     );
   }
 
+  function istSystemProjekt(projekt: Projekt) {
+    const titel = projektTitel(projekt).toLowerCase();
+    const kunde = String(projekt.kunde || "").toLowerCase();
+
+    return titel.includes("betriebsunterhalt") || kunde === "intern";
+  }
+
+  function statusSortWert(status: string) {
+    if (status === "Aktiv") return 1;
+    if (status === "Pausiert") return 2;
+    if (status === "Abgeschlossen") return 3;
+    return 4;
+  }
+
   function bereicheNormalisieren(wert: unknown): string[] {
     if (Array.isArray(wert)) {
       return wert.map((eintrag) => String(eintrag || "").trim()).filter(Boolean);
@@ -198,6 +212,12 @@ export default function ProjektePage() {
     }
 
     const titel = projektTitel(projekt);
+
+    if (istSystemProjekt(projekt)) {
+      setMeldung("Interne Systemprojekte dürfen hier nicht abgeschlossen werden.");
+      return;
+    }
+
     const bestaetigt = window.confirm(`Projekt "${titel}" wirklich auf abgeschlossen setzen?`);
 
     if (!bestaetigt) return;
@@ -248,29 +268,36 @@ export default function ProjektePage() {
   const gefilterteProjekte = useMemo(() => {
     const suchText = suche.trim().toLowerCase();
 
-    return projekte.filter((projekt) => {
-      const status = statusWert(projekt);
-      const passtStatus = statusFilter === "Alle" || status === statusFilter;
+    return projekte
+      .filter((projekt) => {
+        const status = statusWert(projekt);
+        const passtStatus = statusFilter === "Alle" || status === statusFilter;
 
-      if (!passtStatus) return false;
-      if (!suchText) return true;
+        if (!passtStatus) return false;
+        if (!suchText) return true;
 
-      const bereiche = bereicheFuerProjekt(projekt).join(" ");
-      const text = [
-        projekt.kunde,
-        projekt.kommission,
-        projekt.name,
-        projekt.projektname,
-        projekt.projekt_name,
-        status,
-        bereiche,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+        const bereiche = bereicheFuerProjekt(projekt).join(" ");
+        const text = [
+          projekt.kunde,
+          projekt.kommission,
+          projekt.name,
+          projekt.projektname,
+          projekt.projekt_name,
+          status,
+          bereiche,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
 
-      return text.includes(suchText);
-    });
+        return text.includes(suchText);
+      })
+      .sort((a, b) => {
+        const statusVergleich = statusSortWert(statusWert(a)) - statusSortWert(statusWert(b));
+        if (statusVergleich !== 0) return statusVergleich;
+
+        return projektTitel(a).localeCompare(projektTitel(b), "de-CH");
+      });
   }, [projekte, projektBereiche, suche, statusFilter]);
 
   const pageLoading = !seiteGeprueft || initialLoading;
@@ -451,6 +478,10 @@ export default function ProjektePage() {
                             <span className="inline-flex rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-black uppercase tracking-widest text-white/35">
                               Erledigt
                             </span>
+                          ) : istSystemProjekt(projekt) ? (
+                            <span className="inline-flex rounded-xl border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-sky-100">
+                              System
+                            </span>
                           ) : (
                             <button
                               type="button"
@@ -514,6 +545,8 @@ function ProjektMobileCard({
   loading: boolean;
 }) {
   const status = projekt.status || "Aktiv";
+  const titel = projektTitel(projekt).toLowerCase();
+  const istSystem = titel.includes("betriebsunterhalt") || String(projekt.kunde || "").toLowerCase() === "intern";
 
   return (
     <div className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-colors hover:border-sky-300/25 hover:bg-sky-300/5">
@@ -548,6 +581,10 @@ function ProjektMobileCard({
         {status === "Abgeschlossen" ? (
           <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center text-sm font-black uppercase tracking-widest text-white/35">
             Erledigt
+          </div>
+        ) : istSystem ? (
+          <div className="rounded-xl border border-sky-300/20 bg-sky-300/10 px-4 py-3 text-center text-sm font-black uppercase tracking-widest text-sky-100">
+            Systemprojekt
           </div>
         ) : (
           <button
