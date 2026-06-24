@@ -279,6 +279,19 @@ export default function ArbeitszeitenPage() {
   ) {
     const saubererWert = Number(Number(stundenWert || 0).toFixed(2));
 
+    const { data: tageszeitFuerBetriebsunterhalt } = await supabase
+      .from("tageszeiten")
+      .select("startzeit, endzeit, pause")
+      .eq("user_id", userId)
+      .eq("datum", datumWert)
+      .maybeSingle();
+
+    const zeitPayload = {
+      startzeit: tageszeitFuerBetriebsunterhalt?.startzeit || null,
+      endzeit: tageszeitFuerBetriebsunterhalt?.endzeit || null,
+      pause: Number(tageszeitFuerBetriebsunterhalt?.pause || 0),
+    };
+
     const { data: vorhandenerBetriebsunterhalt, error: sucheError } =
       await supabase
         .from("arbeitszeiten")
@@ -315,6 +328,7 @@ export default function ArbeitszeitenPage() {
         .from("arbeitszeiten")
         .update({
           stunden: saubererWert,
+          ...zeitPayload,
         })
         .eq("id", vorhandenerBetriebsunterhalt.id);
 
@@ -327,13 +341,14 @@ export default function ArbeitszeitenPage() {
     }
 
     const { error } = await supabase.from("arbeitszeiten").insert({
-  user_id: userId,
-  datum: datumWert,
-  projekt: "Betriebsunterhalt",
-  bereich: "Betriebsunterhalt",
-  stunden: saubererWert,
-  auto_generiert: true,
-});
+      user_id: userId,
+      datum: datumWert,
+      projekt: "Betriebsunterhalt",
+      bereich: "Betriebsunterhalt",
+      stunden: saubererWert,
+      auto_generiert: true,
+      ...zeitPayload,
+    });
 
     if (error) {
       console.log("BETRIEBSUNTERHALT INSERT FEHLER:", error);
@@ -409,7 +424,7 @@ async function tagesabschlussAusBuchungenAktualisieren(
     return;
   }
 
-  if (vorhandenerTag?.status === "Offen" || vorhandenerTag?.status === "Geprüft") {
+  if (vorhandenerTag) {
     await betriebsunterhaltNeuBerechnen(userId, datumWert);
     return;
   }
@@ -802,7 +817,7 @@ const berechneteStunden =
           startzeit: vonZeit,
           endzeit: bisZeit,
           pause: 0,
-          stunden: berechneteStunden,
+          stunden: Number(berechneteStunden.toFixed(2)),
         })
         .eq("id", bearbeitenId)
         .eq("user_id", user.id);
@@ -824,7 +839,7 @@ const berechneteStunden =
           startzeit: vonZeit,
 endzeit: bisZeit,
           pause: 0,
-          stunden: berechneteStunden,
+          stunden: Number(berechneteStunden.toFixed(2)),
           user_id: user.id,
         },
       ]);
@@ -927,6 +942,8 @@ setBisZeit("");
     setBereich(zeit.bereich || "");
     ladeProjektBereicheById(id, zeit.bereich || "");
     setStunden(String(zeit.stunden || ""));
+    setVonZeit(zeit.startzeit ? String(zeit.startzeit).slice(0, 5) : "");
+    setBisZeit(zeit.endzeit ? String(zeit.endzeit).slice(0, 5) : "");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -1408,7 +1425,17 @@ setBisZeit("");
                                     </div>
 
                                     <div className="text-right">
-                                      <div className="text-lg font-black text-sky-200">{zeit.startzeit && zeit.endzeit ? `${zeit.startzeit.slice(0, 5)} - ${zeit.endzeit.slice(0, 5)}` : "--:--"}</div>
+                                      <div className="text-lg font-black text-sky-200">
+                                        {(() => {
+                                          const tageszeit = tageszeiten.find((t) => t.datum === tag.datum);
+                                          const startAnzeige = zeit.startzeit || (zeit.projekt === "Betriebsunterhalt" ? tageszeit?.startzeit : null);
+                                          const endeAnzeige = zeit.endzeit || (zeit.projekt === "Betriebsunterhalt" ? tageszeit?.endzeit : null);
+
+                                          return startAnzeige && endeAnzeige
+                                            ? `${String(startAnzeige).slice(0, 5)} - ${String(endeAnzeige).slice(0, 5)}`
+                                            : "--:--";
+                                        })()}
+                                      </div>
                                       <div className="text-sm text-white/50">{zeit.bereich || "Ohne Bereich"} · {formatStunden(Number(zeit.stunden || 0))}</div>
                                     </div>
                                   </div>
