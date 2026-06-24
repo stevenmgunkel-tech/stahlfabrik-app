@@ -303,8 +303,7 @@ export default function ArbeitszeitenPage() {
 
     if (sucheError) {
       console.log("BETRIEBSUNTERHALT SUCHE FEHLER:", sucheError);
-      setMeldung(sucheError.message);
-      return;
+      throw sucheError;
     }
 
     if (saubererWert <= 0) {
@@ -316,7 +315,7 @@ export default function ArbeitszeitenPage() {
 
         if (error) {
           console.log("BETRIEBSUNTERHALT DELETE FEHLER:", error);
-          setMeldung(error.message);
+          throw error;
         }
       }
 
@@ -334,7 +333,7 @@ export default function ArbeitszeitenPage() {
 
       if (error) {
         console.log("BETRIEBSUNTERHALT UPDATE FEHLER:", error);
-        setMeldung(error.message);
+        throw error;
       }
 
       return;
@@ -352,29 +351,39 @@ export default function ArbeitszeitenPage() {
 
     if (error) {
       console.log("BETRIEBSUNTERHALT INSERT FEHLER:", error);
-      setMeldung(error.message);
+      throw error;
     }
   }
 
   async function betriebsunterhaltNeuBerechnen(userId: string, datumWert: string) {
-  const { data: tag } = await supabase
+  const { data: tag, error: tagError } = await supabase
     .from("tageszeiten")
     .select("*")
     .eq("user_id", userId)
     .eq("datum", datumWert)
     .maybeSingle();
 
+  if (tagError) {
+    console.log("BETRIEBSUNTERHALT TAGESZEIT FEHLER:", tagError);
+    throw tagError;
+  }
+
   if (!tag) return;
 
-  const { data: zeiten } = await supabase
+  const { data: zeiten, error: zeitenError } = await supabase
     .from("arbeitszeiten")
     .select("*")
     .eq("user_id", userId)
     .eq("datum", datumWert);
 
+  if (zeitenError) {
+    console.log("BETRIEBSUNTERHALT ZEITEN FEHLER:", zeitenError);
+    throw zeitenError;
+  }
+
   const projektStunden =
     zeiten
-      ?.filter((z) => z.projekt !== "Betriebsunterhalt")
+      ?.filter((z) => z.projekt !== "Betriebsunterhalt" && !z.auto_generiert)
       .reduce((sum, z) => sum + Number(z.stunden || 0), 0) || 0;
 
   const betriebsunterhalt = Math.max(
@@ -397,8 +406,7 @@ async function tagesabschlussAusBuchungenAktualisieren(
 
   if (buchungenError) {
     console.log("TAGESABSCHLUSS BUCHUNGEN FEHLER:", buchungenError);
-    setMeldung(buchungenError.message);
-    return;
+    throw buchungenError;
   }
 
   const buchungen = (buchungenData || []).filter(
@@ -415,16 +423,15 @@ async function tagesabschlussAusBuchungenAktualisieren(
 
   if (tagError) {
     console.log("TAGESABSCHLUSS SUCHE FEHLER:", tagError);
-    setMeldung(tagError.message);
-    return;
+    throw tagError;
   }
 
-  if (buchungen.length === 0) {
+  if (vorhandenerTag) {
     await betriebsunterhaltNeuBerechnen(userId, datumWert);
     return;
   }
 
-  if (vorhandenerTag) {
+  if (buchungen.length === 0) {
     await betriebsunterhaltNeuBerechnen(userId, datumWert);
     return;
   }
@@ -453,29 +460,15 @@ async function tagesabschlussAusBuchungenAktualisieren(
     status: "Abgeschlossen",
   };
 
-  if (vorhandenerTag) {
-    const { error } = await supabase
-      .from("tageszeiten")
-      .update(payload)
-      .eq("id", vorhandenerTag.id);
+  const { error } = await supabase.from("tageszeiten").insert({
+    user_id: userId,
+    datum: datumWert,
+    ...payload,
+  });
 
-    if (error) {
-      console.log("TAGESABSCHLUSS UPDATE FEHLER:", error);
-      setMeldung(error.message);
-      return;
-    }
-  } else {
-    const { error } = await supabase.from("tageszeiten").insert({
-      user_id: userId,
-      datum: datumWert,
-      ...payload,
-    });
-
-    if (error) {
-      console.log("TAGESABSCHLUSS INSERT FEHLER:", error);
-      setMeldung(error.message);
-      return;
-    }
+  if (error) {
+    console.log("TAGESABSCHLUSS INSERT FEHLER:", error);
+    throw error;
   }
 
   await betriebsunterhaltNeuBerechnen(userId, datumWert);
@@ -598,7 +591,16 @@ async function tagesabschlussAusBuchungenAktualisieren(
       return;
     }
 
-    await betriebsunterhaltSpeichern(user.id, heute, betriebsunterhalt);
+    try {
+      await betriebsunterhaltSpeichern(user.id, heute, betriebsunterhalt);
+    } catch (error: any) {
+      console.log("BETRIEBSUNTERHALT STOP FEHLER:", error);
+      setMeldung(error?.message || "Betriebsunterhalt konnte nicht gespeichert werden.");
+      return;
+    }
+
+    setDatumSuche(heute);
+    setZusammenfassungOffen(true);
 
     setMeldung(
       projektWarnung
@@ -730,7 +732,16 @@ status: "Abgeschlossen",
       }
     }
 
-    await betriebsunterhaltSpeichern(user.id, manuellDatum, betriebsunterhalt);
+    try {
+      await betriebsunterhaltSpeichern(user.id, manuellDatum, betriebsunterhalt);
+    } catch (error: any) {
+      console.log("BETRIEBSUNTERHALT MANUELL FEHLER:", error);
+      setMeldung(error?.message || "Betriebsunterhalt konnte nicht gespeichert werden.");
+      return;
+    }
+
+    setDatumSuche(manuellDatum);
+    setZusammenfassungOffen(true);
 
     setMeldung(
       projektWarnung
@@ -756,25 +767,25 @@ status: "Abgeschlossen",
     setMeldung("");
 
     if (!datum || !projekt || !bereich || !vonZeit || !bisZeit) {
-  setMeldung("Bitte Datum, Projekt, Bereich, Von und Bis ausfüllen.");
-  return;
-}
+      setMeldung("Bitte Datum, Projekt, Bereich, Von und Bis ausfüllen.");
+      return;
+    }
 
     if (projekt === "Betriebsunterhalt") {
-  setMeldung(
-    "Betriebsunterhalt wird automatisch berechnet und kann nicht manuell erfasst werden."
-  );
-  return;
-}
+      setMeldung(
+        "Betriebsunterhalt wird automatisch berechnet und kann nicht manuell erfasst werden."
+      );
+      return;
+    }
 
     const start = new Date(`${datum}T${vonZeit}`);
-const ende = new Date(`${datum}T${bisZeit}`);
+    const ende = new Date(`${datum}T${bisZeit}`);
 
-const berechneteStunden =
-  (ende.getTime() - start.getTime()) / 1000 / 60 / 60;
+    const berechneteStunden =
+      (ende.getTime() - start.getTime()) / 1000 / 60 / 60;
 
     if (!Number.isFinite(berechneteStunden) || berechneteStunden <= 0) {
-      setMeldung("Bitte gültige Stunden eingeben.");
+      setMeldung("Bitte gültige Von-/Bis-Zeit eingeben.");
       return;
     }
 
@@ -790,87 +801,95 @@ const berechneteStunden =
 
     setSaving(true);
 
+    const gespeichertesDatum = datum;
     let alteDatumVorBearbeitung: string | null = null;
 
-    if (bearbeitenId) {
-      const { data: alteZeit } = await supabase
-        .from("arbeitszeiten")
-        .select("datum, auto_generiert, bereich")
-        .eq("id", bearbeitenId)
-        .eq("user_id", user.id)
-        .single();
+    try {
+      if (bearbeitenId) {
+        const { data: alteZeit, error: alteZeitError } = await supabase
+          .from("arbeitszeiten")
+          .select("datum, auto_generiert, bereich")
+          .eq("id", bearbeitenId)
+          .eq("user_id", user.id)
+          .single();
 
-      if (alteZeit?.auto_generiert) {
-        setSaving(false);
-        setMeldung("Automatisch berechneter Betriebsunterhalt kann nicht bearbeitet werden.");
-        return;
+        if (alteZeitError) throw alteZeitError;
+
+        if (alteZeit?.auto_generiert) {
+          setMeldung("Automatisch berechneter Betriebsunterhalt kann nicht bearbeitet werden.");
+          return;
+        }
+
+        alteDatumVorBearbeitung = alteZeit?.datum || null;
+
+        const { data: gespeicherteZeit, error } = await supabase
+          .from("arbeitszeiten")
+          .update({
+            datum: gespeichertesDatum,
+            projekt,
+            bereich,
+            startzeit: vonZeit,
+            endzeit: bisZeit,
+            pause: 0,
+            stunden: Number(berechneteStunden.toFixed(2)),
+          })
+          .eq("id", bearbeitenId)
+          .eq("user_id", user.id)
+          .select("id")
+          .single();
+
+        if (error) throw error;
+        if (!gespeicherteZeit?.id) throw new Error("Arbeitszeit wurde nicht bestätigt gespeichert.");
+      } else {
+        const { data: gespeicherteZeit, error } = await supabase
+          .from("arbeitszeiten")
+          .insert({
+            datum: gespeichertesDatum,
+            projekt,
+            bereich,
+            startzeit: vonZeit,
+            endzeit: bisZeit,
+            pause: 0,
+            stunden: Number(berechneteStunden.toFixed(2)),
+            user_id: user.id,
+          })
+          .select("id")
+          .single();
+
+        if (error) throw error;
+        if (!gespeicherteZeit?.id) throw new Error("Arbeitszeit wurde nicht bestätigt gespeichert.");
       }
 
-      alteDatumVorBearbeitung = alteZeit?.datum || null;
-
-      const { error } = await supabase
-        .from("arbeitszeiten")
-        .update({
-          datum,
-          projekt,
-          bereich,
-          startzeit: vonZeit,
-          endzeit: bisZeit,
-          pause: 0,
-          stunden: Number(berechneteStunden.toFixed(2)),
-        })
-        .eq("id", bearbeitenId)
-        .eq("user_id", user.id);
-
-      if (error) {
-        setSaving(false);
-        setMeldung(error.message);
-        console.log(error);
-        return;
+      if (alteDatumVorBearbeitung && alteDatumVorBearbeitung !== gespeichertesDatum) {
+        await tagesabschlussAusBuchungenAktualisieren(user.id, alteDatumVorBearbeitung);
       }
 
-      setMeldung("Arbeitszeit aktualisiert.");
-    } else {
-      const { error } = await supabase.from("arbeitszeiten").insert([
-        {
-          datum,
-          projekt,
-          bereich,
-          startzeit: vonZeit,
-endzeit: bisZeit,
-          pause: 0,
-          stunden: Number(berechneteStunden.toFixed(2)),
-          user_id: user.id,
-        },
-      ]);
+      await tagesabschlussAusBuchungenAktualisieren(user.id, gespeichertesDatum);
+      await ladeDaten();
 
-      if (error) {
-        setSaving(false);
-        setMeldung(error.message);
-        console.log(error);
-        return;
-      }
+      setDatum(heuteDatum());
+      setProjekt("");
+      setProjektId(null);
+      setBereich("");
+      setProjektBereiche([]);
+      setStunden("");
+      setVonZeit("");
+      setBisZeit("");
+      setBearbeitenId(null);
+      setDatumSuche(gespeichertesDatum);
+      setZusammenfassungOffen(true);
 
-      setMeldung("Arbeitszeit gespeichert.");
+      setMeldung(
+        bearbeitenId
+          ? `Arbeitszeit aktualisiert für ${gespeichertesDatum}.`
+          : `Arbeitszeit gespeichert für ${gespeichertesDatum}.`
+      );
+    } catch (error: any) {
+      console.log("ARBEITSZEIT SPEICHERN FEHLER:", error);
+      setMeldung(error?.message || "Arbeitszeit konnte nicht gespeichert werden.");
+    } finally {
+      setSaving(false);
     }
-
-    setDatum(heuteDatum());
-    setProjekt("");
-    setProjektId(null);
-    setBereich("");
-    setProjektBereiche([]);
-    setStunden("");
-    setVonZeit("");
-setBisZeit("");
-    setBearbeitenId(null);
-
-    if (alteDatumVorBearbeitung && alteDatumVorBearbeitung !== datum) {
-      await tagesabschlussAusBuchungenAktualisieren(user.id, alteDatumVorBearbeitung);
-    }
-
-    await tagesabschlussAusBuchungenAktualisieren(user.id, datum);
-    await ladeDaten();
-    setSaving(false);
   }
 
   async function zeitLoeschen(id: string | number) {
@@ -942,8 +961,8 @@ setBisZeit("");
     setBereich(zeit.bereich || "");
     ladeProjektBereicheById(id, zeit.bereich || "");
     setStunden(String(zeit.stunden || ""));
-    setVonZeit(zeit.startzeit ? String(zeit.startzeit).slice(0, 5) : "");
-    setBisZeit(zeit.endzeit ? String(zeit.endzeit).slice(0, 5) : "");
+    setVonZeit(String(zeit.startzeit || "").slice(0, 5));
+    setBisZeit(String(zeit.endzeit || "").slice(0, 5));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -1425,17 +1444,7 @@ setBisZeit("");
                                     </div>
 
                                     <div className="text-right">
-                                      <div className="text-lg font-black text-sky-200">
-                                        {(() => {
-                                          const tageszeit = tageszeiten.find((t) => t.datum === tag.datum);
-                                          const startAnzeige = zeit.startzeit || (zeit.projekt === "Betriebsunterhalt" ? tageszeit?.startzeit : null);
-                                          const endeAnzeige = zeit.endzeit || (zeit.projekt === "Betriebsunterhalt" ? tageszeit?.endzeit : null);
-
-                                          return startAnzeige && endeAnzeige
-                                            ? `${String(startAnzeige).slice(0, 5)} - ${String(endeAnzeige).slice(0, 5)}`
-                                            : "--:--";
-                                        })()}
-                                      </div>
+                                      <div className="text-lg font-black text-sky-200">{zeit.startzeit && zeit.endzeit ? `${zeit.startzeit.slice(0, 5)} - ${zeit.endzeit.slice(0, 5)}` : "--:--"}</div>
                                       <div className="text-sm text-white/50">{zeit.bereich || "Ohne Bereich"} · {formatStunden(Number(zeit.stunden || 0))}</div>
                                     </div>
                                   </div>
