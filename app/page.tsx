@@ -106,6 +106,34 @@ function getErsterTagDieserMonat() {
   return new Date(heute.getFullYear(), heute.getMonth(), 1);
 }
 
+function parseDatumLokal(wert?: string | null) {
+  if (!wert) return null;
+
+  const [jahr, monat, tag] = String(wert)
+    .slice(0, 10)
+    .split("-")
+    .map(Number);
+
+  if (!jahr || !monat || !tag) return null;
+
+  const datum = new Date(jahr, monat - 1, tag);
+  datum.setHours(0, 0, 0, 0);
+
+  return datum;
+}
+
+function maxStartDatum(startDatum: Date, grenze?: Date | null) {
+  const start = new Date(startDatum);
+  start.setHours(0, 0, 0, 0);
+
+  if (!grenze) return start;
+
+  const limit = new Date(grenze);
+  limit.setHours(0, 0, 0, 0);
+
+  return limit > start ? limit : start;
+}
+
 function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
   let tage = 0;
   const aktuell = new Date(startDatum);
@@ -168,7 +196,7 @@ export default function DashboardPage() {
 
     const { data: eigenerMitarbeiter, error: mitarbeiterError } = await supabase
       .from("mitarbeiter")
-      .select("wochenstunden, name, ueberstunden_start, eintrittsdatum")
+      .select("wochenstunden, name, ueberstunden_start, eintrittsdatum, zeiterfassung_ab")
       .eq("user_id", user.id)
       .single();
 
@@ -187,10 +215,25 @@ export default function DashboardPage() {
     const heute = formatDateLocal(heuteDate);
 
     const montagDate = getMontagDieserWoche();
-    const montag = formatDateLocal(montagDate);
-
     const monatsStartDate = getErsterTagDieserMonat();
-    const monatsStart = formatDateLocal(monatsStartDate);
+    const berechnungAb = String(
+      eigenerMitarbeiter?.zeiterfassung_ab ||
+        eigenerMitarbeiter?.eintrittsdatum ||
+        "",
+    ).slice(0, 10);
+
+    const berechnungAbDate = parseDatumLokal(berechnungAb);
+    const effektiverWochenStartDate = maxStartDatum(
+      montagDate,
+      berechnungAbDate,
+    );
+    const effektiverMonatsStartDate = maxStartDatum(
+      monatsStartDate,
+      berechnungAbDate,
+    );
+    const effektiverWochenStart = formatDateLocal(effektiverWochenStartDate);
+    const effektiverMonatsStart = formatDateLocal(effektiverMonatsStartDate);
+    const heuteVorBerechnung = !!berechnungAb && heute < berechnungAb;
 
     const wochenstunden = Number(eigenerMitarbeiter?.wochenstunden || 42.5);
     const ueberstundenStart = Number(
@@ -199,7 +242,11 @@ export default function DashboardPage() {
     const tagesSoll = wochenstunden / 5;
 
     const eigeneArbeitszeiten =
-      arbeitszeiten?.filter((item) => item.user_id === user.id) || [];
+      arbeitszeiten?.filter(
+        (item) =>
+          item.user_id === user.id &&
+          (!berechnungAb || !item.datum || item.datum >= berechnungAb),
+      ) || [];
 
     const eigeneAbwesenheiten =
       urlaub?.filter((item) => item.user_id === user.id) || [];
@@ -235,11 +282,11 @@ export default function DashboardPage() {
     const heuteWochentag = heuteDate.getDay();
     const istWochenende = heuteWochentag === 0 || heuteWochentag === 6;
     const heuteIstFeiertag = istFeiertagSG(heuteDate);
-    const heuteSoll = istWochenende || heuteIstFeiertag ? 0 : tagesSoll;
+    const heuteSoll = istWochenende || heuteIstFeiertag || heuteVorBerechnung ? 0 : tagesSoll;
     const heuteDifferenz = heuteIst - heuteSoll;
 
     const eigeneZeitenWoche = eigeneArbeitszeiten.filter(
-      (item) => item.datum >= montag && item.datum <= heute,
+      (item) => item.datum >= effektiverWochenStart && item.datum <= heute,
     );
 
     const wocheBrutto = eigeneZeitenWoche.reduce(
@@ -247,13 +294,17 @@ export default function DashboardPage() {
       0,
     );
 
-    const wocheIst = wocheBrutto - pausenFuerZeitraum(montag, heute);
-    const wocheTage = zaehleArbeitstage(montagDate, heuteDate);
+    const wocheIst =
+      wocheBrutto - pausenFuerZeitraum(effektiverWochenStart, heute);
+    const wocheTage =
+      effektiverWochenStart > heute
+        ? 0
+        : zaehleArbeitstage(effektiverWochenStartDate, heuteDate);
     const wocheSoll = tagesSoll * wocheTage;
     const wocheDifferenz = wocheIst - wocheSoll;
 
     const eigeneZeitenMonat = eigeneArbeitszeiten.filter(
-      (item) => item.datum >= monatsStart && item.datum <= heute,
+      (item) => item.datum >= effektiverMonatsStart && item.datum <= heute,
     );
 
     const monatBrutto = eigeneZeitenMonat.reduce(
@@ -261,8 +312,12 @@ export default function DashboardPage() {
       0,
     );
 
-    const monatIst = monatBrutto - pausenFuerZeitraum(monatsStart, heute);
-    const monatTage = zaehleArbeitstage(monatsStartDate, heuteDate);
+    const monatIst =
+      monatBrutto - pausenFuerZeitraum(effektiverMonatsStart, heute);
+    const monatTage =
+      effektiverMonatsStart > heute
+        ? 0
+        : zaehleArbeitstage(effektiverMonatsStartDate, heuteDate);
     const monatSoll = tagesSoll * monatTage;
 
     const urlaubstageMonat = eigeneAbwesenheiten
@@ -270,8 +325,8 @@ export default function DashboardPage() {
         (eintrag) =>
           eintrag.typ === "Urlaub" &&
           eintrag.status === "Genehmigt" &&
-          eintrag.von >= monatsStart &&
-          eintrag.bis <= heute,
+          eintrag.bis >= effektiverMonatsStart &&
+          eintrag.von <= heute,
       )
       .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
@@ -279,8 +334,8 @@ export default function DashboardPage() {
       .filter(
         (eintrag) =>
           eintrag.typ === "Krank" &&
-          eintrag.von >= monatsStart &&
-          eintrag.bis <= heute,
+          eintrag.bis >= effektiverMonatsStart &&
+          eintrag.von <= heute,
       )
       .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
 
@@ -289,8 +344,8 @@ export default function DashboardPage() {
         (eintrag) =>
           eintrag.typ === "Überstundenabbau" &&
           eintrag.status === "Genehmigt" &&
-          eintrag.von >= monatsStart &&
-          eintrag.bis <= heute,
+          eintrag.bis >= effektiverMonatsStart &&
+          eintrag.von <= heute,
       )
       .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
 
@@ -303,7 +358,15 @@ export default function DashboardPage() {
     const gesamtUeberstunden =
       ueberstundenStart + monatDifferenz - ueberstundenAbbauStundenMonat;
 
-    const lastTime = eigeneArbeitszeiten[eigeneArbeitszeiten.length - 1];
+    const lastTime = [...eigeneArbeitszeiten].sort((a, b) => {
+      const datumVergleich = String(b.datum || "").localeCompare(
+        String(a.datum || ""),
+      );
+
+      if (datumVergleich !== 0) return datumVergleich;
+
+      return Number(b.id || 0) - Number(a.id || 0);
+    })[0];
 
     setStats({
       projekte: projekte?.length || 0,
