@@ -463,6 +463,10 @@ function BrandLogo({ small = false }: { small?: boolean }) {
   </span>
 </div>
 
+        <div className="mt-2 text-center text-[10px] font-black uppercase tracking-[0.24em] text-sky-100/55">
+          DESIGN NACH MASS
+        </div>
+
         <div className="mt-3 text-center text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
           Powered by ODZ.
         </div>
