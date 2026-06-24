@@ -47,6 +47,10 @@ const [freigabeSeite, setFreigabeSeite] = useState(1);
   const [mitarbeiterProbezeitBis, setMitarbeiterProbezeitBis] = useState("");
   const [mitarbeiterAustrittsdatum, setMitarbeiterAustrittsdatum] = useState("");
   const [mitarbeiterZeiterfassungAb, setMitarbeiterZeiterfassungAb] = useState("");
+  const [mitarbeiterArbeitsmodell, setMitarbeiterArbeitsmodell] = useState("100");
+  const [mitarbeiterPensumProzent, setMitarbeiterPensumProzent] = useState("100");
+  const [mitarbeiterArbeitstageProWoche, setMitarbeiterArbeitstageProWoche] = useState("5");
+  const [mitarbeiterFreierWochentag, setMitarbeiterFreierWochentag] = useState("");
 
 const monat = new Date().toISOString().slice(0, 7);
 
@@ -146,6 +150,80 @@ const monat = new Date().toISOString().slice(0, 7);
     if (minuten === 0) return `${prefix}${stunden} h`;
 
     return `${prefix}${stunden} h ${minuten} min`;
+  }
+
+  const wochentagNamen = [
+    "Sonntag",
+    "Montag",
+    "Dienstag",
+    "Mittwoch",
+    "Donnerstag",
+    "Freitag",
+    "Samstag",
+  ];
+
+  function arbeitsmodellSetzen(modell: string) {
+    setMitarbeiterArbeitsmodell(modell);
+
+    if (modell === "100") {
+      setMitarbeiterPensumProzent("100");
+      setMitarbeiterWochenstunden("42.5");
+      setMitarbeiterArbeitstageProWoche("5");
+      setMitarbeiterFreierWochentag("");
+      return;
+    }
+
+    if (modell === "80") {
+      setMitarbeiterPensumProzent("80");
+      setMitarbeiterWochenstunden("34");
+      setMitarbeiterArbeitstageProWoche("4");
+      setMitarbeiterFreierWochentag((aktuell) => aktuell || "Freitag");
+      return;
+    }
+
+    setMitarbeiterPensumProzent("");
+  }
+
+  function arbeitsmodellAusPerson(person: any) {
+    const wochenstunden = Number(person?.wochenstunden || 0);
+    const arbeitstage = Number(
+      person?.arbeitstage_pro_woche || (wochenstunden === 34 ? 4 : 5)
+    );
+    const pensum = Number(
+      person?.pensum_prozent || (wochenstunden === 34 && arbeitstage === 4 ? 80 : 100)
+    );
+
+    if (pensum === 100 && wochenstunden === 42.5 && arbeitstage === 5) return "100";
+    if (pensum === 80 && wochenstunden === 34 && arbeitstage === 4) return "80";
+
+    return "manuell";
+  }
+
+  function normalisiereArbeitstageProWoche(person: any) {
+    const ausDb = Number(person?.arbeitstage_pro_woche || 0);
+    if (ausDb > 0) return ausDb;
+
+    const wochenstunden = Number(person?.wochenstunden || 0);
+    if (wochenstunden === 34) return 4;
+
+    return 5;
+  }
+
+  function normalisiereFreierWochentag(person: any) {
+    const wert = String(person?.freier_wochentag || "").trim();
+    if (wert) return wert;
+
+    const arbeitstageProWoche = normalisiereArbeitstageProWoche(person);
+    if (arbeitstageProWoche === 4) return "Freitag";
+
+    return "";
+  }
+
+  function istFreierWochentag(datum: Date, freierWochentag?: string | null) {
+    const freierTag = String(freierWochentag || "").trim();
+    if (!freierTag) return false;
+
+    return wochentagNamen[datum.getDay()] === freierTag;
   }
 
   useEffect(() => {
@@ -303,7 +381,7 @@ const monat = new Date().toISOString().slice(0, 7);
     return new Date(jahr, monatWert - 1, tag);
   }
 
-  function berechneArbeitstageAbDatum(startDatum?: string | null) {
+  function berechneArbeitstageAbDatum(startDatum?: string | null, freierWochentag?: string | null) {
     const jahr = Number(monat.slice(0, 4));
     const monatNummer = Number(monat.slice(5, 7));
 
@@ -322,8 +400,9 @@ const monat = new Date().toISOString().slice(0, 7);
       const wochentag = datum.getDay();
       const istWochenende = wochentag === 0 || wochentag === 6;
       const istFeiertag = istFeiertagSG(datum);
+      const istFreierTag = istFreierWochentag(datum, freierWochentag);
 
-      if (!istWochenende && !istFeiertag) arbeitstage++;
+      if (!istWochenende && !istFeiertag && !istFreierTag) arbeitstage++;
     }
 
     return arbeitstage;
@@ -431,9 +510,14 @@ const iststunden = bruttoStunden - pauseStunden;
       )
       .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
 
-    const tagesSoll = Number(person.wochenstunden || 0) / 5;
+    const arbeitstageProWoche = normalisiereArbeitstageProWoche(person);
+    const freierWochentag = normalisiereFreierWochentag(person);
+    const tagesSoll = Number(person.wochenstunden || 0) / arbeitstageProWoche;
 
-    const personArbeitstage = berechneArbeitstageAbDatum(berechnungAb || undefined);
+    const personArbeitstage = berechneArbeitstageAbDatum(
+      berechnungAb || undefined,
+      freierWochentag
+    );
 
     const sollstunden = tagesSoll * personArbeitstage;
     const urlaubStunden = urlaubstagePerson * tagesSoll;
@@ -459,6 +543,8 @@ const gesamtUeberstunden =
   kranktagePerson,
   ueberstundenAbbauStunden,
   personArbeitstage,
+  arbeitstageProWoche,
+  freierWochentag,
   berechnungAb,
 };
 
@@ -767,6 +853,10 @@ function mitarbeiterFormZuruecksetzen() {
   setMitarbeiterProbezeitBis("");
   setMitarbeiterAustrittsdatum("");
   setMitarbeiterZeiterfassungAb("");
+  setMitarbeiterArbeitsmodell("100");
+  setMitarbeiterPensumProzent("100");
+  setMitarbeiterArbeitstageProWoche("5");
+  setMitarbeiterFreierWochentag("");
 }
 
 function mitarbeiterZumBearbeitenLaden(person: any) {
@@ -785,6 +875,16 @@ function mitarbeiterZumBearbeitenLaden(person: any) {
   setMitarbeiterProbezeitBis(formatDatumInput(person.probezeit_bis));
   setMitarbeiterAustrittsdatum(formatDatumInput(person.austrittsdatum));
   setMitarbeiterZeiterfassungAb(formatDatumInput(person.zeiterfassung_ab));
+
+  const arbeitstageProWoche = normalisiereArbeitstageProWoche(person);
+  const pensumProzent = Number(
+    person.pensum_prozent || (Number(person.wochenstunden || 0) === 34 ? 80 : 100)
+  );
+
+  setMitarbeiterArbeitsmodell(arbeitsmodellAusPerson(person));
+  setMitarbeiterPensumProzent(String(pensumProzent));
+  setMitarbeiterArbeitstageProWoche(String(arbeitstageProWoche));
+  setMitarbeiterFreierWochentag(normalisiereFreierWochentag(person));
   setMeldung("Mitarbeiter ist im Bearbeitungsmodus.");
 }
 
@@ -806,6 +906,9 @@ async function mitarbeiterSpeichern() {
       name: mitarbeiterName.trim(),
       rolle: mitarbeiterRolle,
       wochenstunden: Number(mitarbeiterWochenstunden || 0),
+      pensum_prozent: Number(mitarbeiterPensumProzent || 0) || null,
+      arbeitstage_pro_woche: Number(mitarbeiterArbeitstageProWoche || 0) || 5,
+      freier_wochentag: Number(mitarbeiterArbeitstageProWoche || 0) === 4 ? mitarbeiterFreierWochentag || "Freitag" : null,
       ferienwochen: Number(mitarbeiterFerienwochen || 0),
       urlaubstage: Number(mitarbeiterUrlaubstage || 0),
       vertragsart: mitarbeiterVertragsart,
@@ -857,6 +960,9 @@ async function mitarbeiterSpeichern() {
     passwort: mitarbeiterPasswort,
     rolle: mitarbeiterRolle,
     wochenstunden: Number(mitarbeiterWochenstunden || 0),
+    pensum_prozent: Number(mitarbeiterPensumProzent || 0) || null,
+    arbeitstage_pro_woche: Number(mitarbeiterArbeitstageProWoche || 0) || 5,
+    freier_wochentag: Number(mitarbeiterArbeitstageProWoche || 0) === 4 ? mitarbeiterFreierWochentag || "Freitag" : null,
     ferienwochen: Number(mitarbeiterFerienwochen || 0),
     urlaubstage: Number(mitarbeiterUrlaubstage || 0),
     vertragsart: mitarbeiterVertragsart,
@@ -882,17 +988,25 @@ async function mitarbeiterSpeichern() {
     return;
   }
 
-  if (result?.mitarbeiter?.id && mitarbeiterZeiterfassungAb) {
-    const { error: zeiterfassungError } = await supabase
+  if (result?.mitarbeiter?.id) {
+    const { error: modellError } = await supabase
       .from("mitarbeiter")
-      .update({ zeiterfassung_ab: mitarbeiterZeiterfassungAb })
+      .update({
+        zeiterfassung_ab: mitarbeiterZeiterfassungAb || null,
+        pensum_prozent: Number(mitarbeiterPensumProzent || 0) || null,
+        arbeitstage_pro_woche: Number(mitarbeiterArbeitstageProWoche || 0) || 5,
+        freier_wochentag:
+          Number(mitarbeiterArbeitstageProWoche || 0) === 4
+            ? mitarbeiterFreierWochentag || "Freitag"
+            : null,
+      })
       .eq("id", result.mitarbeiter.id);
 
-    if (zeiterfassungError) {
+    if (modellError) {
       setMeldung(
-        `Mitarbeiter wurde erstellt, aber "Zeiterfassung ab" konnte nicht gespeichert werden: ${zeiterfassungError.message}`
+        `Mitarbeiter wurde erstellt, aber Arbeitsmodell/Zeiterfassung ab konnte nicht gespeichert werden: ${modellError.message}`
       );
-      console.log(zeiterfassungError);
+      console.log(modellError);
       return;
     }
   }
@@ -1511,7 +1625,7 @@ const systemStatus =
               </label>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-5">
+            <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-6">
               <label className="block">
                 <span className="text-sm font-black text-white/65">Rolle</span>
                 <select
@@ -1528,10 +1642,26 @@ const systemStatus =
               </label>
 
               <label className="block">
+                <span className="text-sm font-black text-white/65">Arbeitsmodell</span>
+                <select
+                  value={mitarbeiterArbeitsmodell}
+                  onChange={(event) => arbeitsmodellSetzen(event.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                >
+                  <option value="100">100% · 42.5h · 5 Tage</option>
+                  <option value="80">80% · 34h · 4 Tage</option>
+                  <option value="manuell">Manuell</option>
+                </select>
+              </label>
+
+              <label className="block">
                 <span className="text-sm font-black text-white/65">Wochenstunden</span>
                 <input
                   value={mitarbeiterWochenstunden}
-                  onChange={(event) => setMitarbeiterWochenstunden(event.target.value)}
+                  onChange={(event) => {
+                    setMitarbeiterWochenstunden(event.target.value);
+                    setMitarbeiterArbeitsmodell("manuell");
+                  }}
                   inputMode="decimal"
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
                 />
@@ -1569,6 +1699,54 @@ const systemStatus =
                   <option value="Temporär">Temporär</option>
                   <option value="Aushilfe">Aushilfe</option>
                 </select>
+              </label>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Pensum %</span>
+                <input
+                  value={mitarbeiterPensumProzent}
+                  onChange={(event) => {
+                    setMitarbeiterPensumProzent(event.target.value);
+                    setMitarbeiterArbeitsmodell("manuell");
+                  }}
+                  inputMode="decimal"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Arbeitstage / Woche</span>
+                <input
+                  value={mitarbeiterArbeitstageProWoche}
+                  onChange={(event) => {
+                    setMitarbeiterArbeitstageProWoche(event.target.value);
+                    setMitarbeiterArbeitsmodell("manuell");
+                  }}
+                  inputMode="decimal"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-white/65">Freier Wochentag</span>
+                <select
+                  value={mitarbeiterFreierWochentag}
+                  onChange={(event) => setMitarbeiterFreierWochentag(event.target.value)}
+                  disabled={Number(mitarbeiterArbeitstageProWoche || 0) !== 4}
+                  className={`mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40 ${Number(mitarbeiterArbeitstageProWoche || 0) !== 4 ? "cursor-not-allowed opacity-50" : ""}`}
+                >
+                  <option value="">Kein freier Tag</option>
+                  <option value="Montag">Montag</option>
+                  <option value="Dienstag">Dienstag</option>
+                  <option value="Mittwoch">Mittwoch</option>
+                  <option value="Donnerstag">Donnerstag</option>
+                  <option value="Freitag">Freitag</option>
+                </select>
+                <p className="mt-2 text-xs font-bold text-white/40">
+                  Bei 80% zählt der freie Tag nicht als Minuszeit.
+                </p>
               </label>
             </div>
 
@@ -1683,7 +1861,11 @@ const systemStatus =
                             {person.name}
                           </div>
                           <div className="mt-1 text-sm text-white/45">
-                            {person.rolle || "Mitarbeiter"} · {Number(person.wochenstunden || 0)} h/Woche
+                            {person.rolle || "Mitarbeiter"} · {Number(person.pensum_prozent || (Number(person.wochenstunden || 0) === 34 ? 80 : 100))}% · {Number(person.wochenstunden || 0)} h/Woche
+                          </div>
+                          <div className="mt-1 text-xs font-bold text-white/35">
+                            {normalisiereArbeitstageProWoche(person)} Tage/Woche
+                            {normalisiereFreierWochentag(person) ? ` · frei ${normalisiereFreierWochentag(person)}` : ""}
                           </div>
                           <div className="mt-1 text-xs font-bold text-white/35">
                             Zeiterfassung ab: {formatDatumInput(person.zeiterfassung_ab) || "Eintrittsdatum"}
