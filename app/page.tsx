@@ -134,7 +134,46 @@ function maxStartDatum(startDatum: Date, grenze?: Date | null) {
   return limit > start ? limit : start;
 }
 
-function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
+function wochentagZuNummer(wert?: string | null) {
+  const normalisiert = String(wert || "")
+    .trim()
+    .toLowerCase();
+
+  const map: Record<string, number> = {
+    montag: 1,
+    mo: 1,
+    dienstag: 2,
+    di: 2,
+    mittwoch: 3,
+    mi: 3,
+    donnerstag: 4,
+    do: 4,
+    freitag: 5,
+    fr: 5,
+  };
+
+  return map[normalisiert] ?? null;
+}
+
+function freieWochentageFuerMitarbeiter(mitarbeiter: any) {
+  const arbeitstageProWoche = Number(mitarbeiter?.arbeitstage_pro_woche || 5);
+  const pensum = Number(mitarbeiter?.pensum_prozent || 100);
+  const freierTag = wochentagZuNummer(mitarbeiter?.freier_wochentag);
+
+  if (freierTag) return [freierTag];
+
+  // Schweizer Standard in StahlFabrik: 80% = 4 Tage à 8.5h.
+  // Falls noch kein freier Tag gespeichert ist, nehmen wir Freitag als sichere Vorgabe.
+  if (arbeitstageProWoche === 4 || pensum === 80) return [5];
+
+  return [];
+}
+
+function zaehleArbeitstage(
+  startDatum: Date,
+  endDatum: Date,
+  freieWochentage: number[] = []
+) {
   let tage = 0;
   const aktuell = new Date(startDatum);
   aktuell.setHours(0, 0, 0, 0);
@@ -145,9 +184,10 @@ function zaehleArbeitstage(startDatum: Date, endDatum: Date) {
   while (aktuell <= ende) {
     const wochentag = aktuell.getDay();
     const istWochenende = wochentag === 0 || wochentag === 6;
+    const istFreierTag = freieWochentage.includes(wochentag);
     const istFeiertag = istFeiertagSG(aktuell);
 
-    if (!istWochenende && !istFeiertag) {
+    if (!istWochenende && !istFreierTag && !istFeiertag) {
       tage++;
     }
 
@@ -196,7 +236,7 @@ export default function DashboardPage() {
 
     const { data: eigenerMitarbeiter, error: mitarbeiterError } = await supabase
       .from("mitarbeiter")
-      .select("wochenstunden, name, ueberstunden_start, eintrittsdatum, zeiterfassung_ab")
+      .select("wochenstunden, name, ueberstunden_start, eintrittsdatum, zeiterfassung_ab, pensum_prozent, arbeitstage_pro_woche, freier_wochentag")
       .eq("user_id", user.id)
       .single();
 
@@ -236,10 +276,15 @@ export default function DashboardPage() {
     const heuteVorBerechnung = !!berechnungAb && heute < berechnungAb;
 
     const wochenstunden = Number(eigenerMitarbeiter?.wochenstunden || 42.5);
+    const arbeitstageProWoche = Math.max(
+      1,
+      Number(eigenerMitarbeiter?.arbeitstage_pro_woche || 5),
+    );
+    const freieWochentage = freieWochentageFuerMitarbeiter(eigenerMitarbeiter);
     const ueberstundenStart = Number(
       eigenerMitarbeiter?.ueberstunden_start || 0,
     );
-    const tagesSoll = wochenstunden / 5;
+    const tagesSoll = wochenstunden / arbeitstageProWoche;
 
     const eigeneArbeitszeiten =
       arbeitszeiten?.filter(
@@ -282,7 +327,11 @@ export default function DashboardPage() {
     const heuteWochentag = heuteDate.getDay();
     const istWochenende = heuteWochentag === 0 || heuteWochentag === 6;
     const heuteIstFeiertag = istFeiertagSG(heuteDate);
-    const heuteSoll = istWochenende || heuteIstFeiertag || heuteVorBerechnung ? 0 : tagesSoll;
+    const heuteIstFreierTag = freieWochentage.includes(heuteWochentag);
+    const heuteSoll =
+      istWochenende || heuteIstFeiertag || heuteIstFreierTag || heuteVorBerechnung
+        ? 0
+        : tagesSoll;
     const heuteDifferenz = heuteIst - heuteSoll;
 
     const eigeneZeitenWoche = eigeneArbeitszeiten.filter(
@@ -299,7 +348,7 @@ export default function DashboardPage() {
     const wocheTage =
       effektiverWochenStart > heute
         ? 0
-        : zaehleArbeitstage(effektiverWochenStartDate, heuteDate);
+        : zaehleArbeitstage(effektiverWochenStartDate, heuteDate, freieWochentage);
     const wocheSoll = tagesSoll * wocheTage;
     const wocheDifferenz = wocheIst - wocheSoll;
 
@@ -317,7 +366,7 @@ export default function DashboardPage() {
     const monatTage =
       effektiverMonatsStart > heute
         ? 0
-        : zaehleArbeitstage(effektiverMonatsStartDate, heuteDate);
+        : zaehleArbeitstage(effektiverMonatsStartDate, heuteDate, freieWochentage);
     const monatSoll = tagesSoll * monatTage;
 
     const urlaubstageMonat = eigeneAbwesenheiten
