@@ -29,9 +29,12 @@ const [freigabeSeite, setFreigabeSeite] = useState(1);
   const [projektBearbeitenId, setProjektBearbeitenId] = useState<string | number | null>(null);
   const [projektBereichMap, setProjektBereichMap] = useState<Record<string, string[]>>({});
 
-  const [verwaltungsModus, setVerwaltungsModus] = useState<"projekt" | "mitarbeiter">("projekt");
+  const [verwaltungsModus, setVerwaltungsModus] = useState<"projekt" | "mitarbeiter" | "termine">("projekt");
   const [abwesenheitOffen, setAbwesenheitOffen] = useState(false);
   const [auswertungOffen, setAuswertungOffen] = useState(false);
+  const [teamKennzahlenOffen, setTeamKennzahlenOffen] = useState(false);
+  const [teamStatusOffen, setTeamStatusOffen] = useState(false);
+  const [teamPerformanceOffen, setTeamPerformanceOffen] = useState(false);
   const [projektUebersichtOffen, setProjektUebersichtOffen] = useState(false);
   const [teamDetailsOffenId, setTeamDetailsOffenId] = useState<string | number | null>(null);
   const [mitarbeiterName, setMitarbeiterName] = useState("");
@@ -1254,7 +1257,7 @@ const teamStatus = mitarbeiter.map((person) => {
       name: person.name,
       rolle: person.rolle,
       status: "Zur Prüfung",
-      farbe: "text-slate-200",
+      farbe: "text-orange-800",
       punkt: "bg-slate-300",
     };
   }
@@ -1273,10 +1276,18 @@ const systemStatus =
     ? "Prüfung erforderlich"
     : "Alles im grünen Bereich";
 
+function springeZu(id: string) {
+  window.setTimeout(() => {
+    document
+      .getElementById(id)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 60);
+}
+
   if (!zugriffGeprueft || loading) {
     return (
-      <main className="flex min-h-[60vh] items-center justify-center text-slate-100">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-5 font-black shadow-2xl shadow-black/30">
+      <main className="flex min-h-[60vh] items-center justify-center text-slate-950">
+        <div className="rounded-3xl border border-white/70 bg-white/75 px-6 py-5 font-black shadow-[0_22px_60px_rgba(15,23,42,0.12)] backdrop-blur-2xl">
           Zugriff wird geprüft...
         </div>
       </main>
@@ -1285,8 +1296,8 @@ const systemStatus =
 
   if (!istAdmin) {
     return (
-      <main className="flex min-h-[60vh] items-center justify-center text-slate-100">
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-6 py-5 font-black text-red-300 shadow-2xl shadow-black/30">
+      <main className="flex min-h-[60vh] items-center justify-center text-slate-950">
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-6 py-5 font-black text-red-300 shadow-2xl shadow-slate-900/10">
           Kein Zugriff auf den Chefbereich.
         </div>
       </main>
@@ -1294,24 +1305,24 @@ const systemStatus =
   }
 
   return (
-    <main className="space-y-8 text-slate-100">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
+    <main className="chef-dashboard-v12 space-y-6 text-slate-950">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/60 bg-gradient-to-br from-[#302720]/90 via-[#26272a]/90 to-[#161719]/95 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.16)] lg:p-7">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.46]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
             style={{
               backgroundImage: "url('/berg.png')",
-              filter: "brightness(1.65) contrast(1.05)",
+              filter: "brightness(1.45) contrast(1.04) saturate(0.92)",
             }}
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#1a1512]/90 via-[#26231f]/60 to-[#f4eee5]/10" />
 
         <div className="relative z-10 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
           <div>
-            <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
-              ODZ SILVER · Chef Dashboard
+            <div className="inline-flex rounded-full border border-orange-200/30 bg-orange-300/20 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-orange-100">
+              ODZ V1.2 · Chef Dashboard
             </div>
 
 
@@ -1319,7 +1330,7 @@ const systemStatus =
               STAHLFABRIK
             </h1>
 
-            <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-white/65 sm:text-base">
+            <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-white/70 sm:text-base">
               Premium Betriebssystem für Zeit, Projekte, Team und Kontrolle.
             </p>
 
@@ -1332,79 +1343,100 @@ const systemStatus =
           </div>
 
           <div className="grid grid-cols-3 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-3">
-            <HeroMini label="Offen" value={offeneTage} orange={offeneTage > 0} />
-            <HeroMini label="Prüfung" value={abgeschlosseneTage} orange={abgeschlosseneTage > 0} />
-            <HeroMini label="Geprüft" value={gepruefteTage} green={gepruefteTage > 0} />
+            <HeroMini label="Offen" value={offeneTage} orange={offeneTage > 0} dark />
+            <HeroMini label="Prüfung" value={abgeschlosseneTage} orange={abgeschlosseneTage > 0} dark />
+            <HeroMini label="Geprüft" value={gepruefteTage} green={gepruefteTage > 0} dark />
           </div>
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <a
-          href="#kommandozentrale"
-          onClick={() => setVerwaltungsModus("projekt")}
-          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-white transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
-        >
-          <div className="text-sm text-white/50">Projekt</div>
-          <div className="mt-2 text-lg font-black text-white">
-            🏗️ Neues Projekt
-          </div>
-        </a>
+      <section className="overflow-x-auto rounded-[1.5rem] border border-white/60 bg-white/35 p-2 shadow-[0_14px_44px_rgba(15,23,42,0.06)] backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex min-w-max items-center gap-2">
+          <QuickDropdownButton
+            eyebrow="Projekt"
+            label="🏗️ Neu"
+            onClick={() => {
+              setVerwaltungsModus("projekt");
+              springeZu("kommandozentrale");
+            }}
+          />
 
-        <a
-          href="#kommandozentrale"
-          onClick={() => setVerwaltungsModus("mitarbeiter")}
-          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
-        >
-          <div className="text-sm text-white/50">Team</div>
-          <div className="mt-2 text-lg font-black text-white">
-            👤 Mitarbeiter
-          </div>
-        </a>
+          <QuickDropdownButton
+            eyebrow="Team"
+            label="👤 Mitarbeiter"
+            onClick={() => {
+              setVerwaltungsModus("mitarbeiter");
+              springeZu("kommandozentrale");
+            }}
+          />
 
-        <a
-          href="#abwesenheit"
-          onClick={() => setAbwesenheitOffen(true)}
-          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
-        >
-          <div className="text-sm text-white/50">Abwesenheit</div>
-          <div className="mt-2 text-lg font-black text-white">
-            📅 Urlaub
-          </div>
-        </a>
+          <QuickDropdownButton
+            eyebrow="Kalender"
+            label="🗓️ Termine"
+            onClick={() => {
+              setVerwaltungsModus("termine");
+              springeZu("kommandozentrale");
+            }}
+          />
 
-        <a
-          href="#auswertung"
-          onClick={() => setAuswertungOffen(true)}
-          className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
-        >
-          <div className="text-sm text-white/50">Auswertung</div>
-          <div className="mt-2 text-lg font-black text-white">
-            📊 Statistik
-          </div>
-        </a>
+          <QuickDropdownButton
+            eyebrow="Zeitkonto"
+            label="📈 Team"
+            onClick={() => {
+              setTeamKennzahlenOffen(true);
+              springeZu("team-kennzahlen");
+            }}
+          />
+
+          <QuickDropdownButton
+            eyebrow="Abwesenheit"
+            label="📅 Urlaub"
+            onClick={() => {
+              setAbwesenheitOffen(true);
+              springeZu("abwesenheit");
+            }}
+          />
+
+          <QuickDropdownButton
+            eyebrow="Auswertung"
+            label="📊 Statistik"
+            onClick={() => {
+              setAuswertungOffen(true);
+              springeZu("auswertung");
+            }}
+          />
+
+          <QuickDropdownButton
+            eyebrow="Projekte"
+            label="▣ Übersicht"
+            onClick={() => {
+              setProjektUebersichtOffen(true);
+              springeZu("projektuebersicht");
+            }}
+          />
+        </div>
       </section>
 
       {meldung && (
-        <div className="rounded-xl border border-slate-200/20 bg-slate-200/10 p-4 text-sm font-bold text-slate-100">
+        <div className="rounded-xl border border-orange-200/40 bg-orange-100/60 p-4 text-sm font-bold text-slate-950">
           {meldung}
         </div>
       )}
 
       <section
         id="kommandozentrale"
-        className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-7"
+        className="rounded-[2rem] border border-white/70 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-white/40 p-6 shadow-2xl shadow-slate-900/10 lg:p-7"
       >
         <div className="mb-7 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
-            <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">
+            <div className="text-xs font-black uppercase tracking-[0.24em] text-orange-800">
               Kommandozentrale
             </div>
-            <h2 className="mt-2 text-2xl font-black text-white">
+            <h2 className="mt-2 text-2xl font-black text-slate-950">
               Verwaltung direkt im Chef Dashboard
             </h2>
-            <p className="mt-1 text-white/55">
-              Projekte und Mitarbeiter werden zentral hier angelegt. So bleibt der Chef im Dashboard.
+            <p className="mt-1 text-slate-500">
+              Projekte, Mitarbeiter und Termine werden zentral hier gesteuert. So bleibt der Chef im Dashboard.
             </p>
           </div>
 
@@ -1416,27 +1448,15 @@ const systemStatus =
           </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-          <label className="block">
-            <span className="text-sm font-black text-white/65">Was möchtest du verwalten?</span>
-            <select
-              value={verwaltungsModus}
-              onChange={(event) => setVerwaltungsModus(event.target.value as "projekt" | "mitarbeiter")}
-              className="mt-2 w-full rounded-2xl border border-slate-200/25 bg-slate-200/10 px-4 py-4 font-black text-slate-100 outline-none transition focus:border-slate-200/50 focus:bg-slate-200/15"
-            >
-              <option value="projekt">🏗️ Projekt erstellen / bearbeiten</option>
-              <option value="mitarbeiter">👤 Mitarbeiter erstellen / bearbeiten</option>
-            </select>
-          </label>
-
-          <div className="grid grid-cols-2 gap-3">
+        <div className="mb-6">
+          <div className="grid grid-cols-3 gap-3">
             <button
               type="button"
               onClick={() => setVerwaltungsModus("projekt")}
               className={`rounded-2xl border px-5 py-4 font-black transition-all duration-300 hover:-translate-y-1 ${
                 verwaltungsModus === "projekt"
-                  ? "border-slate-200/40 bg-slate-200/10 text-slate-100 shadow-lg shadow-slate-200/10"
-                  : "border-white/10 bg-white/[0.03] text-white/55 hover:border-sky-300/25 hover:bg-sky-300/5 hover:text-slate-100"
+                  ? "border-orange-300/50 bg-orange-100/60 text-slate-950 shadow-lg shadow-orange-900/10"
+                  : "border-white/70 bg-white/50 text-slate-500 hover:border-orange-300/25 hover:bg-orange-300/5 hover:text-slate-950"
               }`}
             >
               🏗️ Projekt
@@ -1447,11 +1467,23 @@ const systemStatus =
               onClick={() => setVerwaltungsModus("mitarbeiter")}
               className={`rounded-2xl border px-5 py-4 font-black transition-all duration-300 hover:-translate-y-1 ${
                 verwaltungsModus === "mitarbeiter"
-                  ? "border-slate-200/40 bg-slate-200/10 text-slate-100 shadow-lg shadow-slate-200/10"
-                  : "border-white/10 bg-white/[0.03] text-white/55 hover:border-sky-300/25 hover:bg-sky-300/5 hover:text-sky-200"
+                  ? "border-orange-300/50 bg-orange-100/60 text-slate-950 shadow-lg shadow-orange-900/10"
+                  : "border-white/70 bg-white/50 text-slate-500 hover:border-orange-300/25 hover:bg-orange-300/5 hover:text-orange-700"
               }`}
             >
               👤 Mitarbeiter
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setVerwaltungsModus("termine")}
+              className={`rounded-2xl border px-5 py-4 font-black transition-all duration-300 hover:-translate-y-1 ${
+                verwaltungsModus === "termine"
+                  ? "border-orange-300/50 bg-orange-100/60 text-slate-950 shadow-lg shadow-orange-900/10"
+                  : "border-white/70 bg-white/50 text-slate-500 hover:border-orange-300/25 hover:bg-orange-300/5 hover:text-orange-700"
+              }`}
+            >
+              🗓️ Termine
             </button>
           </div>
         </div>
@@ -1460,41 +1492,41 @@ const systemStatus =
           <>
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
               <label className="block">
-                <span className="text-sm font-black text-white/65">Kunde</span>
+                <span className="text-sm font-black text-slate-600">Kunde</span>
                 <input
                   value={projektKunde}
                   onChange={(event) => setProjektKunde(event.target.value)}
                   placeholder="z.B. Firma"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-slate-200/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300/50 focus:bg-white/80"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Kommission</span>
+                <span className="text-sm font-black text-slate-600">Kommission</span>
                 <input
                   value={projektKommission}
                   onChange={(event) => setProjektKommission(event.target.value)}
                   placeholder="z.B. Baustelle"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-slate-200/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300/50 focus:bg-white/80"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Projektname</span>
+                <span className="text-sm font-black text-slate-600">Projektname</span>
                 <input
                   value={projektName}
                   onChange={(event) => setProjektName(event.target.value)}
                   placeholder="z.B. Geländer Müller"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-slate-200/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300/50 focus:bg-white/80"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Status</span>
+                <span className="text-sm font-black text-slate-600">Status</span>
                 <select
                   value={projektStatus}
                   onChange={(event) => setProjektStatus(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-slate-200/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/50 focus:bg-white/80"
                 >
                   <option value="Aktiv">Aktiv</option>
                   <option value="Pausiert">Pausiert</option>
@@ -1503,9 +1535,9 @@ const systemStatus =
               </label>
             </div>
 
-            <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-5">
-              <div className="text-lg font-black text-white">Erlaubte Bereiche</div>
-              <p className="mt-1 text-sm text-white/50">
+            <div className="mt-6 rounded-2xl border border-white/70 bg-white/50 p-5">
+              <div className="text-lg font-black text-slate-950">Erlaubte Bereiche</div>
+              <p className="mt-1 text-sm text-slate-500">
                 Diese Bereiche erscheinen später in der Zeiterfassung für dieses Projekt.
               </p>
 
@@ -1520,8 +1552,8 @@ const systemStatus =
                       onClick={() => toggleProjektBereich(bereich)}
                       className={`rounded-2xl border px-4 py-3 font-black transition-all duration-300 hover:-translate-y-1 ${
                         aktiv
-                          ? "border-slate-200/40 bg-slate-200/10 text-slate-100 shadow-lg shadow-slate-200/10"
-                          : "border-white/10 bg-white/[0.03] text-white/55 hover:border-sky-300/25 hover:bg-sky-300/5 hover:text-slate-100"
+                          ? "border-orange-300/50 bg-orange-100/60 text-slate-950 shadow-lg shadow-orange-900/10"
+                          : "border-white/70 bg-white/50 text-slate-500 hover:border-orange-300/25 hover:bg-orange-300/5 hover:text-slate-950"
                       }`}
                     >
                       {aktiv ? "✓ " : ""}
@@ -1533,7 +1565,7 @@ const systemStatus =
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-white/45">
+              <p className="text-sm text-slate-500">
                 {projektBearbeitenId
                   ? "Bearbeitungsmodus aktiv. Änderungen werden direkt am bestehenden Projekt gespeichert."
                   : "Ziel: Chef bleibt im Dashboard. Keine doppelte Projektverwaltung mehr."}
@@ -1544,7 +1576,7 @@ const systemStatus =
                   <button
                     type="button"
                     onClick={projektFormZuruecksetzen}
-                    className="rounded-2xl border border-white/10 bg-black/25 px-6 py-4 font-black text-white/60 transition-all duration-300 hover:-translate-y-1 hover:border-white/25 hover:text-white"
+                    className="rounded-2xl border border-white/70 bg-stone-900/5 px-6 py-4 font-black text-slate-600 transition-all duration-300 hover:-translate-y-1 hover:border-white/25 hover:text-slate-950"
                   >
                     Abbrechen
                   </button>
@@ -1553,34 +1585,34 @@ const systemStatus =
                 <button
                   type="button"
                   onClick={projektSpeichern}
-                  className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-6 py-4 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-slate-200/50 hover:bg-slate-200/15 hover:shadow-sky-300/10"
+                  className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-6 py-4 font-black text-slate-950 shadow-lg shadow-orange-900/10 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/60 hover:bg-orange-100/80 hover:shadow-orange-900/10"
                 >
                   {projektBearbeitenId ? "✓ Projekt aktualisieren" : "+ Projekt speichern"}
                 </button>
               </div>
             </div>
 
-            <div className="mt-8 rounded-2xl border border-white/10 bg-black/20 p-5">
+            <div className="mt-8 rounded-2xl border border-white/70 bg-white/50 p-5">
               <div className="mb-4 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
                 <div>
-                  <div className="text-lg font-black text-white">Projekt auswählen</div>
-                  <p className="mt-1 text-sm text-white/45">
+                  <div className="text-lg font-black text-slate-950">Projekt auswählen</div>
+                  <p className="mt-1 text-sm text-slate-500">
                     Nur noch Dropdown: Projekt wählen, Formular springt nach oben, anpassen und speichern.
                   </p>
                 </div>
 
-                <div className="text-xs font-black uppercase tracking-widest text-white/35">
+                <div className="text-xs font-black uppercase tracking-widest text-slate-400">
                   {projekte.length} Projekte
                 </div>
               </div>
 
               {projekte.length === 0 ? (
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-white/45">
+                <div className="rounded-xl border border-white/70 bg-white/50 p-4 text-slate-500">
                   Noch keine Projekte vorhanden.
                 </div>
               ) : (
                 <label className="block">
-                  <span className="text-sm font-black text-white/65">Projekt zum Bearbeiten wählen</span>
+                  <span className="text-sm font-black text-slate-600">Projekt zum Bearbeiten wählen</span>
                   <select
                     value={projektBearbeitenId ? String(projektBearbeitenId) : ""}
                     onChange={(event) => {
@@ -1590,7 +1622,7 @@ const systemStatus =
 
                       if (projekt) projektZumBearbeitenLaden(projekt);
                     }}
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-black text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                    className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-black text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80"
                   >
                     <option value="">Projekt auswählen</option>
                     {projekte.map((projekt) => (
@@ -1603,10 +1635,10 @@ const systemStatus =
               )}
 
               {projektBearbeitenId && (
-                <div className="mt-5 flex flex-col justify-between gap-3 rounded-2xl border border-sky-300/20 bg-sky-300/5 p-4 sm:flex-row sm:items-center">
+                <div className="mt-5 flex flex-col justify-between gap-3 rounded-2xl border border-orange-300/20 bg-orange-300/5 p-4 sm:flex-row sm:items-center">
                   <div>
-                    <div className="text-sm font-black text-sky-100">Bearbeitung aktiv</div>
-                    <div className="mt-1 text-sm text-white/50">
+                    <div className="text-sm font-black text-orange-700">Bearbeitung aktiv</div>
+                    <div className="mt-1 text-sm text-slate-500">
                       Das ausgewählte Projekt ist oben im Formular geladen.
                     </div>
                   </div>
@@ -1620,7 +1652,7 @@ const systemStatus =
 
                       if (projekt) projektLoeschen(projekt);
                     }}
-                    className="rounded-xl border border-red-400/25 bg-red-500/10 px-4 py-3 font-black text-red-200 transition hover:-translate-y-1 hover:border-red-300/45 hover:bg-red-500/15"
+                    className="rounded-xl border border-red-400/25 bg-red-500/10 px-4 py-3 font-black text-red-200 transition hover:-translate-y-1 hover:border-red-300/40 hover:bg-red-500/20"
                   >
                     Projekt löschen
                   </button>
@@ -1628,51 +1660,51 @@ const systemStatus =
               )}
             </div>
           </>
-        ) : (
+        ) : verwaltungsModus === "mitarbeiter" ? (
           <>
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
               <label className="block">
-                <span className="text-sm font-black text-white/65">Name</span>
+                <span className="text-sm font-black text-slate-600">Name</span>
                 <input
                   value={mitarbeiterName}
                   onChange={(event) => setMitarbeiterName(event.target.value)}
                   placeholder="z.B. Max Muster"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-sky-300/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300/40 focus:bg-white/80"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">{mitarbeiterBearbeitenId ? "E-Mail nur bei neuem Login" : "E-Mail"}</span>
+                <span className="text-sm font-black text-slate-600">{mitarbeiterBearbeitenId ? "E-Mail nur bei neuem Login" : "E-Mail"}</span>
                 <input
                   value={mitarbeiterEmail}
                   onChange={(event) => setMitarbeiterEmail(event.target.value)}
                   placeholder={mitarbeiterBearbeitenId ? "Bei Bearbeitung nicht nötig" : "max@firma.ch"}
                   type="email"
                   disabled={!!mitarbeiterBearbeitenId}
-                  className={`mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-sky-300/40 focus:bg-black/40 ${mitarbeiterBearbeitenId ? "cursor-not-allowed opacity-50" : ""}`}
+                  className={`mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300/40 focus:bg-white/80 ${mitarbeiterBearbeitenId ? "cursor-not-allowed opacity-50" : ""}`}
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">{mitarbeiterBearbeitenId ? "Passwort unverändert" : "Startpasswort"}</span>
+                <span className="text-sm font-black text-slate-600">{mitarbeiterBearbeitenId ? "Passwort unverändert" : "Startpasswort"}</span>
                 <input
                   value={mitarbeiterPasswort}
                   onChange={(event) => setMitarbeiterPasswort(event.target.value)}
                   placeholder={mitarbeiterBearbeitenId ? "Nur über Supabase Auth ändern" : "mind. 6 Zeichen"}
                   type="password"
                   disabled={!!mitarbeiterBearbeitenId}
-                  className={`mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition placeholder:text-white/25 focus:border-sky-300/40 focus:bg-black/40 ${mitarbeiterBearbeitenId ? "cursor-not-allowed opacity-50" : ""}`}
+                  className={`mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300/40 focus:bg-white/80 ${mitarbeiterBearbeitenId ? "cursor-not-allowed opacity-50" : ""}`}
                 />
               </label>
             </div>
 
             <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-6">
               <label className="block">
-                <span className="text-sm font-black text-white/65">Rolle</span>
+                <span className="text-sm font-black text-slate-600">Rolle</span>
                 <select
                   value={mitarbeiterRolle}
                   onChange={(event) => setMitarbeiterRolle(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80"
                 >
                   <option value="Mitarbeiter">Mitarbeiter</option>
                   <option value="Admin">Admin</option>
@@ -1683,11 +1715,11 @@ const systemStatus =
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Arbeitsmodell</span>
+                <span className="text-sm font-black text-slate-600">Arbeitsmodell</span>
                 <select
                   value={mitarbeiterArbeitsmodell}
                   onChange={(event) => arbeitsmodellSetzen(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80"
                 >
                   <option value="100">100% · 42.5h · 5 Tage</option>
                   <option value="80">80% · 34h · 4 Tage</option>
@@ -1696,7 +1728,7 @@ const systemStatus =
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Wochenstunden</span>
+                <span className="text-sm font-black text-slate-600">Wochenstunden</span>
                 <input
                   value={mitarbeiterWochenstunden}
                   onChange={(event) => {
@@ -1704,36 +1736,36 @@ const systemStatus =
                     setMitarbeiterArbeitsmodell("manuell");
                   }}
                   inputMode="decimal"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Ferienwochen</span>
+                <span className="text-sm font-black text-slate-600">Ferienwochen</span>
                 <input
                   value={mitarbeiterFerienwochen}
                   onChange={(event) => setMitarbeiterFerienwochen(event.target.value)}
                   inputMode="decimal"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Urlaubstage</span>
+                <span className="text-sm font-black text-slate-600">Urlaubstage</span>
                 <input
                   value={mitarbeiterUrlaubstage}
                   onChange={(event) => setMitarbeiterUrlaubstage(event.target.value)}
                   inputMode="decimal"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Vertragsart</span>
+                <span className="text-sm font-black text-slate-600">Vertragsart</span>
                 <select
                   value={mitarbeiterVertragsart}
                   onChange={(event) => setMitarbeiterVertragsart(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80"
                 >
                   <option value="Festangestellt">Festangestellt</option>
                   <option value="Befristet">Befristet</option>
@@ -1745,7 +1777,7 @@ const systemStatus =
 
             <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
               <label className="block">
-                <span className="text-sm font-black text-white/65">Pensum %</span>
+                <span className="text-sm font-black text-slate-600">Pensum %</span>
                 <input
                   value={mitarbeiterPensumProzent}
                   onChange={(event) => {
@@ -1753,12 +1785,12 @@ const systemStatus =
                     setMitarbeiterArbeitsmodell("manuell");
                   }}
                   inputMode="decimal"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Arbeitstage / Woche</span>
+                <span className="text-sm font-black text-slate-600">Arbeitstage / Woche</span>
                 <input
                   value={mitarbeiterArbeitstageProWoche}
                   onChange={(event) => {
@@ -1766,17 +1798,17 @@ const systemStatus =
                     setMitarbeiterArbeitsmodell("manuell");
                   }}
                   inputMode="decimal"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Freier Wochentag</span>
+                <span className="text-sm font-black text-slate-600">Freier Wochentag</span>
                 <select
                   value={mitarbeiterFreierWochentag}
                   onChange={(event) => setMitarbeiterFreierWochentag(event.target.value)}
                   disabled={Number(mitarbeiterArbeitstageProWoche || 0) !== 4}
-                  className={`mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40 ${Number(mitarbeiterArbeitstageProWoche || 0) !== 4 ? "cursor-not-allowed opacity-50" : ""}`}
+                  className={`mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80 ${Number(mitarbeiterArbeitstageProWoche || 0) !== 4 ? "cursor-not-allowed opacity-50" : ""}`}
                 >
                   <option value="">Kein freier Tag</option>
                   <option value="Montag">Montag</option>
@@ -1785,7 +1817,7 @@ const systemStatus =
                   <option value="Donnerstag">Donnerstag</option>
                   <option value="Freitag">Freitag</option>
                 </select>
-                <p className="mt-2 text-xs font-bold text-white/40">
+                <p className="mt-2 text-xs font-bold text-slate-400">
                   Bei 80% zählt der freie Tag nicht als Minuszeit.
                 </p>
               </label>
@@ -1793,58 +1825,58 @@ const systemStatus =
 
             <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-5">
               <label className="block">
-                <span className="text-sm font-black text-white/65">Eintrittsdatum</span>
+                <span className="text-sm font-black text-slate-600">Eintrittsdatum</span>
                 <input
                   value={mitarbeiterEintrittsdatum}
                   onChange={(event) => setMitarbeiterEintrittsdatum(event.target.value)}
                   type="date"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Zeiterfassung ab</span>
+                <span className="text-sm font-black text-slate-600">Zeiterfassung ab</span>
                 <input
                   value={mitarbeiterZeiterfassungAb}
                   onChange={(event) => setMitarbeiterZeiterfassungAb(event.target.value)}
                   type="date"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Probezeit bis</span>
+                <span className="text-sm font-black text-slate-600">Probezeit bis</span>
                 <input
                   value={mitarbeiterProbezeitBis}
                   onChange={(event) => setMitarbeiterProbezeitBis(event.target.value)}
                   type="date"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Austrittsdatum</span>
+                <span className="text-sm font-black text-slate-600">Austrittsdatum</span>
                 <input
                   value={mitarbeiterAustrittsdatum}
                   onChange={(event) => setMitarbeiterAustrittsdatum(event.target.value)}
                   type="date"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80"
                 />
               </label>
 
               <label className="block">
-                <span className="text-sm font-black text-white/65">Überstunden Start</span>
+                <span className="text-sm font-black text-slate-600">Überstunden Start</span>
                 <input
                   value={mitarbeiterUeberstundenStart}
                   onChange={(event) => setMitarbeiterUeberstundenStart(event.target.value)}
                   inputMode="decimal"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 font-bold text-white outline-none transition focus:border-sky-300/40 focus:bg-black/40"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/40 focus:bg-white/80"
                 />
               </label>
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-white/45">
+              <p className="text-sm text-slate-500">
                 {mitarbeiterBearbeitenId
                   ? "Bearbeitungsmodus aktiv. Es wird kein neuer Login erstellt."
                   : "Mitarbeiter wird mit Login erstellt. Details können direkt hier bearbeitet werden."}
@@ -1855,7 +1887,7 @@ const systemStatus =
                   <button
                     type="button"
                     onClick={mitarbeiterFormZuruecksetzen}
-                    className="rounded-2xl border border-white/10 bg-black/25 px-6 py-4 font-black text-white/60 transition-all duration-300 hover:-translate-y-1 hover:border-white/25 hover:text-white"
+                    className="rounded-2xl border border-white/70 bg-stone-900/5 px-6 py-4 font-black text-slate-600 transition-all duration-300 hover:-translate-y-1 hover:border-white/25 hover:text-slate-950"
                   >
                     Abbrechen
                   </button>
@@ -1864,54 +1896,54 @@ const systemStatus =
                 <button
                   type="button"
                   onClick={mitarbeiterSpeichern}
-                  className="rounded-2xl border border-slate-200/25 bg-slate-200/10 px-6 py-4 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/40 hover:bg-sky-300/5 hover:shadow-sky-300/10"
+                  className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-6 py-4 font-black text-slate-950 shadow-lg shadow-orange-900/10 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-300/5 hover:shadow-orange-900/10"
                 >
                   {mitarbeiterBearbeitenId ? "✓ Mitarbeiter aktualisieren" : "+ Mitarbeiter speichern"}
                 </button>
               </div>
             </div>
 
-            <div className="mt-8 rounded-2xl border border-white/10 bg-black/20 p-5">
+            <div className="mt-8 rounded-2xl border border-white/70 bg-white/50 p-5">
               <div className="mb-4 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
                 <div>
-                  <div className="text-lg font-black text-white">Mitarbeiter bearbeiten</div>
-                  <p className="mt-1 text-sm text-white/45">
+                  <div className="text-lg font-black text-slate-950">Mitarbeiter bearbeiten</div>
+                  <p className="mt-1 text-sm text-slate-500">
                     Bestehende Mitarbeiter direkt ins Formular laden und aktualisieren.
                   </p>
                 </div>
 
-                <div className="text-xs font-black uppercase tracking-widest text-white/35">
+                <div className="text-xs font-black uppercase tracking-widest text-slate-400">
                   {mitarbeiter.length} Personen
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                 {mitarbeiter.length === 0 ? (
-                  <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-white/45">
+                  <div className="rounded-xl border border-white/70 bg-white/50 p-4 text-slate-500">
                     Noch keine Mitarbeiter vorhanden.
                   </div>
                 ) : (
                   mitarbeiter.map((person) => (
                     <div
                       key={person.id}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-sky-300/25 hover:bg-sky-300/5"
+                      className="rounded-2xl border border-white/70 bg-white/50 p-4 transition hover:border-orange-300/25 hover:bg-orange-300/5"
                     >
                       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                         <div>
-                          <div className="text-lg font-black text-white">
+                          <div className="text-lg font-black text-slate-950">
                             {person.name}
                           </div>
-                          <div className="mt-1 text-sm text-white/45">
+                          <div className="mt-1 text-sm text-slate-500">
                             {person.rolle || "Mitarbeiter"} · {Number(person.pensum_prozent || (Number(person.wochenstunden || 0) === 34 ? 80 : 100))}% · {Number(person.wochenstunden || 0)} h/Woche
                           </div>
-                          <div className="mt-1 text-xs font-bold text-white/35">
+                          <div className="mt-1 text-xs font-bold text-slate-400">
                             {normalisiereArbeitstageProWoche(person)} Tage/Woche
                             {normalisiereFreierWochentag(person) ? ` · frei ${normalisiereFreierWochentag(person)}` : ""}
                           </div>
-                          <div className="mt-1 text-xs font-bold text-white/35">
+                          <div className="mt-1 text-xs font-bold text-slate-400">
                             Zeiterfassung ab: {formatDatumInput(person.zeiterfassung_ab) || "Eintrittsdatum"}
                           </div>
-                          <div className="mt-2 text-xs font-black uppercase tracking-widest text-slate-200">
+                          <div className="mt-2 text-xs font-black uppercase tracking-widest text-orange-800">
                             {person.vertragsart || "Festangestellt"}
                           </div>
                         </div>
@@ -1919,7 +1951,7 @@ const systemStatus =
                         <button
                           type="button"
                           onClick={() => mitarbeiterZumBearbeitenLaden(person)}
-                          className="rounded-xl border border-slate-200/25 bg-slate-200/10 px-4 py-3 font-black text-slate-100 transition hover:-translate-y-1 hover:border-sky-300/40 hover:bg-sky-300/5"
+                          className="rounded-xl border border-orange-200/50 bg-orange-100/60 px-4 py-3 font-black text-slate-950 transition hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-300/5"
                         >
                           Bearbeiten
                         </button>
@@ -1930,96 +1962,360 @@ const systemStatus =
               </div>
             </div>
           </>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
+              <label className="block xl:col-span-2">
+                <span className="text-sm font-black text-slate-600">Termintitel</span>
+                <input
+                  placeholder="z.B. Montage Müller / Kundenbesuch"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300/50 focus:bg-white/80"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-slate-600">Datum</span>
+                <input
+                  type="date"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300/50 focus:bg-white/80"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-slate-600">Typ</span>
+                <select className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/50 focus:bg-white/80">
+                  <option>Termin</option>
+                  <option>Montage</option>
+                  <option>Besichtigung</option>
+                  <option>Lieferung</option>
+                  <option>Intern</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-4">
+              <label className="block">
+                <span className="text-sm font-black text-slate-600">Von</span>
+                <input
+                  type="time"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/50 focus:bg-white/80"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-black text-slate-600">Bis</span>
+                <input
+                  type="time"
+                  className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/50 focus:bg-white/80"
+                />
+              </label>
+
+              <label className="block xl:col-span-2">
+                <span className="text-sm font-black text-slate-600">Projekt zuweisen</span>
+                <select className="mt-2 w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition focus:border-orange-300/50 focus:bg-white/80">
+                  <option>Ohne Projekt</option>
+                  {projekte.map((projekt) => (
+                    <option key={projekt.id} value={String(projekt.id)}>
+                      {projektTitel(projekt)} · {projekt.kunde || "Intern"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[1fr_0.75fr]">
+              <label className="block">
+                <span className="text-sm font-black text-slate-600">Notiz</span>
+                <textarea
+                  placeholder="Kurze Info für Kalender / Chef Dashboard"
+                  rows={4}
+                  className="mt-2 w-full resize-none rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 font-bold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300/50 focus:bg-white/80"
+                />
+              </label>
+
+              <div className="rounded-2xl border border-white/70 bg-white/55 p-5">
+                <div className="text-lg font-black text-slate-950">Kalender-Vorschau</div>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  Terminmaske sitzt jetzt direkt in der Kommandozentrale. Der echte Speicher-Patch bekommt danach eine kleine Supabase-Tabelle, damit Termine reloadsicher im Monatskalender erscheinen.
+                </p>
+
+                <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((tag) => (
+                    <div key={tag}>{tag}</div>
+                  ))}
+                </div>
+
+                <div className="mt-2 grid grid-cols-7 gap-1">
+                  {Array.from({ length: 14 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="min-h-[42px] rounded-lg border border-white/70 bg-white/70 p-1 text-[10px] font-black text-slate-500"
+                    >
+                      {index + 1}
+                      {index === 4 || index === 10 ? (
+                        <div className="mt-1 rounded-md bg-orange-100/80 px-1 py-0.5 text-[9px] text-orange-800">
+                          Termin
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-slate-500">
+                Design ist vorbereitet. Echte Termin-Speicherung kommt sauber mit eigener Tabelle statt als Schnellschuss.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => setMeldung("Terminbereich ist vorbereitet. Für echtes Speichern folgt die Supabase-Tabelle für Kalendertermine.")}
+                className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-6 py-4 font-black text-slate-950 shadow-lg shadow-orange-900/10 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-300/5"
+              >
+                + Termin vorbereiten
+              </button>
+            </div>
+          </>
         )}
       </section>
 
-      <section className="grid grid-cols-1 items-start gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard
-          label="Team Iststunden"
-          value={loading ? "..." : formatStunden(teamIststunden)}
-          orange
-        />
+      <DropdownPanel
+        id="team-kennzahlen"
+        eyebrow="Team · Zeitkonto · Performance"
+        title="Team & Zeitkonto"
+        description="Kennzahlen, Tagesstatus und Team-Performance sind jetzt in einem ruhigen Chef-Panel zusammengefasst."
+        open={teamKennzahlenOffen}
+        onToggle={() => setTeamKennzahlenOffen(!teamKennzahlenOffen)}
+      >
+        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <KpiCard
+            label="Team Iststunden"
+            value={loading ? "..." : formatStunden(teamIststunden)}
+            orange
+          />
 
-        <KpiCard
-          label="Angerechnet"
-          value={loading ? "..." : formatStunden(teamAngerechnet)}
-        />
+          <KpiCard
+            label="Angerechnet"
+            value={loading ? "..." : formatStunden(teamAngerechnet)}
+          />
 
-        <KpiCard
-          label="Überstundenabbau"
-          value={
-            loading
-              ? "..."
-              : teamUeberstundenAbbauStunden > 0
-              ? formatStunden(-teamUeberstundenAbbauStunden)
-              : "0 min"
-          }
-          orange
-        />
+          <KpiCard
+            label="Team Sollstunden"
+            value={loading ? "..." : formatStunden(teamSollstunden)}
+          />
 
-        <KpiCard
-          label="Team Überstunden"
-          value={
-            loading
-              ? "..."
-              : formatStunden(teamDifferenz, true)
-          }
-          green={teamDifferenz >= 0}
-          red={teamDifferenz < 0}
-        />
-      </section>
+          <KpiCard
+            label="Team Überstunden"
+            value={loading ? "..." : formatStunden(teamDifferenz, true)}
+            green={teamDifferenz >= 0}
+            red={teamDifferenz < 0}
+          />
+        </div>
 
-      
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[0.72fr_1.28fr]">
+          <section className="rounded-2xl border border-white/70 bg-white/45 p-5">
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <div>
+                <div className="text-xs font-black uppercase tracking-[0.22em] text-orange-800">Heute</div>
+                <h3 className="mt-1 text-xl font-black text-slate-950">Team Status</h3>
+              </div>
+              <div className="text-xs font-black uppercase tracking-widest text-slate-400">
+                {heutigesDatum}
+              </div>
+            </div>
 
-      <section className="grid grid-cols-1 items-start gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard
-          label="Team Sollstunden"
-          value={loading ? "..." : formatStunden(teamSollstunden)}
-        />
+            <div className="space-y-2">
+              {teamStatus.map((person) => (
+                <div
+                  key={person.name}
+                  className="flex items-center justify-between rounded-xl border border-white/70 bg-white/60 px-4 py-3 transition hover:border-orange-300/25"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${person.punkt}`} />
+                    <div className="min-w-0">
+                      <div className="truncate font-black text-slate-950">{person.name}</div>
+                      <div className="text-xs text-slate-500">{person.rolle}</div>
+                    </div>
+                  </div>
 
-        <KpiCard label="Arbeitstage bis heute" value={loading ? "..." : arbeitstage} />
+                  <div className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${person.farbe}`}>
+                    {person.status}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
 
-        <KpiCard
-          label="Mitarbeiter"
-          value={loading ? "..." : mitarbeiter.length}
-        />
+          <section className="rounded-2xl border border-white/70 bg-white/45 p-5">
+            <div className="mb-4 flex flex-col justify-between gap-2 md:flex-row md:items-end">
+              <div>
+                <div className="text-xs font-black uppercase tracking-[0.22em] text-orange-800">Monat {monat}</div>
+                <h3 className="mt-1 text-xl font-black text-slate-950">Team Performance</h3>
+              </div>
+              <div className="text-sm font-bold text-slate-500">
+                {mitarbeiterStats.length} Mitarbeiter
+              </div>
+            </div>
 
-        <KpiCard
-          label="Offene Anträge"
-          value={loading ? "..." : offeneAntraege}
-          orange={offeneAntraege > 0}
-        />
+            <div className="space-y-4 md:hidden">
+              {mitarbeiterStats.map((person) => {
+                const detailsOffen = String(teamDetailsOffenId || "") === String(person.id);
 
-        <KpiCard
-  label="Offene Tage"
-  value={loading ? "..." : offeneTage}
-  orange={offeneTage > 0}
-/>
+                return (
+                  <div key={person.id} className="rounded-2xl border border-white/70 bg-white/60 p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setTeamDetailsOffenId(detailsOffen ? null : person.id)}
+                        className="min-w-0 text-left"
+                      >
+                        <div className="text-xl font-black text-slate-950 hover:text-orange-700">
+                          {person.name}
+                        </div>
+                        <div className="mt-1 text-sm text-slate-500">
+                          {person.rolle} · Details {detailsOffen ? "ausblenden" : "anzeigen"}
+                        </div>
+                      </button>
 
-<KpiCard
-  label="Abgeschlossen"
-  value={loading ? "..." : abgeschlosseneTage}
-/>
+                      <span
+                        className={`rounded-full border px-3 py-1 text-sm font-black ${
+                          person.differenz >= 0
+                            ? "border-green-400/30 bg-green-500/10 text-green-400"
+                            : "border-red-400/30 bg-red-500/10 text-red-400"
+                        }`}
+                      >
+                        {formatStunden(Number(person.differenz || 0), true)}
+                      </span>
+                    </div>
 
-<KpiCard
-  label="Geprüft"
-  value={loading ? "..." : gepruefteTage}
-  green={gepruefteTage > 0}
-/>
-      </section>
+                    <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                      <Info label="Arbeitstage" value={person.personArbeitstage} />
+                      <Info label="Soll" value={formatStunden(Number(person.sollstunden || 0))} />
+                      <Info label="Ist" value={formatStunden(Number(person.iststunden || 0))} />
+                      <Info label="Angerechnet" value={formatStunden(Number(person.angerechneteStunden || 0))} />
+                      <Info label="Urlaub" value={person.urlaubstagePerson} />
+                      <Info label="Krank" value={person.kranktagePerson} />
+                    </div>
 
-      <section className="min-h-[150px] rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+                    {detailsOffen && <MitarbeiterDetail person={person} formatStunden={formatStunden} />}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="hidden space-y-3 md:block">
+              {mitarbeiterStats.map((person) => {
+                const detailsOffen = String(teamDetailsOffenId || "") === String(person.id);
+                const differenz = Number(person.differenz || 0);
+                const istPlus = differenz >= 0;
+
+                return (
+                  <div
+                    key={person.id}
+                    className="overflow-hidden rounded-2xl border border-white/70 bg-white/60 shadow-[0_10px_30px_rgba(15,23,42,0.05)] transition hover:border-orange-300/25 hover:bg-white/70"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setTeamDetailsOffenId(detailsOffen ? null : person.id)}
+                      className="block w-full px-4 py-4 text-left"
+                    >
+                      <div className="grid gap-4 lg:grid-cols-[1.05fr_2fr_auto] lg:items-center">
+                        <div className="min-w-0">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="shrink-0 text-sm font-black text-orange-800">
+                              {detailsOffen ? "▾" : "▸"}
+                            </span>
+                            <span className="truncate text-lg font-black text-slate-950">
+                              {person.name}
+                            </span>
+                          </div>
+                          <div className="mt-1 text-sm font-bold text-slate-500">
+                            {person.rolle} · {person.personArbeitstage} Arbeitstage
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
+                          <div className="rounded-xl border border-white/70 bg-white/55 px-3 py-2">
+                            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Soll</div>
+                            <div className="mt-1 text-sm font-black text-slate-950">
+                              {formatStunden(Number(person.sollstunden || 0))}
+                            </div>
+                          </div>
+
+                          <div className="rounded-xl border border-white/70 bg-white/55 px-3 py-2">
+                            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Ist</div>
+                            <div className="mt-1 text-sm font-black text-slate-950">
+                              {formatStunden(Number(person.iststunden || 0))}
+                            </div>
+                          </div>
+
+                          <div className="rounded-xl border border-white/70 bg-white/55 px-3 py-2">
+                            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Angerechnet</div>
+                            <div className="mt-1 text-sm font-black text-slate-950">
+                              {formatStunden(Number(person.angerechneteStunden || 0))}
+                            </div>
+                          </div>
+
+                          <div className="rounded-xl border border-white/70 bg-white/55 px-3 py-2">
+                            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Abwesenheit</div>
+                            <div className="mt-1 text-sm font-black text-slate-950">
+                              U: {person.urlaubstagePerson} / K: {person.kranktagePerson}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div
+                          className={`rounded-2xl border px-4 py-3 text-right ${
+                            istPlus
+                              ? "border-green-400/20 bg-green-500/10 text-green-500"
+                              : "border-red-400/20 bg-red-500/10 text-red-500"
+                          }`}
+                        >
+                          <div className="text-[10px] font-black uppercase tracking-[0.18em] opacity-70">
+                            Überstunden
+                          </div>
+                          <div className="mt-1 whitespace-nowrap text-xl font-black">
+                            {formatStunden(differenz, true)}
+                          </div>
+                          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
+                            ÜA {formatStunden(-Number(person.ueberstundenAbbauStunden || 0))}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {detailsOffen && <MitarbeiterDetail person={person} formatStunden={formatStunden} desktop />}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
+          <MiniCard label="Offen" value={offeneTage} orange={offeneTage > 0} />
+          <MiniCard label="Abgeschlossen" value={abgeschlosseneTage} />
+          <MiniCard label="Geprüft" value={gepruefteTage} />
+          <MiniCard label="Offene Anträge" value={offeneAntraege} orange={offeneAntraege > 0} />
+          <MiniCard label="Arbeitstage" value={arbeitstage} />
+          <MiniCard label="Mitarbeiter" value={mitarbeiter.length} />
+          <MiniCard label="ÜA Abbau" value={formatStunden(-Number(teamUeberstundenAbbauStunden || 0))} orange={teamUeberstundenAbbauStunden > 0} />
+        </div>
+      </DropdownPanel>
+
+      <section className="min-h-[150px] rounded-[2rem] border border-white/70 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-slate-900/10 lg:p-7">
   <div className="mb-6">
-    <h2 className="text-2xl font-black text-white">
+    <h2 className="text-2xl font-black text-slate-950">
       Prüfzentrum
     </h2>
-    <p className="mt-1 text-white/55">
+    <p className="mt-1 text-slate-500">
       Tage prüfen, freigeben und sauber abschließen.
     </p>
   </div>
 
   {abgeschlosseneTageListe.length === 0 ? (
-    <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
+    <div className="rounded-xl border border-white/70 bg-white/50 p-5 text-slate-500">
       Alles geprüft. Keine offenen Tagesabschlüsse.
     </div>
   ) : (
@@ -2034,19 +2330,19 @@ const systemStatus =
         return (
           <div
             key={tag.id}
-            className="rounded-2xl border border-slate-200/20 bg-gradient-to-br from-slate-200/10 to-black/25 p-5"
+            className="rounded-2xl border border-orange-200/40 bg-gradient-to-br from-slate-200/10 to-white/40 p-5"
           >
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
               <div>
-                <div className="text-lg font-black text-white">
+                <div className="text-lg font-black text-slate-950">
                   {tag.mitarbeiterName}
                 </div>
 
-                <div className="mt-1 text-sm text-white/55">
+                <div className="mt-1 text-sm text-slate-500">
                   {tag.datum} · Tagesabschluss {formatStunden(Number(tag.netto_stunden || 0))}
                 </div>
 
-                <div className="mt-1 text-xs font-bold uppercase tracking-widest text-slate-200">
+                <div className="mt-1 text-xs font-bold uppercase tracking-widest text-orange-800">
                   Status: {tag.status}
                 </div>
               </div>
@@ -2054,30 +2350,30 @@ const systemStatus =
               <button
                 type="button"
                 onClick={() => tagAlsGeprueftMarkieren(tag.id)}
-                className="rounded-xl border border-slate-200/25 bg-slate-200/10 px-5 py-3 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/40 hover:bg-sky-300/5 hover:shadow-sky-300/10"
+                className="rounded-xl border border-orange-200/50 bg-orange-100/60 px-5 py-3 font-black text-slate-950 shadow-lg shadow-orange-900/10 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-300/5 hover:shadow-orange-900/10"
               >
                 ✓ Freigeben
               </button>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-4">
+            <div className="mt-5 rounded-2xl border border-white/70 bg-white/50 p-4">
               <div className="mb-3 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
                 <div>
-                  <div className="text-xs font-black uppercase tracking-[0.22em] text-sky-200">
+                  <div className="text-xs font-black uppercase tracking-[0.22em] text-orange-700">
                     Aufträge zur Prüfung
                   </div>
-                  <div className="mt-1 text-sm text-white/45">
+                  <div className="mt-1 text-sm text-slate-500">
                     Nicht nur Gesamtzeit: Hier siehst du die gebuchten Aufträge, Bereiche und Zeiten.
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-black uppercase tracking-widest text-slate-200">
+                <div className="rounded-xl border border-white/70 bg-white/60 px-3 py-2 text-xs font-black uppercase tracking-widest text-orange-800">
                   {pruefEintraege.length} Buchung{pruefEintraege.length === 1 ? "" : "en"} · {formatStunden(pruefSumme)}
                 </div>
               </div>
 
               {pruefEintraege.length === 0 ? (
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/45">
+                <div className="rounded-xl border border-white/70 bg-white/50 p-4 text-sm text-slate-500">
                   Keine Projektbuchungen für diesen Tagesabschluss gefunden.
                 </div>
               ) : (
@@ -2085,28 +2381,28 @@ const systemStatus =
                   {pruefEintraege.map((eintrag) => (
                     <div
                       key={`${tag.id}-${eintrag.id}`}
-                      className="rounded-xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-sky-300/25 hover:bg-sky-300/5"
+                      className="rounded-xl border border-white/70 bg-white/50 p-4 transition hover:border-orange-300/25 hover:bg-orange-300/5"
                     >
                       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
                         <div>
-                          <div className="text-base font-black text-white">
+                          <div className="text-base font-black text-slate-950">
                             {eintrag.projekt || "Ohne Auftrag"}
                           </div>
-                          <div className="mt-1 text-sm text-white/50">
-                            Bereich: <span className="font-bold text-white/75">{eintrag.bereich || "Ohne Bereich"}</span>
+                          <div className="mt-1 text-sm text-slate-500">
+                            Bereich: <span className="font-bold text-slate-700">{eintrag.bereich || "Ohne Bereich"}</span>
                           </div>
                           {String(eintrag.projekt || "").toLowerCase() === "betriebsunterhalt" && (
-                            <div className="mt-2 inline-flex rounded-full border border-slate-200/20 bg-slate-200/10 px-3 py-1 text-xs font-black uppercase tracking-widest text-slate-200">
+                            <div className="mt-2 inline-flex rounded-full border border-orange-200/40 bg-orange-100/60 px-3 py-1 text-xs font-black uppercase tracking-widest text-orange-800">
                               Automatisch
                             </div>
                           )}
                         </div>
 
                         <div className="text-left sm:text-right">
-                          <div className="text-xl font-black text-sky-200">
+                          <div className="text-xl font-black text-orange-700">
                             {formatStunden(Number(eintrag.stunden || 0))}
                           </div>
-                          <div className="mt-1 text-sm font-bold text-white/55">
+                          <div className="mt-1 text-sm font-bold text-slate-500">
                             {zeitVonBisText(eintrag)}
                           </div>
                         </div>
@@ -2123,23 +2419,23 @@ const systemStatus =
   )}
 </section>
 
-<section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+<section className="rounded-[2rem] border border-white/70 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-slate-900/10 lg:p-7">
   <button
     type="button"
     onClick={() => setGepruefteOffen(!gepruefteOffen)}
     className="flex w-full items-center justify-between gap-4 text-left"
   >
     <div>
-      <h2 className="text-2xl font-black text-white">
+      <h2 className="text-2xl font-black text-slate-950">
         Freigabehistorie
       </h2>
 
-      <p className="mt-1 text-white/55">
+      <p className="mt-1 text-slate-500">
         Zuletzt freigegebene und geprüfte Arbeitstage.
       </p>
     </div>
 
-    <div className="rounded-xl border border-slate-200/30 bg-slate-200/10 px-4 py-3 text-sm font-black text-slate-200">
+    <div className="rounded-xl border border-orange-200/50 bg-orange-100/60 px-4 py-3 text-sm font-black text-orange-800">
       {gepruefteOffen ? "Schließen ▲" : "Historie öffnen ▼"}
     </div>
   </button>
@@ -2147,7 +2443,7 @@ const systemStatus =
   {gepruefteOffen && (
     <div className="mt-6">
       {letzteGepruefteTage.length === 0 ? (
-        <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
+        <div className="rounded-xl border border-white/70 bg-white/50 p-5 text-slate-500">
           Noch keine Freigaben vorhanden.
         </div>
       ) : (
@@ -2156,15 +2452,15 @@ const systemStatus =
           {sichtbareFreigaben.map((tag) => (
             <div
               key={tag.id}
-              className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+              className="rounded-2xl border border-white/70 bg-gradient-to-br from-white/[0.06] to-white/40 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/25 hover:bg-orange-300/5 hover:shadow-lg hover:shadow-orange-900/10"
             >
               <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
                 <div>
-                  <div className="text-base font-black text-white">
+                  <div className="text-base font-black text-slate-950">
                     {tag.mitarbeiterName}
                   </div>
 
-                  <div className="mt-1 text-sm text-white/55">
+                  <div className="mt-1 text-sm text-slate-500">
                     {tag.datum} · {formatStunden(Number(tag.netto_stunden || 0))}
                   </div>
 
@@ -2173,7 +2469,7 @@ const systemStatus =
                   </div>
                 </div>
 
-                <div className="text-sm text-white/60 md:text-right">
+                <div className="text-sm text-slate-600 md:text-right">
                   <div>
                     Geprüft von: {tag.geprueft_von || "-"}
                   </div>
@@ -2194,12 +2490,12 @@ const systemStatus =
             type="button"
             onClick={() => setFreigabeSeite((s) => Math.max(1, s - 1))}
             disabled={freigabeSeite === 1}
-            className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 font-black text-white/70 transition hover:border-sky-300/30 hover:text-sky-200 disabled:cursor-not-allowed disabled:opacity-30"
+            className="rounded-xl border border-white/70 bg-stone-900/5 px-4 py-3 font-black text-slate-600 transition hover:border-orange-300/30 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-30"
           >
             ◀
           </button>
 
-          <div className="text-sm font-black uppercase tracking-widest text-white/45">
+          <div className="text-sm font-black uppercase tracking-widest text-slate-500">
             Seite {freigabeSeite} / {freigabeSeiten}
           </div>
 
@@ -2209,7 +2505,7 @@ const systemStatus =
               setFreigabeSeite((s) => Math.min(freigabeSeiten, s + 1))
             }
             disabled={freigabeSeite === freigabeSeiten}
-            className="rounded-xl border border-white/10 bg-black/25 px-4 py-3 font-black text-white/70 transition hover:border-sky-300/30 hover:text-sky-200 disabled:cursor-not-allowed disabled:opacity-30"
+            className="rounded-xl border border-white/70 bg-stone-900/5 px-4 py-3 font-black text-slate-600 transition hover:border-orange-300/30 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-30"
           >
             ▶
           </button>
@@ -2229,12 +2525,12 @@ const systemStatus =
         onToggle={() => setAbwesenheitOffen(!abwesenheitOffen)}
       >
 <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+        <div className="rounded-[2rem] border border-white/70 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-slate-900/10">
           <div className="mb-7">
-            <h2 className="text-2xl font-black text-white">
+            <h2 className="text-2xl font-black text-slate-950">
               Abwesenheiten diesen Monat
             </h2>
-            <p className="mt-1 text-white/55">
+            <p className="mt-1 text-slate-500">
               Urlaub, Krankheit und Überstundenabbau im aktuellen Monat
             </p>
           </div>
@@ -2250,10 +2546,10 @@ const systemStatus =
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+        <div className="rounded-[2rem] border border-white/70 bg-gradient-to-br from-white/[0.08] to-white/[0.025] p-7 shadow-2xl shadow-slate-900/10">
           <div className="mb-7">
-            <h2 className="text-2xl font-black text-white">Schnellzugriff</h2>
-            <p className="mt-1 text-white/55">Wichtige Adminbereiche</p>
+            <h2 className="text-2xl font-black text-slate-950">Schnellzugriff</h2>
+            <p className="mt-1 text-slate-500">Wichtige Adminbereiche</p>
           </div>
 
           <div className="space-y-3">
@@ -2275,14 +2571,14 @@ const systemStatus =
         onToggle={() => setAuswertungOffen(!auswertungOffen)}
       >
 <section className="grid grid-cols-1 gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+        <div className="rounded-[2rem] border border-white/70 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-slate-900/10">
           <div className="mb-7">
-            <h2 className="text-2xl font-black text-white">Top Projekte</h2>
-            <p className="mt-1 text-white/55">Stärkste Projektbelastung im aktuellen Monat</p>
+            <h2 className="text-2xl font-black text-slate-950">Top Projekte</h2>
+            <p className="mt-1 text-slate-500">Stärkste Projektbelastung im aktuellen Monat</p>
           </div>
 
           {topProjekte.length === 0 ? (
-            <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
+            <div className="rounded-xl border border-white/70 bg-white/50 p-5 text-slate-500">
               Noch keine Projektstunden vorhanden.
             </div>
           ) : (
@@ -2292,23 +2588,23 @@ const systemStatus =
                 const percent = Math.min(100, Math.round((Number(projekt.stunden || 0) / max) * 100));
 
                 return (
-                  <div key={projekt.name} className="rounded-2xl border border-white/10 bg-black/25 p-5">
+                  <div key={projekt.name} className="rounded-2xl border border-white/70 bg-white/50 p-5">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <div className="text-xs font-black uppercase tracking-[0.22em] text-slate-300">
+                        <div className="text-xs font-black uppercase tracking-[0.22em] text-slate-500">
                           #{index + 1}
                         </div>
-                        <div className="mt-2 text-xl font-black text-white">{projekt.name}</div>
-                        <div className="mt-1 text-sm text-white/45">{projekt.kunde || "Kein Kunde"}</div>
+                        <div className="mt-2 text-xl font-black text-slate-950">{projekt.name}</div>
+                        <div className="mt-1 text-sm text-slate-500">{projekt.kunde || "Kein Kunde"}</div>
                       </div>
 
-                      <div className="text-3xl font-black text-slate-100">
+                      <div className="text-3xl font-black text-slate-950">
                         {formatStunden(Number(projekt.stunden || 0))}
                       </div>
                     </div>
 
                     <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
-                      <div className="h-full rounded-full bg-gradient-to-r from-slate-200/80 to-slate-100/80 shadow-lg shadow-slate-200/10" style={{ width: `${percent}%` }} />
+                      <div className="h-full rounded-full bg-gradient-to-r from-slate-200/80 to-slate-100/80 shadow-lg shadow-orange-900/10" style={{ width: `${percent}%` }} />
                     </div>
                   </div>
                 );
@@ -2317,10 +2613,10 @@ const systemStatus =
           )}
         </div>
 
-        <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+        <div className="rounded-[2rem] border border-white/70 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-slate-900/10">
           <div className="mb-7">
-            <h2 className="text-2xl font-black text-white">Kontrollstatus</h2>
-            <p className="mt-1 text-white/55">Was Aufmerksamkeit braucht</p>
+            <h2 className="text-2xl font-black text-slate-950">Kontrollstatus</h2>
+            <p className="mt-1 text-slate-500">Was Aufmerksamkeit braucht</p>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -2332,14 +2628,14 @@ const systemStatus =
         </div>
       </section>
 
-      <section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
+      <section className="rounded-[2rem] border border-white/70 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-slate-900/10">
         <div className="mb-7">
-          <h2 className="text-2xl font-black text-white">Top Bereiche</h2>
-          <p className="mt-1 text-white/55">Werkstatt, Montage, Planung und Logistik sauber im Blick</p>
+          <h2 className="text-2xl font-black text-slate-950">Top Bereiche</h2>
+          <p className="mt-1 text-slate-500">Werkstatt, Montage, Planung und Logistik sauber im Blick</p>
         </div>
 
         {topBereiche.length === 0 ? (
-          <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
+          <div className="rounded-xl border border-white/70 bg-white/50 p-5 text-slate-500">
             Noch keine Bereichsstunden vorhanden.
           </div>
         ) : (
@@ -2347,13 +2643,13 @@ const systemStatus =
             {topBereiche.map((bereich, index) => (
               <div
                 key={bereich.name}
-                className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:shadow-lg hover:shadow-sky-300/10"
+                className="rounded-2xl border border-white/70 bg-white/50 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/25 hover:shadow-lg hover:shadow-orange-900/10"
               >
-                <div className="text-xs font-black uppercase tracking-[0.22em] text-slate-200">
+                <div className="text-xs font-black uppercase tracking-[0.22em] text-orange-800">
                   #{index + 1}
                 </div>
-                <div className="mt-3 text-xl font-black text-white">{bereich.name}</div>
-                <div className="mt-3 text-3xl font-black text-slate-100">
+                <div className="mt-3 text-xl font-black text-slate-950">{bereich.name}</div>
+                <div className="mt-3 text-3xl font-black text-slate-950">
                   {formatStunden(bereich.stunden)}
                 </div>
               </div>
@@ -2365,187 +2661,6 @@ const systemStatus =
       
       </DropdownPanel>
 
-      <section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-7 shadow-2xl shadow-black/30">
-  <div className="mb-7">
-    <h2 className="text-2xl font-black text-white">
-      Team Status
-    </h2>
-
-    <p className="mt-1 text-white/55">
-      Live Übersicht für den heutigen Arbeitstag
-    </p>
-  </div>
-
-  <div className="space-y-3">
-    {teamStatus.map((person) => (
-      <div
-        key={person.name}
-        className="flex items-center justify-between rounded-2xl border border-white/10 bg-gradient-to-r from-black/30 to-white/[0.03] p-4 transition hover:border-sky-300/25"
-      >
-        <div className="flex items-center gap-4">
-          <span className={`h-3 w-3 rounded-full ${person.punkt}`} />
-
-          <div>
-            <div className="text-lg font-black text-white">
-              {person.name}
-            </div>
-
-            <div className="text-sm text-white/45">
-              {person.rolle}
-            </div>
-          </div>
-        </div>
-
-        <div className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-widest ${person.farbe}`}>
-          {person.status}
-        </div>
-      </div>
-    ))}
-  </div>
-</section>
-
-      <section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
-        <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
-          <div>
-            <h2 className="text-2xl font-black text-white">
-              Team Performance
-            </h2>
-            <p className="mt-1 text-white/55">
-              Leistung, Arbeitszeit und Überstunden im Überblick
-            </p>
-          </div>
-
-          <div className="text-sm text-white/50">
-            Monat {monat} · {mitarbeiterStats.length} Mitarbeiter
-          </div>
-        </div>
-
-        <div className="space-y-4 md:hidden">
-          {mitarbeiterStats.map((person) => {
-            const detailsOffen = String(teamDetailsOffenId || "") === String(person.id);
-
-            return (
-              <div
-                key={person.id}
-                className="rounded-2xl border border-white/10 bg-black/25 p-5"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setTeamDetailsOffenId(detailsOffen ? null : person.id)}
-                    className="min-w-0 text-left"
-                  >
-                    <div className="text-xl font-black text-white hover:text-sky-100">
-                      {person.name}
-                    </div>
-                    <div className="mt-1 text-sm text-white/55">
-                      {person.rolle} · Details {detailsOffen ? "ausblenden" : "anzeigen"}
-                    </div>
-                  </button>
-
-                  <span
-                    className={`rounded-full border px-3 py-1 text-sm font-black ${
-                      person.differenz >= 0
-                        ? "border-green-400/30 bg-green-500/10 text-green-300"
-                        : "border-red-400/30 bg-red-500/10 text-red-300"
-                    }`}
-                  >
-                    {formatStunden(Number(person.differenz || 0), true)}
-                  </span>
-                </div>
-
-                <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                  <Info label="Arbeitstage" value={person.personArbeitstage} />
-                  <Info
-                    label="Soll"
-                    value={formatStunden(Number(person.sollstunden || 0))}
-                  />
-                  <Info label="Ist" value={formatStunden(Number(person.iststunden || 0))} />
-                  <Info
-                    label="Angerechnet"
-                    value={formatStunden(Number(person.angerechneteStunden || 0))}
-                  />
-                  <Info label="Urlaub" value={person.urlaubstagePerson} />
-                  <Info label="Krank" value={person.kranktagePerson} />
-                  <Info
-                    label="ÜA Stunden"
-                    value={formatStunden(-Number(person.ueberstundenAbbauStunden || 0))}
-                    orange
-                  />
-                </div>
-
-                {detailsOffen && <MitarbeiterDetail person={person} formatStunden={formatStunden} />}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="hidden overflow-hidden rounded-xl border border-white/10 md:block">
-          <div className="overflow-x-auto">
-            <div className="min-w-[1250px]">
-              <div className="grid grid-cols-9 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
-                <div>Name</div>
-                <div>Rolle</div>
-                <div>Arbeitstage</div>
-                <div>Soll</div>
-                <div>Ist</div>
-                <div>Angerechnet</div>
-                <div>Überstunden</div>
-                <div>Abwesenheit</div>
-                <div>ÜA Abbau</div>
-              </div>
-
-              {mitarbeiterStats.map((person) => {
-                const detailsOffen = String(teamDetailsOffenId || "") === String(person.id);
-
-                return (
-                  <div key={person.id} className="border-b border-white/10">
-                    <div className="grid grid-cols-9 items-center px-5 py-4 text-white/80 transition hover:bg-white/[0.03]">
-                      <button
-                        type="button"
-                        onClick={() => setTeamDetailsOffenId(detailsOffen ? null : person.id)}
-                        className="text-left text-lg font-black text-white transition hover:text-sky-100"
-                      >
-                        {detailsOffen ? "▾" : "▸"} {person.name}
-                      </button>
-                      <div>{person.rolle}</div>
-                      <div>{person.personArbeitstage}</div>
-                      <div>{formatStunden(Number(person.sollstunden || 0))}</div>
-                      <div>{formatStunden(Number(person.iststunden || 0))}</div>
-
-                      <div className="text-lg font-black text-white">
-                        {formatStunden(Number(person.angerechneteStunden || 0))}
-                      </div>
-
-                      <div
-                        className={`font-black ${
-                          Number(person.differenz || 0) >= 0
-                            ? "text-green-400"
-                            : "text-red-400"
-                        }`}
-                      >
-                        {formatStunden(Number(person.differenz || 0), true)}
-                      </div>
-
-                      <div>
-                        U: {person.urlaubstagePerson} / K:{" "}
-                        {person.kranktagePerson}
-                      </div>
-
-                      <div className="font-black text-slate-100">
-                      {formatStunden(-Number(person.ueberstundenAbbauStunden || 0))}
-                      </div>
-                    </div>
-
-                    {detailsOffen && <MitarbeiterDetail person={person} formatStunden={formatStunden} desktop />}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
       <DropdownPanel
         id="projektuebersicht"
         title="Projektübersicht"
@@ -2554,18 +2669,18 @@ const systemStatus =
         open={projektUebersichtOffen}
         onToggle={() => setProjektUebersichtOffen(!projektUebersichtOffen)}
       >
-<section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/30 lg:p-7">
+<section className="rounded-[2rem] border border-white/70 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-slate-900/10 lg:p-7">
         <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div>
-            <h2 className="text-2xl font-black text-white">
+            <h2 className="text-2xl font-black text-slate-950">
               Projektübersicht
             </h2>
-            <p className="mt-1 text-white/55">
+            <p className="mt-1 text-slate-500">
               Aktuelle Projektbelastung im laufenden Monat
             </p>
           </div>
 
-          <div className="text-sm text-white/50">
+          <div className="text-sm text-slate-500">
             {projektStunden.length} Projekte
           </div>
         </div>
@@ -2574,19 +2689,19 @@ const systemStatus =
           {projektStunden.map((projekt) => (
             <div
               key={projekt.name}
-              className="rounded-2xl border border-white/10 bg-black/25 p-5"
+              className="rounded-2xl border border-white/70 bg-white/50 p-5"
             >
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <div className="text-lg font-black text-white">
+                  <div className="text-lg font-black text-slate-950">
                     {projekt.name}
                   </div>
-                  <p className="mt-1 text-sm text-white/55">
+                  <p className="mt-1 text-sm text-slate-500">
                     Kunde: {projekt.kunde || "-"}
                   </p>
                 </div>
 
-                <div className="font-black text-slate-100">
+                <div className="font-black text-slate-950">
                   {formatStunden(Number(projekt.stunden || 0))}
                 </div>
               </div>
@@ -2594,10 +2709,10 @@ const systemStatus =
           ))}
         </div>
 
-        <div className="hidden overflow-hidden rounded-xl border border-white/10 md:block">
+        <div className="hidden overflow-hidden rounded-xl border border-white/70 md:block">
           <div className="overflow-x-auto">
             <div className="min-w-[700px]">
-              <div className="grid grid-cols-3 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+              <div className="grid grid-cols-3 border-b border-white/70 bg-stone-900/5 px-5 py-4 text-sm font-bold uppercase tracking-wide text-slate-500">
                 <div>Projekt</div>
                 <div>Kunde</div>
                 <div>Stunden</div>
@@ -2606,11 +2721,11 @@ const systemStatus =
               {projektStunden.map((projekt) => (
                 <div
                   key={projekt.name}
-                  className="grid grid-cols-3 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
+                  className="grid grid-cols-3 items-center border-b border-white/70 px-5 py-4 text-slate-700 transition hover:bg-white/50"
                 >
-                  <div className="text-lg font-black text-white">{projekt.name}</div>
-                  <div className="text-sm text-white/55">{projekt.kunde || "-"}</div>
-                  <div className="font-black text-slate-100">
+                  <div className="text-lg font-black text-slate-950">{projekt.name}</div>
+                  <div className="text-sm text-slate-500">{projekt.kunde || "-"}</div>
+                  <div className="font-black text-slate-950">
                     {formatStunden(Number(projekt.stunden || 0))}
                   </div>
                 </div>
@@ -2620,6 +2735,56 @@ const systemStatus =
         </div>
       </section>
       </DropdownPanel>
+
+      <style jsx global>{`
+        .chef-dashboard-v12 input,
+        .chef-dashboard-v12 select {
+          color: #020617 !important;
+          color-scheme: light;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
+        }
+
+        .chef-dashboard-v12 input::placeholder {
+          color: rgba(15, 23, 42, 0.45) !important;
+        }
+
+        .chef-dashboard-v12 option {
+          color: #020617;
+          background: #ffffff;
+        }
+
+        .chef-dashboard-v12 input::-webkit-datetime-edit,
+        .chef-dashboard-v12 input::-webkit-datetime-edit-fields-wrapper,
+        .chef-dashboard-v12 input::-webkit-datetime-edit-text,
+        .chef-dashboard-v12 input::-webkit-datetime-edit-month-field,
+        .chef-dashboard-v12 input::-webkit-datetime-edit-day-field,
+        .chef-dashboard-v12 input::-webkit-datetime-edit-year-field,
+        .chef-dashboard-v12 input::-webkit-datetime-edit-hour-field,
+        .chef-dashboard-v12 input::-webkit-datetime-edit-minute-field,
+        .chef-dashboard-v12 input::-webkit-datetime-edit-ampm-field {
+          color: #020617 !important;
+        }
+
+        .chef-dashboard-v12 input:disabled,
+        .chef-dashboard-v12 select:disabled,
+        .chef-dashboard-v12 input:disabled::-webkit-datetime-edit,
+        .chef-dashboard-v12 input:disabled::-webkit-datetime-edit-fields-wrapper,
+        .chef-dashboard-v12 input:disabled::-webkit-datetime-edit-text,
+        .chef-dashboard-v12 input:disabled::-webkit-datetime-edit-month-field,
+        .chef-dashboard-v12 input:disabled::-webkit-datetime-edit-day-field,
+        .chef-dashboard-v12 input:disabled::-webkit-datetime-edit-year-field,
+        .chef-dashboard-v12 input:disabled::-webkit-datetime-edit-hour-field,
+        .chef-dashboard-v12 input:disabled::-webkit-datetime-edit-minute-field {
+          color: rgba(15, 23, 42, 0.48) !important;
+          -webkit-text-fill-color: rgba(15, 23, 42, 0.48) !important;
+        }
+
+        .chef-dashboard-v12 input::-webkit-calendar-picker-indicator {
+          filter: none;
+          opacity: 0.58;
+          cursor: pointer;
+        }
+      `}</style>
     </main>
   );
 }
@@ -2630,32 +2795,38 @@ function KpiCard({
   orange,
   green,
   red,
+  compact,
 }: {
   label: string;
   value: string | number;
   orange?: boolean;
   green?: boolean;
   red?: boolean;
+  compact?: boolean;
 }) {
   const color = green
-    ? "text-green-400"
+    ? "text-green-600"
     : red
-    ? "text-red-400"
+    ? "text-red-500"
     : orange
-    ? "text-slate-200"
-    : "text-slate-100";
+    ? "text-orange-700"
+    : "text-slate-950";
 
   return (
-  <div className="group rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
-      <div className={`text-4xl font-black md:text-5xl ${color}`}>
+    <div
+      className={`group rounded-[1.35rem] border border-white/70 bg-white/60 shadow-[0_16px_42px_rgba(15,23,42,0.08)] backdrop-blur-xl transition hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/70 hover:shadow-orange-900/10 ${
+        compact ? "p-4" : "p-5"
+      }`}
+    >
+      <div className={`${compact ? "text-2xl md:text-3xl" : "text-4xl md:text-5xl"} font-black ${color}`}>
         {value}
       </div>
 
-      <div className="mt-3 text-xs font-black uppercase tracking-[0.22em] text-white/45">
+      <div className="mt-3 text-xs font-black uppercase tracking-[0.22em] text-slate-500">
         {label}
       </div>
 
-      <div className="mt-5 h-1 w-16 rounded-full bg-white/30 transition-all duration-300 group-hover:w-24 group-hover:bg-sky-200/70" />
+      <div className="mt-5 h-1 w-16 rounded-full bg-stone-900/10 transition-all duration-300 group-hover:w-24 group-hover:bg-orange-300/70" />
     </div>
   );
 }
@@ -2666,22 +2837,36 @@ function HeroMini({
   value,
   orange,
   green,
+  dark,
 }: {
   label: string;
   value: string | number;
   orange?: boolean;
   green?: boolean;
+  dark?: boolean;
 }) {
-  const color = orange
-    ? "text-slate-200"
+  const color = dark
+    ? orange
+      ? "text-orange-200"
+      : green
+      ? "text-green-300"
+      : "text-white"
     : green
-    ? "text-green-400"
-    : "text-slate-100";
+    ? "text-green-600"
+    : orange
+    ? "text-orange-700"
+    : "text-slate-950";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div
+      className={`rounded-2xl border p-3 text-center transition ${
+        dark
+          ? "border-white/10 bg-white/[0.08] hover:border-orange-200/40 hover:bg-orange-300/10"
+          : "border-white/70 bg-white/60 shadow-[0_10px_28px_rgba(15,23,42,0.06)] hover:border-orange-300/40 hover:bg-orange-50/80"
+      }`}
+    >
       <div className={`text-xl font-black leading-tight md:text-2xl ${color}`}>{value}</div>
-      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
+      <div className={`mt-1 text-[9px] font-black uppercase tracking-[0.16em] ${dark ? "text-white/50" : "text-slate-500"}`}>
         {label}
       </div>
     </div>
@@ -2698,11 +2883,11 @@ function MiniCard({
   orange?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/25 p-5 transition hover:border-sky-300/25 hover:bg-sky-300/5">
-      <div className="text-sm font-bold text-white/50">{label}</div>
+    <div className="rounded-2xl border border-white/70 bg-white/60 p-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)] transition hover:border-orange-300/40 hover:bg-orange-50/80">
+      <div className="text-sm font-bold text-slate-500">{label}</div>
       <div
         className={`mt-3 text-4xl font-black ${
-          orange ? "text-slate-200" : "text-slate-100"
+          orange ? "text-orange-800" : "text-slate-950"
         }`}
       >
         {value}
@@ -2711,6 +2896,30 @@ function MiniCard({
   );
 }
 
+
+function QuickDropdownButton({
+  eyebrow,
+  label,
+  onClick,
+}: {
+  eyebrow: string;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex min-w-[170px] items-center justify-between gap-3 rounded-2xl border border-white/60 bg-white/55 px-4 py-3 text-left text-slate-950 shadow-[0_10px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-300/40 hover:bg-orange-100/60"
+    >
+      <span>
+        <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{eyebrow}</span>
+        <span className="mt-0.5 block text-sm font-black text-slate-950">{label}</span>
+      </span>
+      <span className="text-xs font-black text-orange-800 opacity-60 transition group-hover:opacity-100">›</span>
+    </button>
+  );
+}
 
 function DropdownPanel({
   id,
@@ -2730,26 +2939,26 @@ function DropdownPanel({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30">
+    <section id={id} className="overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-slate-900/10">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-sky-300/5 lg:flex-row lg:items-center lg:p-7"
+        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-orange-300/5 lg:flex-row lg:items-center lg:p-7"
       >
         <div>
-          <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-orange-800">
             {eyebrow}
           </div>
-          <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
-          <p className="mt-1 text-white/55">{description}</p>
+          <h2 className="mt-2 text-2xl font-black text-slate-950">{title}</h2>
+          <p className="mt-1 text-slate-500">{description}</p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 transition hover:border-sky-300/35 hover:bg-sky-300/10 hover:text-sky-100">
+        <div className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-5 py-3 text-sm font-black text-slate-950 transition hover:border-orange-300/40 hover:bg-orange-300/10 hover:text-orange-700">
           {open ? "Schließen ▲" : "Öffnen ▼"}
         </div>
       </button>
 
-      {open && <div className="space-y-6 border-t border-white/10 p-6 lg:p-7">{children}</div>}
+      {open && <div className="space-y-6 border-t border-white/70 p-6 lg:p-7">{children}</div>}
     </section>
   );
 }
@@ -2761,8 +2970,8 @@ function QuickLink({ href, label, orange, onClick }: { href: string; label: stri
       onClick={onClick}
       className={`block rounded-xl border p-4 font-black transition-all duration-300 hover:-translate-y-1 ${
         orange
-          ? "border-slate-200/20 bg-white/[0.03] text-slate-100 hover:border-slate-200/35 hover:bg-sky-300/5"
-          : "border-white/10 bg-white/[0.03] text-white hover:border-sky-300/25 hover:bg-sky-300/5 hover:text-slate-100"
+          ? "border-orange-200/40 bg-white/50 text-slate-950 hover:border-slate-200/40 hover:bg-orange-300/5"
+          : "border-white/70 bg-white/50 text-slate-950 hover:border-orange-300/25 hover:bg-orange-300/5 hover:text-slate-950"
       }`}
     >
       {label}
@@ -2785,7 +2994,7 @@ function MitarbeiterDetail({
 
   return (
     <div className={`${desktop ? "px-5 pb-5" : "mt-5"}`}>
-      <div className="rounded-2xl border border-sky-300/20 bg-sky-300/[0.04] p-5">
+      <div className="rounded-2xl border border-orange-300/20 bg-orange-300/[0.04] p-5">
         <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Info label="Echte Tageszeit" value={formatStunden(Number(person.iststunden || 0))} />
           <Info label="Projektzeit" value={formatStunden(Number(person.projektStundenOhneBetriebsunterhalt || 0))} />
@@ -2794,13 +3003,13 @@ function MitarbeiterDetail({
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
-          <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-            <div className="mb-3 text-xs font-black uppercase tracking-[0.22em] text-white/40">
+          <div className="rounded-2xl border border-white/70 bg-white/50 p-4">
+            <div className="mb-3 text-xs font-black uppercase tracking-[0.22em] text-slate-400">
               Tage · Von/Bis · Netto · Status
             </div>
 
             {tagesliste.length === 0 ? (
-              <div className="text-sm font-bold text-white/40">
+              <div className="text-sm font-bold text-slate-400">
                 Noch keine abgeschlossenen Tageszeiten in diesem Zeitraum.
               </div>
             ) : (
@@ -2808,16 +3017,16 @@ function MitarbeiterDetail({
                 {tagesliste.map((tag: any) => (
                   <div
                     key={`${person.id}-${tag.id || tag.datum}`}
-                    className="grid grid-cols-1 gap-2 rounded-xl border border-white/10 bg-white/[0.035] p-3 text-sm text-white/70 md:grid-cols-[1fr_0.9fr_0.8fr_0.8fr]"
+                    className="grid grid-cols-1 gap-2 rounded-xl border border-white/70 bg-white/50 p-3 text-sm text-slate-600 md:grid-cols-[1fr_0.9fr_0.8fr_0.8fr]"
                   >
-                    <div className="font-black text-white">{tag.datum}</div>
+                    <div className="font-black text-slate-950">{tag.datum}</div>
                     <div>
                       {String(tag.startzeit || "").slice(0, 5) || "--:--"} - {String(tag.endzeit || "").slice(0, 5) || "--:--"}
                     </div>
-                    <div className="font-black text-sky-100">
+                    <div className="font-black text-orange-700">
                       {formatStunden(Number(tag.netto_stunden || 0))}
                     </div>
-                    <div className="text-white/45">
+                    <div className="text-slate-500">
                       {tag.status || "-"} · {tag.buchungen || 0} Buch.
                     </div>
                   </div>
@@ -2826,13 +3035,13 @@ function MitarbeiterDetail({
             )}
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-            <div className="mb-3 text-xs font-black uppercase tracking-[0.22em] text-white/40">
+          <div className="rounded-2xl border border-white/70 bg-white/50 p-4">
+            <div className="mb-3 text-xs font-black uppercase tracking-[0.22em] text-slate-400">
               Projektverteilung
             </div>
 
             {projektSummen.length === 0 ? (
-              <div className="text-sm font-bold text-white/40">
+              <div className="text-sm font-bold text-slate-400">
                 Noch keine Projektbuchungen in diesem Zeitraum.
               </div>
             ) : (
@@ -2840,12 +3049,12 @@ function MitarbeiterDetail({
                 {projektSummen.map((projekt: any) => (
                   <div
                     key={`${person.id}-${projekt.projektName}`}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-3"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-white/70 bg-white/50 p-3"
                   >
-                    <div className="min-w-0 truncate text-sm font-black text-white">
+                    <div className="min-w-0 truncate text-sm font-black text-slate-950">
                       {projekt.projektName}
                     </div>
-                    <div className="shrink-0 text-sm font-black text-sky-100">
+                    <div className="shrink-0 text-sm font-black text-orange-700">
                       {formatStunden(Number(projekt.stunden || 0))}
                     </div>
                   </div>
@@ -2869,11 +3078,11 @@ function Info({
   orange?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/25 p-3">
-      <div className="text-xs text-white/45">{label}</div>
+    <div className="rounded-xl border border-white/70 bg-stone-900/5 p-3">
+      <div className="text-xs text-slate-500">{label}</div>
       <div
         className={`mt-1 font-bold ${
-          orange ? "text-slate-200" : "text-slate-100"
+          orange ? "text-orange-800" : "text-slate-950"
         }`}
       >
         {value}

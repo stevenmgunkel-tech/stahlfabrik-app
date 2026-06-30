@@ -576,18 +576,18 @@ export default function AbwesenheitenPage() {
 
   function typFarbe(eintragTyp: string) {
     if (eintragTyp === "Urlaub") {
-      return "border-sky-300/30 bg-sky-300/10 text-sky-200";
+      return "border-orange-300/35 bg-orange-300/10 text-orange-700";
     }
 
     if (eintragTyp === "Krank") {
-      return "border-red-400/30 bg-red-500/10 text-red-300";
+      return "border-red-400/30 bg-red-950/10 text-red-800";
     }
 
     if (eintragTyp === "Überstundenabbau") {
-      return "border-slate-200/30 bg-slate-200/10 text-slate-100";
+      return "border-slate-200/30 bg-slate-200/10 text-slate-950";
     }
 
-    return "border-white/10 bg-white/[0.06] text-white/70";
+    return "border-white/70 bg-white/60 text-slate-600";
   }
 
   function statusFarbe(status: string) {
@@ -596,10 +596,10 @@ export default function AbwesenheitenPage() {
     }
 
     if (status === "Abgelehnt") {
-      return "border-red-400/30 bg-red-500/10 text-red-300";
+      return "border-red-400/30 bg-red-950/10 text-red-800";
     }
 
-    return "border-slate-200/30 bg-slate-200/10 text-slate-100";
+    return "border-slate-200/30 bg-slate-200/10 text-slate-950";
   }
 
   function eintragZeitraum(eintrag: Abwesenheit) {
@@ -642,40 +642,40 @@ export default function AbwesenheitenPage() {
   const berechneteStunden = Number(stunden || 0);
 
   return (
-    <main className="space-y-8 text-slate-100">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
+    <main className="abwesenheiten-v12 space-y-6 text-slate-950">
+      <section className="v12-hero relative overflow-hidden rounded-[2rem] border border-white/60 bg-gradient-to-br from-[#302720]/90 via-[#26272a]/90 to-[#161719]/95 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.16)] lg:p-7">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.46]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
             style={{
               backgroundImage: "url('/berg.png')",
-              filter: "brightness(1.65) contrast(1.05)",
+              filter: "brightness(1.45) contrast(1.04) saturate(0.92)",
             }}
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#1a1512]/90 via-[#26231f]/60 to-[#f4eee5]/10" />
 
         <div className="relative z-10 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
           <div>
-            <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
-              ODZ SILVER · Abwesenheiten
+            <div className="inline-flex rounded-full border border-orange-200/30 bg-orange-300/20 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-orange-100">
+              ODZ V1.2 · Abwesenheiten
             </div>
 
-            <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="mt-3 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
               Abwesenheiten
             </h1>
 
-            <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-white/65 sm:text-base">
+            <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-950/65 sm:text-base">
               Urlaub, Krankheit und Überstundenabbau sauber erfassen und kontrollieren.
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-3">
-              <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-white/70 bg-white/55 px-3 py-2 backdrop-blur-xl">
                 <span
                   className={`h-3 w-3 rounded-full ${
                     konto.offeneAntraege > 0
-                      ? "bg-sky-300 shadow-lg shadow-sky-300/40"
+                      ? "bg-sky-300 shadow-lg shadow-orange-900/20"
                       : "bg-green-400 shadow-lg shadow-green-400/40"
                   }`}
                 />
@@ -686,7 +686,7 @@ export default function AbwesenheitenPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/70 bg-white/55 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-3">
             <HeroMini label="Ferien" value={resturlaub} green={resturlaub >= 0} red={resturlaub < 0} />
             <HeroMini label="Offen" value={String(konto.offeneAntraege).padStart(2, "0")} blue={konto.offeneAntraege > 0} />
             <HeroMini label="Krank" value={String(konto.kranktage).padStart(2, "0")} red={konto.kranktage > 0} />
@@ -694,15 +694,17 @@ export default function AbwesenheitenPage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <section className="rounded-[1.5rem] border border-white/60 bg-white/35 p-2 shadow-[0_14px_44px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         <ActionCard href="#konto" label="Konto" title="🌿 Urlaub" onClick={() => setKontoOffen(true)} />
         <ActionCard href="#formular" label="Beantragen" title="✦ Abwesenheit" onClick={() => setFormularOffen(true)} />
         <ActionCard href="#uebersicht" label="Status" title="▤ Anträge" onClick={() => setUebersichtOffen(true)} />
         <ActionCard href="#uebersicht" label="Verlauf" title="📊 Übersicht" onClick={() => setUebersichtOffen(true)} />
+        </div>
       </section>
 
       {meldung && (
-        <div className="rounded-xl border border-slate-200/20 bg-slate-200/10 p-4 text-sm font-bold text-slate-100">
+        <div className="rounded-xl border border-orange-200/40 bg-orange-100/60 p-4 text-sm font-bold text-slate-950">
           {meldung}
         </div>
       )}
@@ -730,30 +732,30 @@ export default function AbwesenheitenPage() {
           />
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
+        <div className="rounded-2xl border border-white/70 bg-white/55 p-5">
           <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-end">
             <div>
-              <div className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
+              <div className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">
                 Verbrauch
               </div>
-              <div className="mt-2 text-2xl font-black text-white">
+              <div className="mt-2 text-2xl font-black text-slate-950">
                 {konto.genommenerUrlaub} von {konto.jahresurlaub} Tagen
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-black text-slate-100">
+            <div className="rounded-2xl border border-white/70 bg-white/55 px-4 py-3 text-sm font-black text-slate-950">
               {restProzent.toFixed(0)}% verfügbar
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-full border border-white/10 bg-black/35 p-1">
+          <div className="overflow-hidden rounded-full border border-white/70 bg-stone-900/10 p-1">
             <div
-              className="h-4 rounded-full bg-gradient-to-r from-sky-200 to-emerald-300 shadow-lg shadow-sky-300/20 transition-all"
+              className="h-4 rounded-full bg-gradient-to-r from-orange-300 to-emerald-300 shadow-lg shadow-orange-900/10 transition-all"
               style={{ width: `${verbrauchtProzent}%` }}
             />
           </div>
 
-          <div className="mt-4 flex justify-between text-sm text-white/50">
+          <div className="mt-4 flex justify-between text-sm text-slate-500">
             <span>{verbrauchtProzent.toFixed(0)}% verbraucht</span>
             <span>{restProzent.toFixed(0)}% verfügbar</span>
           </div>
@@ -776,11 +778,11 @@ export default function AbwesenheitenPage() {
           />
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-          <div className="text-sm font-bold text-white/50">Aktuelle Überstunden</div>
+        <div className="rounded-2xl border border-white/70 bg-white/55 p-5">
+          <div className="text-sm font-bold text-slate-500">Aktuelle Überstunden</div>
           <div
             className={`mt-2 text-3xl font-black ${
-              konto.ueberstundenAktuell >= 0 ? "text-green-400" : "text-red-400"
+              konto.ueberstundenAktuell >= 0 ? "text-green-600" : "text-red-600"
             }`}
           >
             {formatStunden(konto.ueberstundenAktuell, true)}
@@ -801,11 +803,11 @@ export default function AbwesenheitenPage() {
         onToggle={() => setFormularOffen(!formularOffen)}
       >
         <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-          <div className="rounded-2xl border border-white/10 bg-black/25 px-5 py-4">
-            <div className="text-xs font-black uppercase tracking-[0.2em] text-white/45">
+          <div className="rounded-2xl border border-white/70 bg-white/55 px-5 py-4">
+            <div className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">
               Berechnet
             </div>
-            <div className="mt-2 text-3xl font-black text-slate-100">
+            <div className="mt-2 text-3xl font-black text-slate-950">
               {typ === "Überstundenabbau"
                 ? formatStunden(berechneteStunden || 0)
                 : `${berechneteTage} Tage`}
@@ -813,7 +815,7 @@ export default function AbwesenheitenPage() {
           </div>
 
           {typ === "Überstundenabbau" && (
-            <div className="rounded-2xl border border-sky-300/20 bg-sky-300/5 p-4 text-sm font-medium text-sky-100">
+            <div className="rounded-2xl border border-orange-300/30 bg-orange-300/5 p-4 text-sm font-medium text-orange-800">
               Überstundenabbau wird in Stunden erfasst und später direkt vom Überstundenkonto abgezogen.
             </div>
           )}
@@ -829,7 +831,7 @@ export default function AbwesenheitenPage() {
                 setBis("");
                 setStunden("");
               }}
-              className="dark-input"
+              className="warm-input"
             >
               <option value="Urlaub">Urlaub</option>
               <option value="Krank">Krank</option>
@@ -844,7 +846,7 @@ export default function AbwesenheitenPage() {
                   type="date"
                   value={von}
                   onChange={(e) => setVon(e.target.value)}
-                  className="dark-input"
+                  className="warm-input"
                 />
               </Field>
 
@@ -856,7 +858,7 @@ export default function AbwesenheitenPage() {
                   placeholder="z.B. 2.5"
                   value={stunden}
                   onChange={(e) => setStunden(e.target.value)}
-                  className="dark-input"
+                  className="warm-input"
                 />
               </Field>
             </>
@@ -867,7 +869,7 @@ export default function AbwesenheitenPage() {
                   type="date"
                   value={von}
                   onChange={(e) => setVon(e.target.value)}
-                  className="dark-input"
+                  className="warm-input"
                 />
               </Field>
 
@@ -876,7 +878,7 @@ export default function AbwesenheitenPage() {
                   type="date"
                   value={bis}
                   onChange={(e) => setBis(e.target.value)}
-                  className="dark-input"
+                  className="warm-input"
                 />
               </Field>
             </>
@@ -887,7 +889,7 @@ export default function AbwesenheitenPage() {
               type="button"
               onClick={abwesenheitHinzufuegen}
               disabled={saving}
-              className="rounded-2xl border border-slate-200/30 bg-slate-200/10 p-4 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/10 hover:shadow-sky-300/10 disabled:opacity-50"
+              className="rounded-2xl border border-orange-200/50 bg-orange-100/60 p-4 font-black text-slate-950 shadow-lg shadow-orange-900/10 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/60 hover:bg-orange-100/80 hover:shadow-orange-900/10 disabled:opacity-50"
             >
               {saving ? "Speichern..." : "Speichern"}
             </button>
@@ -905,19 +907,19 @@ export default function AbwesenheitenPage() {
       >
         <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div>
-            <h2 className="text-2xl font-black text-white">Übersicht</h2>
-            <p className="mt-1 text-white/55">
+            <h2 className="text-2xl font-black text-slate-950">Übersicht</h2>
+            <p className="mt-1 text-slate-500">
               Alle Abwesenheiten mit Status und Menge.
             </p>
           </div>
 
-          <div className="text-sm text-white/50">
+          <div className="text-sm text-slate-500">
             {abwesenheiten.length} Einträge
           </div>
         </div>
 
         {abwesenheiten.length === 0 && (
-          <div className="rounded-xl border border-white/10 bg-black/25 p-5 text-white/55">
+          <div className="rounded-xl border border-white/70 bg-white/55 p-5 text-slate-500">
             Noch keine Abwesenheiten vorhanden.
           </div>
         )}
@@ -937,10 +939,10 @@ export default function AbwesenheitenPage() {
           ))}
         </div>
 
-        <div className="hidden overflow-hidden rounded-2xl border border-white/10 md:block">
+        <div className="hidden overflow-hidden rounded-2xl border border-white/70 md:block">
           <div className="overflow-x-auto">
             <div className="min-w-[850px]">
-              <div className="grid grid-cols-6 border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+              <div className="grid grid-cols-6 border-b border-white/70 bg-stone-900/5 px-5 py-4 text-sm font-bold uppercase tracking-wide text-slate-500">
                 <div>Typ</div>
                 <div>Von</div>
                 <div>Bis / Datum</div>
@@ -952,7 +954,7 @@ export default function AbwesenheitenPage() {
               {abwesenheiten.map((eintrag) => (
                 <div
                   key={eintrag.id}
-                  className="grid grid-cols-6 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-sky-300/5"
+                  className="grid grid-cols-6 items-center border-b border-white/70 px-5 py-4 text-slate-700 transition hover:bg-orange-300/5"
                 >
                   <div>
                     <span
@@ -972,7 +974,7 @@ export default function AbwesenheitenPage() {
                       : eintrag.bis}
                   </div>
 
-                  <div className="font-black text-slate-100">
+                  <div className="font-black text-slate-950">
                     {eintragMenge(eintrag)}
                   </div>
 
@@ -991,12 +993,12 @@ export default function AbwesenheitenPage() {
                       <button
                         type="button"
                         onClick={() => abwesenheitLoeschen(eintrag.id)}
-                        className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 font-bold text-red-300 transition hover:bg-red-500/15"
+                        className="rounded-lg border border-red-950/30 bg-red-950/10 px-4 py-2 font-bold text-red-800 transition hover:bg-red-950/15"
                       >
                         Löschen
                       </button>
                     ) : (
-                      <span className="text-sm font-bold text-white/35">Verlauf</span>
+                      <span className="text-sm font-bold text-slate-400">Verlauf</span>
                     )}
                   </div>
                 </div>
@@ -1007,59 +1009,60 @@ export default function AbwesenheitenPage() {
       </DropdownPanel>
 
       <style jsx global>{`
-        .dark-input {
+        .warm-input {
           width: 100%;
           border-radius: 1rem;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(0, 0, 0, 0.28);
+          border: 1px solid rgba(255, 255, 255, 0.72);
+          background: rgba(255, 255, 255, 0.82);
           padding: 0.95rem 1rem;
-          color: white;
+          color: #020617;
           outline: none;
           transition: 0.2s ease;
+          color-scheme: light;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
         }
 
-        .dark-input:focus {
-          border-color: rgba(125, 211, 252, 0.45);
-          box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.1);
-          background: rgba(0, 0, 0, 0.38);
+        .warm-input:focus {
+          border-color: rgba(251, 146, 60, 0.55);
+          box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+          background: rgba(255, 255, 255, 0.94);
         }
 
-        .dark-input::placeholder {
-          color: rgba(255, 255, 255, 0.35);
+        .warm-input::placeholder {
+          color: rgba(15, 23, 42, 0.45);
         }
 
-        .dark-input option {
-          background: #111315;
-          color: white;
+        .warm-input option {
+          background: #ffffff;
+          color: #020617;
         }
 
-        .dark-input[type="date"],
-        .dark-input[type="time"],
-        .dark-input[type="datetime-local"],
-        .dark-input[type="month"] {
-          color-scheme: dark !important;
+        .warm-input::-webkit-datetime-edit,
+        .warm-input::-webkit-datetime-edit-fields-wrapper,
+        .warm-input::-webkit-datetime-edit-text,
+        .warm-input::-webkit-datetime-edit-month-field,
+        .warm-input::-webkit-datetime-edit-day-field,
+        .warm-input::-webkit-datetime-edit-year-field,
+        .warm-input::-webkit-datetime-edit-hour-field,
+        .warm-input::-webkit-datetime-edit-minute-field,
+        .warm-input::-webkit-datetime-edit-ampm-field {
+          color: #020617;
+        }
+
+        .warm-input::-webkit-calendar-picker-indicator {
+          filter: none;
+          opacity: 0.58;
+          cursor: pointer;
+        }
+
+        .abwesenheiten-v12 .v12-hero .text-slate-950,
+        .abwesenheiten-v12 .v12-hero .text-slate-600,
+        .abwesenheiten-v12 .v12-hero .text-slate-500 {
+          color: rgba(255, 255, 255, 0.72) !important;
+        }
+
+        .abwesenheiten-v12 .v12-hero h1 {
           color: #ffffff !important;
-          padding-right: 3rem !important;
-          background-repeat: no-repeat !important;
-          background-position: right 1rem center !important;
-          background-size: 1.15rem 1.15rem !important;
-        }
-
-        .dark-input[type="date"],
-        .dark-input[type="month"],
-        .dark-input[type="datetime-local"] {
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E") !important;
-        }
-
-        .dark-input[type="time"] {
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E") !important;
-        }
-
-        .dark-input::-webkit-calendar-picker-indicator {
-          opacity: 0 !important;
-          cursor: pointer !important;
-          width: 2.75rem !important;
-          height: 100% !important;
         }
       `}</style>
     </main>
@@ -1077,16 +1080,16 @@ function InfoBox({
 }) {
   const color =
     highlight === "green"
-      ? "text-green-400"
+      ? "text-green-600"
       : highlight === "red"
-      ? "text-red-400"
+      ? "text-red-600"
       : highlight === "blue"
-      ? "text-sky-200"
-      : "text-slate-100";
+      ? "text-orange-700"
+      : "text-slate-950";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
-      <div className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
+    <div className="rounded-2xl border border-white/70 bg-white/60 p-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-lg hover:shadow-orange-900/10">
+      <div className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
         {label}
       </div>
       <div className={`mt-2 text-2xl font-black ${color}`}>{value}</div>
@@ -1109,10 +1112,10 @@ function ActionCard({
     <a
       href={href}
       onClick={onClick}
-      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+      className="group block w-full rounded-2xl border border-white/70 bg-white/55 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-lg hover:shadow-orange-900/10"
     >
-      <div className="text-sm text-white/50">{label}</div>
-      <div className="mt-2 text-lg font-black text-white">{title}</div>
+      <div className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">{label}</div>
+      <div className="mt-1 text-base font-black text-slate-950">{title}</div>
     </a>
   );
 }
@@ -1135,24 +1138,24 @@ function DropdownPanel({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30">
+    <section id={id} className="overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white/[0.08] to-white/[0.025] shadow-2xl shadow-slate-900/10">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-sky-300/5 lg:flex-row lg:items-center lg:p-7"
+        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-orange-300/5 lg:flex-row lg:items-center lg:p-7"
       >
         <div>
-          <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">{eyebrow}</div>
-          <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
-          <p className="mt-1 text-white/55">{description}</p>
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-orange-800">{eyebrow}</div>
+          <h2 className="mt-2 text-2xl font-black text-slate-950">{title}</h2>
+          <p className="mt-1 text-slate-500">{description}</p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 transition hover:border-sky-300/35 hover:bg-sky-300/10 hover:text-sky-100">
+        <div className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-5 py-3 text-sm font-black text-slate-950 transition hover:border-orange-300/40 hover:bg-orange-300/10 hover:text-orange-700">
           {open ? "Schließen ▲" : "Öffnen ▼"}
         </div>
       </button>
 
-      {open && <div className="space-y-6 border-t border-white/10 p-6 lg:p-7">{children}</div>}
+      {open && <div className="space-y-6 border-t border-white/70 p-6 lg:p-7">{children}</div>}
     </section>
   );
 }
@@ -1171,21 +1174,21 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.08] p-3 text-center transition hover:border-orange-200/40 hover:bg-orange-300/10">
       <div
         className={`text-xl font-black leading-tight md:text-2xl ${
           red
-            ? "text-red-400"
+            ? "text-red-300"
             : green
-              ? "text-green-400"
+              ? "text-green-300"
               : blue
-                ? "text-sky-200"
-                : "text-slate-100"
+                ? "text-orange-200"
+                : "text-white"
         }`}
       >
         {value}
       </div>
-      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">{label}</div>
+      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/50">{label}</div>
     </div>
   );
 }
@@ -1199,7 +1202,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-bold text-white/70">{label}</label>
+      <label className="mb-2 block text-sm font-black text-slate-600">{label}</label>
       {children}
     </div>
   );
@@ -1223,7 +1226,7 @@ function MobileEntry({
   canDelete: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-5 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
+    <div className="rounded-2xl border border-white/70 bg-white/60 p-5 transition hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-lg hover:shadow-orange-900/10">
       <div className="flex items-start justify-between gap-4">
         <div>
           <span
@@ -1234,11 +1237,11 @@ function MobileEntry({
             {eintrag.typ || "Urlaub"}
           </span>
 
-          <p className="mt-4 text-lg font-black text-white">
+          <p className="mt-4 text-lg font-black text-slate-950">
             {eintragZeitraum(eintrag)}
           </p>
 
-          <p className="mt-1 text-sm text-white/60">
+          <p className="mt-1 text-sm text-slate-500">
             {eintragMenge(eintrag)}
           </p>
         </div>
@@ -1256,12 +1259,12 @@ function MobileEntry({
         <button
           type="button"
           onClick={onDelete}
-          className="mt-5 w-full rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 font-bold text-red-300 transition hover:bg-red-500/15"
+          className="mt-5 w-full rounded-xl border border-red-950/30 bg-red-950/10 px-4 py-3 font-bold text-red-800 transition hover:bg-red-950/15"
         >
           Löschen
         </button>
       ) : (
-        <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center text-sm font-bold text-white/35">
+        <div className="mt-5 rounded-xl border border-white/70 bg-white/50 px-4 py-3 text-center text-sm font-bold text-slate-400">
           Verlauf bleibt gespeichert
         </div>
       )}

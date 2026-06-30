@@ -1171,24 +1171,24 @@ status: "Abgeschlossen",
   }
 
   return (
-    <main className="space-y-8 text-slate-100">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
+    <main className="arbeitszeiten-v12 space-y-6 text-slate-950">
+      <section className="v12-hero relative overflow-hidden rounded-[2rem] border border-white/60 bg-gradient-to-br from-[#302720]/90 via-[#26272a]/90 to-[#161719]/95 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.16)] lg:p-7">
         <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
             style={{
               backgroundImage: "url('/berg.png')",
-              filter: "brightness(1.65) contrast(1.05)",
+              filter: "brightness(1.45) contrast(1.04) saturate(0.92)",
             }}
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#1a1512]/90 via-[#26231f]/60 to-[#f4eee5]/10" />
 
         <div className="relative z-10 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
           <div>
-            <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
-              ODZ SILVER · Zeiterfassung
+            <div className="inline-flex rounded-full border border-orange-200/30 bg-orange-300/20 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-orange-100">
+              ODZ V1.2 · Zeiterfassung
             </div>
 
             <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -1204,7 +1204,7 @@ status: "Abgeschlossen",
                 <span
                   className={`h-3 w-3 rounded-full ${
                     offenerArbeitstag
-                      ? "bg-green-400 shadow-lg shadow-green-400/40"
+                      ? "bg-emerald-700 shadow-lg shadow-emerald-900/20"
                       : "bg-slate-400"
                   }`}
                 />
@@ -1223,15 +1223,17 @@ status: "Abgeschlossen",
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <ActionCard href="#arbeitstag" label="Start / Stop" title="▶ Arbeitstag" onClick={() => setArbeitstagOffen(true)} />
-        <ActionCard href="#manuell" label="Nachtragen" title="🕒 Manuell" onClick={() => setManuellOffen(true)} />
-        <ActionCard href="#buchen" label="Projekt" title="🏗️ Buchen" onClick={() => setBuchungOffen(true)} />
-        <ActionCard href="#zusammenfassung" label="Suche" title="📊 Zeiten" onClick={() => setZusammenfassungOffen(true)} />
+      <section className="rounded-[1.5rem] border border-white/60 bg-white/35 p-2 shadow-[0_14px_44px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+          <ActionCard href="#arbeitstag" label="Start / Stop" title="▶ Arbeitstag" onClick={() => setArbeitstagOffen(true)} />
+          <ActionCard href="#manuell" label="Nachtragen" title="🕒 Manuell" onClick={() => setManuellOffen(true)} />
+          <ActionCard href="#buchen" label="Projekt" title="🏗️ Buchen" onClick={() => setBuchungOffen(true)} />
+          <ActionCard href="#zusammenfassung" label="Suche" title="📊 Zeiten" onClick={() => setZusammenfassungOffen(true)} />
+        </div>
       </section>
 
       {meldung && (
-        <div className="rounded-xl border border-slate-200/20 bg-slate-200/10 p-4 text-sm font-bold text-slate-100">
+        <div className="rounded-xl border border-orange-200/40 bg-orange-100/60 p-4 text-sm font-bold text-slate-950 shadow-[0_12px_34px_rgba(15,23,42,0.08)]">
           {meldung}
         </div>
       )}
@@ -1249,7 +1251,7 @@ status: "Abgeschlossen",
 
           {offenerArbeitstag ? (
             <>
-              <div className="mt-2 text-xl font-black text-green-400">Arbeitstag läuft</div>
+              <div className="mt-2 text-xl font-black text-emerald-700">Arbeitstag läuft</div>
               <div className="mt-3 text-sm text-white/50">Gestartet um {offenerArbeitstag.startzeit?.slice(0, 5)}</div>
               <div className="mt-3 text-5xl font-black text-white">{laufzeitText()}</div>
             </>
@@ -1262,7 +1264,7 @@ status: "Abgeschlossen",
           <button
             type="button"
             onClick={startArbeitstag}
-            className="rounded-2xl border border-green-500/30 bg-green-500/10 px-5 py-4 font-black text-green-300 shadow-lg shadow-green-500/10 transition-all duration-300 hover:-translate-y-1 hover:border-green-500/50 hover:bg-green-500/15"
+            className="rounded-2xl border border-emerald-900/35 bg-emerald-950/15 px-5 py-4 font-black text-emerald-800 shadow-lg shadow-emerald-950/5 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-900/50 hover:bg-emerald-950/25"
           >
             ▶ Arbeitstag starten
           </button>
@@ -1284,8 +1286,8 @@ status: "Abgeschlossen",
             disabled={!offenerArbeitstag}
             className={`rounded-2xl border px-5 py-4 font-black shadow-lg transition-all duration-300 ${
               offenerArbeitstag
-                ? "border-red-500/40 bg-red-500/15 text-red-300 shadow-red-500/10 hover:-translate-y-1 hover:border-red-500/60 hover:bg-red-500/20 hover:shadow-red-500/20"
-                : "cursor-not-allowed border-red-500/15 bg-red-500/5 text-red-300/40 shadow-none"
+                ? "border-red-950/40 bg-red-950/15 text-red-900 shadow-red-950/5 hover:-translate-y-1 hover:border-red-950/55 hover:bg-red-950/25 hover:shadow-red-950/10"
+                : "cursor-not-allowed border-red-950/15 bg-red-950/5 text-red-900/35 shadow-none"
             }`}
           >
             ■ Arbeitstag stoppen
@@ -1553,7 +1555,7 @@ status: "Abgeschlossen",
                                   ) : (
                                     <div className="mt-4 grid grid-cols-2 gap-2">
                                       <button type="button" onClick={() => bearbeitungStarten(zeit)} className="rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2 text-sm font-bold text-white transition hover:border-sky-300/25 hover:bg-sky-300/10">Bearbeiten</button>
-                                      <button type="button" onClick={() => zeitLoeschen(zeit.id)} className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-bold text-red-300 transition hover:bg-red-500/15">Löschen</button>
+                                      <button type="button" onClick={() => zeitLoeschen(zeit.id)} className="rounded-lg border border-red-950/30 bg-red-950/10 px-3 py-2 text-sm font-bold text-red-900 transition hover:bg-red-950/15">Löschen</button>
                                     </div>
                                   )}
                                 </div>
@@ -1575,33 +1577,94 @@ status: "Abgeschlossen",
         .dark-input {
           width: 100%;
           border-radius: 1rem;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(0, 0, 0, 0.28);
-          padding: 0.95rem 1rem;
-          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.7);
+          background: rgba(255, 255, 255, 0.78);
+          padding: 0.9rem 1rem;
+          color: #020617;
           outline: none;
           transition: 0.2s ease;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+          color-scheme: light;
         }
 
         .dark-input:focus {
-          border-color: rgba(125, 211, 252, 0.45);
-          box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.1);
-          background: rgba(0, 0, 0, 0.38);
+          border-color: rgba(251, 146, 60, 0.55);
+          box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.13), inset 0 1px 0 rgba(255,255,255,0.65);
+          background: rgba(255, 255, 255, 0.92);
         }
 
         .dark-input::placeholder {
-          color: rgba(255, 255, 255, 0.35);
+          color: rgba(100, 116, 139, 0.62);
+        }
+
+        .dark-input::-webkit-datetime-edit,
+        .dark-input::-webkit-datetime-edit-fields-wrapper,
+        .dark-input::-webkit-datetime-edit-text,
+        .dark-input::-webkit-datetime-edit-month-field,
+        .dark-input::-webkit-datetime-edit-day-field,
+        .dark-input::-webkit-datetime-edit-year-field,
+        .dark-input::-webkit-datetime-edit-hour-field,
+        .dark-input::-webkit-datetime-edit-minute-field,
+        .dark-input::-webkit-datetime-edit-ampm-field {
+          color: #020617;
+        }
+
+        .dark-input:disabled,
+        .dark-input:disabled::-webkit-datetime-edit,
+        .dark-input:disabled::-webkit-datetime-edit-fields-wrapper,
+        .dark-input:disabled::-webkit-datetime-edit-text,
+        .dark-input:disabled::-webkit-datetime-edit-month-field,
+        .dark-input:disabled::-webkit-datetime-edit-day-field,
+        .dark-input:disabled::-webkit-datetime-edit-year-field,
+        .dark-input:disabled::-webkit-datetime-edit-hour-field,
+        .dark-input:disabled::-webkit-datetime-edit-minute-field {
+          color: rgba(15, 23, 42, 0.45);
         }
 
         .dark-input option {
-          background: #111315;
-          color: white;
+          background: #ffffff;
+          color: #020617;
         }
 
         .dark-input::-webkit-calendar-picker-indicator {
-          filter: brightness(0) invert(1);
-          opacity: 1;
+          filter: none;
+          opacity: 0.75;
           cursor: pointer;
+        }
+
+        .arbeitszeiten-v12 section:not(.v12-hero) .bg-black\/25,
+        .arbeitszeiten-v12 section:not(.v12-hero) .bg-white\/\[0\.03\],
+        .arbeitszeiten-v12 section:not(.v12-hero) .bg-white\/\[0\.04\],
+        .arbeitszeiten-v12 section:not(.v12-hero) .bg-white\/\[0\.06\] {
+          background: rgba(255, 255, 255, 0.52) !important;
+        }
+
+        .arbeitszeiten-v12 section:not(.v12-hero) .border-white\/10,
+        .arbeitszeiten-v12 section:not(.v12-hero) .border-slate-200\/20 {
+          border-color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        .arbeitszeiten-v12 section:not(.v12-hero) .text-white,
+        .arbeitszeiten-v12 section:not(.v12-hero) .text-slate-100 {
+          color: #020617 !important;
+        }
+
+        .arbeitszeiten-v12 section:not(.v12-hero) [class*="text-white/"] {
+          color: #64748b !important;
+        }
+
+        .arbeitszeiten-v12 section:not(.v12-hero) .text-slate-200 {
+          color: #9a3412 !important;
+        }
+
+        .arbeitszeiten-v12 section:not(.v12-hero) .text-sky-200,
+        .arbeitszeiten-v12 section:not(.v12-hero) .text-sky-100 {
+          color: #9a3412 !important;
+        }
+
+        .arbeitszeiten-v12 section:not(.v12-hero) .hover\:bg-sky-300\/5:hover,
+        .arbeitszeiten-v12 section:not(.v12-hero) .hover\:bg-sky-300\/10:hover {
+          background: rgba(253, 186, 116, 0.14) !important;
         }
       `}</style>
     </main>
@@ -1623,10 +1686,10 @@ function ActionCard({
     <a
       href={href}
       onClick={onClick}
-      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+      className="group block w-full rounded-xl border border-white/70 bg-white/55 px-4 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-300/35 hover:bg-orange-100/45 hover:shadow-[0_14px_34px_rgba(154,52,18,0.10)]"
     >
-      <div className="text-sm text-white/50">{label}</div>
-      <div className="mt-2 text-lg font-black text-white">{title}</div>
+      <div className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">{label}</div>
+      <div className="mt-1 text-base font-black text-slate-950">{title}</div>
     </a>
   );
 }
@@ -1649,24 +1712,24 @@ function DropdownPanel({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30">
+    <section id={id} className="overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-white/40 shadow-2xl shadow-slate-900/10 backdrop-blur-xl">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-sky-300/5 lg:flex-row lg:items-center lg:p-7"
+        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-orange-300/5 lg:flex-row lg:items-center lg:p-7"
       >
         <div>
-          <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">{eyebrow}</div>
-          <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
-          <p className="mt-1 text-white/55">{description}</p>
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-orange-800">{eyebrow}</div>
+          <h2 className="mt-2 text-2xl font-black text-slate-950">{title}</h2>
+          <p className="mt-1 text-slate-500">{description}</p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 transition hover:border-sky-300/35 hover:bg-sky-300/10 hover:text-sky-100">
+        <div className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-5 py-3 text-sm font-black text-slate-950 transition hover:border-orange-300/40 hover:bg-orange-300/10 hover:text-orange-700">
           {open ? "Schließen ▲" : "Öffnen ▼"}
         </div>
       </button>
 
-      {open && <div className="space-y-6 border-t border-white/10 p-6 lg:p-7">{children}</div>}
+      {open && <div className="space-y-6 border-t border-white/70 p-6 lg:p-7">{children}</div>}
     </section>
   );
 }
@@ -1682,7 +1745,7 @@ function HeroMini({
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
-      <div className={`text-xl font-black leading-tight md:text-2xl ${green ? "text-green-400" : "text-slate-100"}`}>{value}</div>
+      <div className={`text-xl font-black leading-tight md:text-2xl ${green ? "text-emerald-700" : "text-slate-100"}`}>{value}</div>
       <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">{label}</div>
     </div>
   );
@@ -1697,7 +1760,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-bold text-white/70">{label}</label>
+      <label className="mb-2 block text-sm font-black text-slate-600">{label}</label>
       {children}
     </div>
   );
