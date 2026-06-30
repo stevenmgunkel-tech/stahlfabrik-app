@@ -19,6 +19,7 @@ const navGroups = [
     items: [
       { href: "/abwesenheiten", label: "Abwesenheiten", icon: "◈" },
       { href: "/mitarbeiter", label: "Mitarbeiter", icon: "◇" },
+      { href: "/profil", label: "Profil", icon: "●" },
     ],
   },
   {
@@ -58,6 +59,7 @@ function getNavGroupsForRole(role: string) {
       title: "Personal",
       items: [
         { href: "/abwesenheiten", label: "Abwesenheiten", icon: "◈" },
+        { href: "/profil", label: "Profil", icon: "●" },
       ],
     },
   ];
