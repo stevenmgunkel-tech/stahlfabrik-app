@@ -33,6 +33,7 @@ const [freigabeSeite, setFreigabeSeite] = useState(1);
   const [abwesenheitOffen, setAbwesenheitOffen] = useState(false);
   const [auswertungOffen, setAuswertungOffen] = useState(false);
   const [projektUebersichtOffen, setProjektUebersichtOffen] = useState(false);
+  const [teamDetailsOffenId, setTeamDetailsOffenId] = useState<string | number | null>(null);
   const [mitarbeiterName, setMitarbeiterName] = useState("");
   const [mitarbeiterEmail, setMitarbeiterEmail] = useState("");
   const [mitarbeiterPasswort, setMitarbeiterPasswort] = useState("");
@@ -476,20 +477,67 @@ const gepruefteTage = tageszeiten.filter(
         (!berechnungAb || !eintrag.bis || eintrag.bis >= berechnungAb)
     );
 
-    const bruttoStunden = personArbeitszeiten.reduce(
-  (sum, eintrag) => sum + Number(eintrag.stunden || 0),
-  0
-);
+    const personTageszeiten = tageszeiten
+      .filter(
+        (tag) =>
+          tag.user_id === person.user_id &&
+          tag.status !== "Offen" &&
+          (!berechnungAb || !tag.datum || tag.datum >= berechnungAb)
+      )
+      .sort((a, b) => String(b.datum || "").localeCompare(String(a.datum || "")));
 
-const pauseStunden = tagespausen
-  .filter(
-    (pause) =>
-      pause.user_id === person.user_id &&
-      (!berechnungAb || !pause.datum || pause.datum >= berechnungAb)
-  )
-  .reduce((sum, pause) => sum + Number(pause.pause || 0) / 60, 0);
+    // Echte Mitarbeiter-Istzeit kommt aus dem Tagesabschluss.
+    // arbeitszeiten ist nur die Projektverteilung inklusive Betriebsunterhalt.
+    const iststunden = personTageszeiten.reduce(
+      (sum, tag) => sum + Number(tag.netto_stunden || 0),
+      0
+    );
 
-const iststunden = bruttoStunden - pauseStunden;
+    const projektStundenGebucht = personArbeitszeiten.reduce(
+      (sum, eintrag) => sum + Number(eintrag.stunden || 0),
+      0
+    );
+
+    const betriebsunterhaltStunden = personArbeitszeiten
+      .filter((eintrag) => String(eintrag.projekt || "") === "Betriebsunterhalt" || eintrag.auto_generiert)
+      .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
+
+    const projektStundenOhneBetriebsunterhalt = Math.max(
+      0,
+      projektStundenGebucht - betriebsunterhaltStunden
+    );
+
+    const projektSummenMap = personArbeitszeiten.reduce((map: Record<string, number>, eintrag) => {
+      const projektName = String(eintrag.projekt || "Ohne Projekt").trim() || "Ohne Projekt";
+      map[projektName] = (map[projektName] || 0) + Number(eintrag.stunden || 0);
+      return map;
+    }, {});
+
+    const projektSummen = Object.entries(projektSummenMap)
+      .map(([projektName, stunden]) => ({ projektName, stunden: Number(stunden || 0) }))
+      .filter((eintrag) => eintrag.stunden > 0)
+      .sort((a, b) => b.stunden - a.stunden);
+
+    const tagesliste = personTageszeiten.map((tag) => {
+      const tagArbeitszeiten = personArbeitszeiten.filter(
+        (eintrag) => eintrag.datum === tag.datum
+      );
+
+      const projektStundenTag = tagArbeitszeiten
+        .filter((eintrag) => String(eintrag.projekt || "") !== "Betriebsunterhalt" && !eintrag.auto_generiert)
+        .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
+
+      const betriebsunterhaltTag = tagArbeitszeiten
+        .filter((eintrag) => String(eintrag.projekt || "") === "Betriebsunterhalt" || eintrag.auto_generiert)
+        .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
+
+      return {
+        ...tag,
+        projektStundenTag,
+        betriebsunterhaltTag,
+        buchungen: tagArbeitszeiten.length,
+      };
+    });
 
     const urlaubstagePerson = personUrlaub
       .filter(
@@ -535,6 +583,11 @@ const gesamtUeberstunden =
    return {
   ...person,
   iststunden,
+  projektStundenGebucht,
+  projektStundenOhneBetriebsunterhalt,
+  betriebsunterhaltStunden,
+  projektSummen,
+  tagesliste,
   sollstunden,
   angerechneteStunden,
   differenz,
@@ -2368,53 +2421,63 @@ const systemStatus =
         </div>
 
         <div className="space-y-4 md:hidden">
-          {mitarbeiterStats.map((person) => (
-            <div
-              key={person.id}
-              className="rounded-2xl border border-white/10 bg-black/25 p-5"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="text-xl font-black text-white">
-                    {person.name}
-                  </div>
-                  <div className="mt-1 text-sm text-white/55">
-                    {person.rolle}
-                  </div>
+          {mitarbeiterStats.map((person) => {
+            const detailsOffen = String(teamDetailsOffenId || "") === String(person.id);
+
+            return (
+              <div
+                key={person.id}
+                className="rounded-2xl border border-white/10 bg-black/25 p-5"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setTeamDetailsOffenId(detailsOffen ? null : person.id)}
+                    className="min-w-0 text-left"
+                  >
+                    <div className="text-xl font-black text-white hover:text-sky-100">
+                      {person.name}
+                    </div>
+                    <div className="mt-1 text-sm text-white/55">
+                      {person.rolle} · Details {detailsOffen ? "ausblenden" : "anzeigen"}
+                    </div>
+                  </button>
+
+                  <span
+                    className={`rounded-full border px-3 py-1 text-sm font-black ${
+                      person.differenz >= 0
+                        ? "border-green-400/30 bg-green-500/10 text-green-300"
+                        : "border-red-400/30 bg-red-500/10 text-red-300"
+                    }`}
+                  >
+                    {formatStunden(Number(person.differenz || 0), true)}
+                  </span>
                 </div>
 
-                <span
-                  className={`rounded-full border px-3 py-1 text-sm font-black ${
-                    person.differenz >= 0
-                      ? "border-green-400/30 bg-green-500/10 text-green-300"
-                      : "border-red-400/30 bg-red-500/10 text-red-300"
-                  }`}
-                >
-                  {formatStunden(Number(person.differenz || 0), true)}
-                </span>
-              </div>
+                <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                  <Info label="Arbeitstage" value={person.personArbeitstage} />
+                  <Info
+                    label="Soll"
+                    value={formatStunden(Number(person.sollstunden || 0))}
+                  />
+                  <Info label="Ist" value={formatStunden(Number(person.iststunden || 0))} />
+                  <Info
+                    label="Angerechnet"
+                    value={formatStunden(Number(person.angerechneteStunden || 0))}
+                  />
+                  <Info label="Urlaub" value={person.urlaubstagePerson} />
+                  <Info label="Krank" value={person.kranktagePerson} />
+                  <Info
+                    label="ÜA Stunden"
+                    value={formatStunden(-Number(person.ueberstundenAbbauStunden || 0))}
+                    orange
+                  />
+                </div>
 
-              <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                <Info label="Arbeitstage" value={person.personArbeitstage} />
-                <Info
-                  label="Soll"
-                  value={formatStunden(Number(person.sollstunden || 0))}
-                />
-                <Info label="Ist" value={formatStunden(Number(person.iststunden || 0))} />
-                <Info
-                  label="Angerechnet"
-                  value={formatStunden(Number(person.angerechneteStunden || 0))}
-                />
-                <Info label="Urlaub" value={person.urlaubstagePerson} />
-                <Info label="Krank" value={person.kranktagePerson} />
-                <Info
-                  label="ÜA Stunden"
-                  value={formatStunden(-Number(person.ueberstundenAbbauStunden || 0))}
-                  orange
-                />
+                {detailsOffen && <MitarbeiterDetail person={person} formatStunden={formatStunden} />}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="hidden overflow-hidden rounded-xl border border-white/10 md:block">
@@ -2432,41 +2495,52 @@ const systemStatus =
                 <div>ÜA Abbau</div>
               </div>
 
-              {mitarbeiterStats.map((person) => (
-                <div
-                  key={person.id}
-                  className="grid grid-cols-9 items-center border-b border-white/10 px-5 py-4 text-white/80 transition hover:bg-white/[0.03]"
-                >
-                  <div className="text-lg font-black text-white">{person.name}</div>
-                  <div>{person.rolle}</div>
-                  <div>{person.personArbeitstage}</div>
-                  <div>{formatStunden(Number(person.sollstunden || 0))}</div>
-                  <div>{formatStunden(Number(person.iststunden || 0))}</div>
+              {mitarbeiterStats.map((person) => {
+                const detailsOffen = String(teamDetailsOffenId || "") === String(person.id);
 
-                  <div className="text-lg font-black text-white">
-                    {formatStunden(Number(person.angerechneteStunden || 0))}
-                  </div>
+                return (
+                  <div key={person.id} className="border-b border-white/10">
+                    <div className="grid grid-cols-9 items-center px-5 py-4 text-white/80 transition hover:bg-white/[0.03]">
+                      <button
+                        type="button"
+                        onClick={() => setTeamDetailsOffenId(detailsOffen ? null : person.id)}
+                        className="text-left text-lg font-black text-white transition hover:text-sky-100"
+                      >
+                        {detailsOffen ? "▾" : "▸"} {person.name}
+                      </button>
+                      <div>{person.rolle}</div>
+                      <div>{person.personArbeitstage}</div>
+                      <div>{formatStunden(Number(person.sollstunden || 0))}</div>
+                      <div>{formatStunden(Number(person.iststunden || 0))}</div>
 
-                  <div
-                    className={`font-black ${
-                      Number(person.differenz || 0) >= 0
-                        ? "text-green-400"
-                        : "text-red-400"
-                    }`}
-                  >
-                    {formatStunden(Number(person.differenz || 0), true)}
-                  </div>
+                      <div className="text-lg font-black text-white">
+                        {formatStunden(Number(person.angerechneteStunden || 0))}
+                      </div>
 
-                  <div>
-                    U: {person.urlaubstagePerson} / K:{" "}
-                    {person.kranktagePerson}
-                  </div>
+                      <div
+                        className={`font-black ${
+                          Number(person.differenz || 0) >= 0
+                            ? "text-green-400"
+                            : "text-red-400"
+                        }`}
+                      >
+                        {formatStunden(Number(person.differenz || 0), true)}
+                      </div>
 
-                  <div className="font-black text-slate-100">
-                   {formatStunden(-Number(person.ueberstundenAbbauStunden || 0))}
+                      <div>
+                        U: {person.urlaubstagePerson} / K:{" "}
+                        {person.kranktagePerson}
+                      </div>
+
+                      <div className="font-black text-slate-100">
+                      {formatStunden(-Number(person.ueberstundenAbbauStunden || 0))}
+                      </div>
+                    </div>
+
+                    {detailsOffen && <MitarbeiterDetail person={person} formatStunden={formatStunden} desktop />}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -2693,6 +2767,95 @@ function QuickLink({ href, label, orange, onClick }: { href: string; label: stri
     >
       {label}
     </a>
+  );
+}
+
+
+function MitarbeiterDetail({
+  person,
+  formatStunden,
+  desktop,
+}: {
+  person: any;
+  formatStunden: (wert: number, mitVorzeichen?: boolean) => string;
+  desktop?: boolean;
+}) {
+  const tagesliste = person.tagesliste || [];
+  const projektSummen = person.projektSummen || [];
+
+  return (
+    <div className={`${desktop ? "px-5 pb-5" : "mt-5"}`}>
+      <div className="rounded-2xl border border-sky-300/20 bg-sky-300/[0.04] p-5">
+        <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Info label="Echte Tageszeit" value={formatStunden(Number(person.iststunden || 0))} />
+          <Info label="Projektzeit" value={formatStunden(Number(person.projektStundenOhneBetriebsunterhalt || 0))} />
+          <Info label="Betriebsunterhalt" value={formatStunden(Number(person.betriebsunterhaltStunden || 0))} />
+          <Info label="Alle Buchungen" value={formatStunden(Number(person.projektStundenGebucht || 0))} />
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+          <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+            <div className="mb-3 text-xs font-black uppercase tracking-[0.22em] text-white/40">
+              Tage · Von/Bis · Netto · Status
+            </div>
+
+            {tagesliste.length === 0 ? (
+              <div className="text-sm font-bold text-white/40">
+                Noch keine abgeschlossenen Tageszeiten in diesem Zeitraum.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {tagesliste.map((tag: any) => (
+                  <div
+                    key={`${person.id}-${tag.id || tag.datum}`}
+                    className="grid grid-cols-1 gap-2 rounded-xl border border-white/10 bg-white/[0.035] p-3 text-sm text-white/70 md:grid-cols-[1fr_0.9fr_0.8fr_0.8fr]"
+                  >
+                    <div className="font-black text-white">{tag.datum}</div>
+                    <div>
+                      {String(tag.startzeit || "").slice(0, 5) || "--:--"} - {String(tag.endzeit || "").slice(0, 5) || "--:--"}
+                    </div>
+                    <div className="font-black text-sky-100">
+                      {formatStunden(Number(tag.netto_stunden || 0))}
+                    </div>
+                    <div className="text-white/45">
+                      {tag.status || "-"} · {tag.buchungen || 0} Buch.
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+            <div className="mb-3 text-xs font-black uppercase tracking-[0.22em] text-white/40">
+              Projektverteilung
+            </div>
+
+            {projektSummen.length === 0 ? (
+              <div className="text-sm font-bold text-white/40">
+                Noch keine Projektbuchungen in diesem Zeitraum.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {projektSummen.map((projekt: any) => (
+                  <div
+                    key={`${person.id}-${projekt.projektName}`}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-3"
+                  >
+                    <div className="min-w-0 truncate text-sm font-black text-white">
+                      {projekt.projektName}
+                    </div>
+                    <div className="shrink-0 text-sm font-black text-sky-100">
+                      {formatStunden(Number(projekt.stunden || 0))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
