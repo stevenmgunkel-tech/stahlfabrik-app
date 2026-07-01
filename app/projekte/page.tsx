@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "../../lib/supabase";
 
-type ProjektStatus = "Alle" | "Aktiv" | "Pausiert" | "Abgeschlossen";
+type ProjektStatus = "Laufend" | "Aktiv" | "Pausiert" | "Archiv";
 
 type Projekt = {
   id: number | string;
@@ -32,7 +32,7 @@ export default function ProjektePage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [seiteGeprueft, setSeiteGeprueft] = useState(false);
   const [uebersichtOffen, setUebersichtOffen] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<ProjektStatus>("Alle");
+  const [statusFilter, setStatusFilter] = useState<ProjektStatus>("Laufend");
   const [suche, setSuche] = useState("");
 
   useEffect(() => {
@@ -207,18 +207,18 @@ export default function ProjektePage() {
     const aktuellerStatus = statusWert(projekt);
 
     if (aktuellerStatus === "Abgeschlossen") {
-      setMeldung("Projekt ist bereits abgeschlossen.");
+      setMeldung("Projekt ist bereits im Archiv.");
       return;
     }
 
     const titel = projektTitel(projekt);
 
     if (istSystemProjekt(projekt)) {
-      setMeldung("Interne Systemprojekte dürfen hier nicht abgeschlossen werden.");
+      setMeldung("Interne Systemprojekte dürfen hier nicht archiviert werden.");
       return;
     }
 
-    const bestaetigt = window.confirm(`Projekt "${titel}" wirklich auf abgeschlossen setzen?`);
+    const bestaetigt = window.confirm(`Projekt "${titel}" wirklich ins Archiv verschieben?`);
 
     if (!bestaetigt) return;
 
@@ -232,7 +232,7 @@ export default function ProjektePage() {
 
     if (error) {
       setLoading(false);
-      setMeldung(error.message || "Projekt konnte nicht abgeschlossen werden.");
+      setMeldung(error.message || "Projekt konnte nicht archiviert werden.");
       console.log(error);
       return;
     }
@@ -245,9 +245,9 @@ export default function ProjektePage() {
       )
     );
 
-    setStatusFilter("Alle");
+    setStatusFilter("Laufend");
     setLoading(false);
-    setMeldung(`Projekt "${titel}" wurde abgeschlossen.`);
+    setMeldung(`Projekt "${titel}" wurde ins Archiv verschoben.`);
   }
 
   const aktiveProjekte = useMemo(
@@ -260,7 +260,7 @@ export default function ProjektePage() {
     [projekte]
   );
 
-  const abgeschlosseneProjekte = useMemo(
+  const archivierteProjekte = useMemo(
     () => projekte.filter((projekt) => statusWert(projekt) === "Abgeschlossen").length,
     [projekte]
   );
@@ -271,7 +271,12 @@ export default function ProjektePage() {
     return projekte
       .filter((projekt) => {
         const status = statusWert(projekt);
-        const passtStatus = statusFilter === "Alle" || status === statusFilter;
+        const passtStatus =
+          statusFilter === "Laufend"
+            ? status !== "Abgeschlossen"
+            : statusFilter === "Archiv"
+              ? status === "Abgeschlossen"
+              : status === statusFilter;
 
         if (!passtStatus) return false;
         if (!suchText) return true;
@@ -328,14 +333,14 @@ export default function ProjektePage() {
             </h1>
 
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-white/65 sm:text-base">
-              Saubere Übersicht über aktive, pausierte und abgeschlossene Projekte. Projekte können hier schnell abgeschlossen werden, alles andere bleibt im Chef Dashboard.
+              Saubere Übersicht über aktive und pausierte Projekte. Abgeschlossene Projekte wandern sauber ins Archiv.
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-xl">
                 <span className="h-3 w-3 rounded-full bg-green-400 shadow-lg shadow-green-400/40" />
                 <span className="text-xs font-black uppercase tracking-widest text-white/70">
-                  Übersicht · Schnell abschließen
+                  Übersicht · Schnell archivieren
                 </span>
               </div>
             </div>
@@ -344,7 +349,7 @@ export default function ProjektePage() {
           <div className="grid grid-cols-3 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3">
             <HeroMini label="Aktiv" value={pageLoading ? "—" : String(aktiveProjekte).padStart(2, "0")} green={!pageLoading && aktiveProjekte > 0} />
             <HeroMini label="Pausiert" value={pageLoading ? "—" : String(pausierteProjekte).padStart(2, "0")} blue={!pageLoading && pausierteProjekte > 0} />
-            <HeroMini label="Archiv" value={pageLoading ? "—" : String(abgeschlosseneProjekte).padStart(2, "0")} />
+            <HeroMini label="Archiv" value={pageLoading ? "—" : String(archivierteProjekte).padStart(2, "0")} />
           </div>
         </div>
       </section>
@@ -368,7 +373,7 @@ export default function ProjektePage() {
         id="uebersicht"
         title="Projektübersicht"
         eyebrow="Aktiv · Pausiert · Archiv"
-        description="Diese Seite zeigt den Überblick. Projekte kannst du hier per Klick abschließen, alles Weitere machst du im Chef Dashboard."
+        description="Diese Seite zeigt laufende Projekte. Archivierte Projekte erscheinen nur im Archiv-Filter."
         open={uebersichtOffen}
         onToggle={() => setUebersichtOffen(!uebersichtOffen)}
       >
@@ -385,7 +390,7 @@ export default function ProjektePage() {
           </label>
 
           <div className="flex flex-wrap gap-2">
-            {(["Alle", "Aktiv", "Pausiert", "Abgeschlossen"] as ProjektStatus[]).map((status) => (
+            {(["Laufend", "Aktiv", "Pausiert", "Archiv"] as ProjektStatus[]).map((status) => (
               <button
                 key={status}
                 type="button"
@@ -396,7 +401,7 @@ export default function ProjektePage() {
                     : "border-white/70 bg-white/55 text-slate-500"
                 }`}
               >
-                {status === "Abgeschlossen" ? "Archiv" : status}
+                {status}
               </button>
             ))}
           </div>
@@ -405,11 +410,11 @@ export default function ProjektePage() {
         <div className="grid gap-4 md:grid-cols-3">
           <KpiCard label="Aktiv" value={aktiveProjekte} subvalue="laufende Projekte" green />
           <KpiCard label="Pausiert" value={pausierteProjekte} subvalue="wartet / gestoppt" blue />
-          <KpiCard label="Archiv" value={abgeschlosseneProjekte} subvalue="abgeschlossen" />
+          <KpiCard label="Archiv" value={archivierteProjekte} subvalue="im Archiv" />
         </div>
 
         <div className="rounded-2xl border border-orange-200/50 bg-orange-100/55 p-4 text-sm font-bold text-orange-900">
-          Hinweis: Projekt abschließen ist hier erlaubt. Projekt erstellen, bearbeiten, löschen und Bereiche ändern läuft im Chef Dashboard.
+          Hinweis: Projekt archivieren ist hier erlaubt. Archivierte Projekte werden nur im Archiv angezeigt.
         </div>
 
         {pageLoading ? (
@@ -458,7 +463,7 @@ export default function ProjektePage() {
                         <div className="font-bold text-orange-800">{projektTitel(projekt)}</div>
                         <div>
                           <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(status)}`}>
-                            {status}
+                            {status === "Abgeschlossen" ? "Archiv" : status}
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -478,7 +483,7 @@ export default function ProjektePage() {
                         <div>
                           {status === "Abgeschlossen" ? (
                             <span className="inline-flex rounded-xl border border-white/70 bg-white/55 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-400">
-                              Erledigt
+                              Archiv
                             </span>
                           ) : istSystemProjekt(projekt) ? (
                             <span className="inline-flex rounded-xl border border-orange-200/50 bg-orange-100/60 px-4 py-2 text-xs font-black uppercase tracking-widest text-orange-800">
@@ -491,7 +496,7 @@ export default function ProjektePage() {
                               disabled={loading}
                               className="rounded-xl border border-emerald-900/30 bg-emerald-950/10 px-4 py-2 text-sm font-black text-emerald-800 transition hover:-translate-y-1 hover:border-emerald-900/45 hover:bg-emerald-950/15 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                              ✓ Abschließen
+                              ✓ Archivieren
                             </button>
                           )}
                         </div>
@@ -598,7 +603,7 @@ function ProjektMobileCard({
         </div>
 
         <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(status)}`}>
-          {status}
+          {status === "Abgeschlossen" ? "Archiv" : status}
         </span>
       </div>
 
@@ -620,7 +625,7 @@ function ProjektMobileCard({
       <div className="mt-5">
         {status === "Abgeschlossen" ? (
           <div className="rounded-xl border border-white/70 bg-white/55 px-4 py-3 text-center text-sm font-black uppercase tracking-widest text-slate-400">
-            Erledigt
+            Archiv
           </div>
         ) : istSystem ? (
           <div className="rounded-xl border border-orange-200/50 bg-orange-100/60 px-4 py-3 text-center text-sm font-black uppercase tracking-widest text-orange-800">
@@ -633,7 +638,7 @@ function ProjektMobileCard({
             disabled={loading}
             className="w-full rounded-xl border border-emerald-900/30 bg-emerald-950/10 px-4 py-3 font-black text-emerald-800 transition hover:-translate-y-1 hover:border-emerald-900/45 hover:bg-emerald-950/15 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            ✓ Projekt abschließen
+            ✓ Projekt archivieren
           </button>
         )}
       </div>
