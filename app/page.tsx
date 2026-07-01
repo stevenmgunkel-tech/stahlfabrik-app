@@ -88,7 +88,15 @@ function formatStunden(value: number) {
 }
 
 function formatKurz(value: number) {
-  return `${value >= 0 ? "+" : ""}${value.toFixed(2)} h`;
+  const totalMinuten = Math.round(Math.abs(value) * 60);
+  const stunden = Math.floor(totalMinuten / 60);
+  const minuten = totalMinuten % 60;
+  const prefix = value > 0 ? "+" : value < 0 ? "-" : "";
+
+  if (stunden === 0) return `${prefix}${minuten} min`;
+  if (minuten === 0) return `${prefix}${stunden} h`;
+
+  return `${prefix}${stunden} h ${minuten} min`;
 }
 
 function getMontagDieserWoche() {
@@ -223,8 +231,8 @@ export default function DashboardPage() {
       .from("arbeitszeiten")
       .select("*");
 
-    const { data: tagespausen, error: pausenError } = await supabase
-      .from("tagespausen")
+    const { data: tageszeiten, error: tageszeitenError } = await supabase
+      .from("tageszeiten")
       .select("*")
       .eq("user_id", user.id);
 
@@ -244,7 +252,7 @@ export default function DashboardPage() {
 
     const error =
       zeitenError ||
-      pausenError ||
+      tageszeitenError ||
       urlaubError ||
       projekteError ||
       mitarbeiterError;
@@ -295,6 +303,24 @@ export default function DashboardPage() {
           (!berechnungAb || !item.datum || item.datum >= berechnungAb),
       ) || [];
 
+    // Echte Istzeit kommt aus tageszeiten.netto_stunden.
+    // Projektbuchungen in arbeitszeiten sind nur Verteilung und dürfen ohne Tagesabschluss
+    // keine Überstunden erzeugen.
+    const eigeneTageszeiten =
+      tageszeiten?.filter(
+        (tag) =>
+          tag.user_id === user.id &&
+          tag.status !== "Offen" &&
+          tag.datum &&
+          (!berechnungAb || tag.datum >= berechnungAb),
+      ) || [];
+
+    function istzeitAusTageszeiten(start: string, ende: string) {
+      return eigeneTageszeiten
+        .filter((tag) => tag.datum >= start && tag.datum <= ende)
+        .reduce((sum, tag) => sum + Number(tag.netto_stunden || 0), 0);
+    }
+
     const eigeneAbwesenheiten =
       urlaub?.filter((item) => item.user_id === user.id) || [];
 
@@ -302,29 +328,7 @@ export default function DashboardPage() {
       (item) => item.status === "Beantragt",
     ).length;
 
-    function pauseFuerDatum(datum: string) {
-      const pause = tagespausen?.find((p) => p.datum === datum);
-      return Number(pause?.pause || 0) / 60;
-    }
-
-    function pausenFuerZeitraum(start: string, ende: string) {
-      return (
-        tagespausen
-          ?.filter((p) => p.datum >= start && p.datum <= ende)
-          .reduce((sum, p) => sum + Number(p.pause || 0) / 60, 0) || 0
-      );
-    }
-
-    const eigeneZeitenHeute = eigeneArbeitszeiten.filter(
-      (item) => item.datum === heute,
-    );
-
-    const heuteBrutto = eigeneZeitenHeute.reduce(
-      (sum, item) => sum + Number(item.stunden || 0),
-      0,
-    );
-
-    const heuteIst = heuteBrutto - pauseFuerDatum(heute);
+    const heuteIst = istzeitAusTageszeiten(heute, heute);
 
     const heuteWochentag = heuteDate.getDay();
     const istWochenende = heuteWochentag === 0 || heuteWochentag === 6;
@@ -336,17 +340,7 @@ export default function DashboardPage() {
         : tagesSoll;
     const heuteDifferenz = heuteIst - heuteSoll;
 
-    const eigeneZeitenWoche = eigeneArbeitszeiten.filter(
-      (item) => item.datum >= effektiverWochenStart && item.datum <= heute,
-    );
-
-    const wocheBrutto = eigeneZeitenWoche.reduce(
-      (sum, item) => sum + Number(item.stunden || 0),
-      0,
-    );
-
-    const wocheIst =
-      wocheBrutto - pausenFuerZeitraum(effektiverWochenStart, heute);
+    const wocheIst = istzeitAusTageszeiten(effektiverWochenStart, heute);
     const wocheTage =
       effektiverWochenStart > heute
         ? 0
@@ -354,17 +348,7 @@ export default function DashboardPage() {
     const wocheSoll = tagesSoll * wocheTage;
     const wocheDifferenz = wocheIst - wocheSoll;
 
-    const eigeneZeitenMonat = eigeneArbeitszeiten.filter(
-      (item) => item.datum >= effektiverMonatsStart && item.datum <= heute,
-    );
-
-    const monatBrutto = eigeneZeitenMonat.reduce(
-      (sum, item) => sum + Number(item.stunden || 0),
-      0,
-    );
-
-    const monatIst =
-      monatBrutto - pausenFuerZeitraum(effektiverMonatsStart, heute);
+    const monatIst = istzeitAusTageszeiten(effektiverMonatsStart, heute);
     const monatTage =
       effektiverMonatsStart > heute
         ? 0
@@ -406,28 +390,18 @@ export default function DashboardPage() {
     const angerechneteStundenMonat = monatIst + abwesenheitsstundenMonat;
     const monatDifferenz = angerechneteStundenMonat - monatSoll;
 
-    const ersteArbeitszeit = [...eigeneArbeitszeiten]
+    const ersteTageszeit = [...eigeneTageszeiten]
       .filter((item) => item.datum)
       .sort((a, b) => String(a.datum || "").localeCompare(String(b.datum || "")))[0];
 
     const effektiverGesamtStartDate =
       berechnungAbDate ||
-      parseDatumLokal(ersteArbeitszeit?.datum) ||
+      parseDatumLokal(ersteTageszeit?.datum) ||
       effektiverMonatsStartDate;
 
     const effektiverGesamtStart = formatDateLocal(effektiverGesamtStartDate);
 
-    const gesamtZeiten = eigeneArbeitszeiten.filter(
-      (item) => item.datum >= effektiverGesamtStart && item.datum <= heute,
-    );
-
-    const gesamtBrutto = gesamtZeiten.reduce(
-      (sum, item) => sum + Number(item.stunden || 0),
-      0,
-    );
-
-    const gesamtIst =
-      gesamtBrutto - pausenFuerZeitraum(effektiverGesamtStart, heute);
+    const gesamtIst = istzeitAusTageszeiten(effektiverGesamtStart, heute);
 
     const gesamtTage =
       effektiverGesamtStart > heute

@@ -223,13 +223,8 @@ export default function AbwesenheitenPage() {
       .eq("user_id", user.id)
       .order("id", { ascending: false });
 
-    const { data: arbeitszeiten, error: zeitenError } = await supabase
-      .from("arbeitszeiten")
-      .select("*")
-      .eq("user_id", user.id);
-
-    const { data: tagespausen, error: pausenError } = await supabase
-      .from("tagespausen")
+    const { data: tageszeiten, error: tageszeitenError } = await supabase
+      .from("tageszeiten")
       .select("*")
       .eq("user_id", user.id);
 
@@ -239,14 +234,9 @@ export default function AbwesenheitenPage() {
       return;
     }
 
-    if (zeitenError) {
-      setMeldung(zeitenError.message);
-      console.log(zeitenError);
-    }
-
-    if (pausenError) {
-      setMeldung(pausenError.message);
-      console.log(pausenError);
+    if (tageszeitenError) {
+      setMeldung(tageszeitenError.message);
+      console.log(tageszeitenError);
     }
 
     const eintraege = (data || []) as Abwesenheit[];
@@ -316,30 +306,23 @@ export default function AbwesenheitenPage() {
     const monatsStart = formatDateLocal(monatsStartDate);
     const monatNochNichtGestartet = monatsStartDate > heuteDate;
 
-    const arbeitszeitenMonat =
-      arbeitszeiten?.filter(
-        (item) =>
-          item.datum >= monatsStart &&
-          item.datum <= heute &&
-          (!zeiterfassungAb || !item.datum || item.datum >= zeiterfassungAb)
+    const echteTageszeiten =
+      (tageszeiten || []).filter(
+        (tag) =>
+          tag.status !== "Offen" &&
+          tag.datum &&
+          (!zeiterfassungAb || tag.datum >= zeiterfassungAb)
       ) || [];
 
-    const monatBrutto = arbeitszeitenMonat.reduce(
-      (sum, item) => sum + Number(item.stunden || 0),
-      0
-    );
+    function istzeitAusTageszeiten(start: string, ende: string) {
+      return echteTageszeiten
+        .filter((tag) => tag.datum >= start && tag.datum <= ende)
+        .reduce((sum, tag) => sum + Number(tag.netto_stunden || 0), 0);
+    }
 
-    const pausenMonat =
-      tagespausen
-        ?.filter(
-          (pause) =>
-            pause.datum >= monatsStart &&
-            pause.datum <= heute &&
-            (!zeiterfassungAb || !pause.datum || pause.datum >= zeiterfassungAb)
-        )
-        .reduce((sum, pause) => sum + Number(pause.pause || 0) / 60, 0) || 0;
-
-    const monatIst = monatBrutto - pausenMonat;
+    const monatIst = monatNochNichtGestartet
+      ? 0
+      : istzeitAusTageszeiten(monatsStart, heute);
     const monatTage = monatNochNichtGestartet
       ? 0
       : zaehleArbeitstage(monatsStartDate, heuteDate, freierWochentag);
@@ -384,23 +367,88 @@ export default function AbwesenheitenPage() {
         0
       );
 
-    const ueberstundenabbauStundenMonat = eintraege
-      .filter(
-        (eintrag) =>
-          eintrag.typ === "Überstundenabbau" &&
-          eintrag.status === "Genehmigt" &&
-          eintrag.von >= monatsStart &&
-          eintrag.von <= heute
-      )
-      .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
-
     const abwesenheitsstundenMonat =
       (urlaubstageMonat + kranktageMonat) * tagesSoll;
 
     const angerechneteStundenMonat = monatIst + abwesenheitsstundenMonat;
     const monatDifferenz = angerechneteStundenMonat - monatSoll;
+
+    const ersteTageszeit = [...echteTageszeiten]
+      .filter((tag) => tag.datum)
+      .sort((a, b) => String(a.datum || "").localeCompare(String(b.datum || "")))[0];
+
+    const gesamtStartDate =
+      zeiterfassungAbDate ||
+      parseDatumLokal(ersteTageszeit?.datum) ||
+      monatsStartDate;
+    const gesamtStart = formatDateLocal(gesamtStartDate);
+    const gesamtNochNichtGestartet = gesamtStartDate > heuteDate;
+
+    const gesamtIst = gesamtNochNichtGestartet
+      ? 0
+      : istzeitAusTageszeiten(gesamtStart, heute);
+    const gesamtTage = gesamtNochNichtGestartet
+      ? 0
+      : zaehleArbeitstage(gesamtStartDate, heuteDate, freierWochentag);
+    const gesamtSoll = tagesSoll * gesamtTage;
+
+    const urlaubstageGesamt = eintraege
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Urlaub" &&
+          eintrag.status === "Genehmigt" &&
+          eintrag.bis >= gesamtStart &&
+          eintrag.von <= heute
+      )
+      .reduce(
+        (sum, eintrag) =>
+          sum +
+          abwesenheitstageImZeitraum(
+            eintrag,
+            gesamtStartDate,
+            heuteDate,
+            freierWochentag
+          ),
+        0
+      );
+
+    const kranktageGesamt = eintraege
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Krank" &&
+          eintrag.bis >= gesamtStart &&
+          eintrag.von <= heute
+      )
+      .reduce(
+        (sum, eintrag) =>
+          sum +
+          abwesenheitstageImZeitraum(
+            eintrag,
+            gesamtStartDate,
+            heuteDate,
+            freierWochentag
+          ),
+        0
+      );
+
+    const ueberstundenabbauStundenGesamt = eintraege
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Überstundenabbau" &&
+          eintrag.status === "Genehmigt" &&
+          eintrag.bis >= gesamtStart &&
+          eintrag.von <= heute
+      )
+      .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
+
+    const abwesenheitsstundenGesamt =
+      (urlaubstageGesamt + kranktageGesamt) * tagesSoll;
+
+    const angerechneteStundenGesamt = gesamtIst + abwesenheitsstundenGesamt;
+    const ueberstundenZeitraum = angerechneteStundenGesamt - gesamtSoll;
+
     const ueberstundenAktuell =
-      ueberstundenStart + monatDifferenz - ueberstundenabbauStundenMonat;
+      ueberstundenStart + ueberstundenZeitraum - ueberstundenabbauStundenGesamt;
 
     const offeneAntraege = eintraege.filter(
       (eintrag) => eintrag.status === "Beantragt"
