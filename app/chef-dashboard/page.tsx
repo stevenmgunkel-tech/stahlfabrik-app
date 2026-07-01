@@ -15,6 +15,8 @@ export default function ChefDashboardPage() {
   const [istAdmin, setIstAdmin] = useState(false);
   const [meldung, setMeldung] = useState("");
   const [tageszeiten, setTageszeiten] = useState<any[]>([]);
+  const [tageszeitenGesamt, setTageszeitenGesamt] = useState<any[]>([]);
+  const [urlaubGesamt, setUrlaubGesamt] = useState<any[]>([]);
   const [gepruefteOffen, setGepruefteOffen] = useState(false);
   const [adminName, setAdminName] = useState("Chef");
 const [freigabeSeite, setFreigabeSeite] = useState(1);
@@ -314,11 +316,20 @@ const monat = new Date().toISOString().slice(0, 7);
     .gte("datum", start)
     .lte("datum", ende);
 
+      const { data: tageszeitenGesamtData, error: tageszeitenGesamtError } =
+        await supabase
+          .from("tageszeiten")
+          .select("*");
+
       const { data: urlaubData, error: urlaubError } = await supabase
         .from("urlaub")
         .select("*")
         .gte("von", start)
         .lte("bis", ende);
+
+      const { data: urlaubGesamtData, error: urlaubGesamtError } = await supabase
+        .from("urlaub")
+        .select("*");
 
       const { data: projekteData, error: projekteError } = await supabase
         .from("projekte")
@@ -351,7 +362,9 @@ const monat = new Date().toISOString().slice(0, 7);
   arbeitszeitenError ||
   tagespausenError ||
   tageszeitenError ||
+  tageszeitenGesamtError ||
   urlaubError ||
+  urlaubGesamtError ||
   projekteError;
 
       if (fehler) {
@@ -363,7 +376,9 @@ const monat = new Date().toISOString().slice(0, 7);
       setArbeitszeiten(arbeitszeitenData || []);
       setTagespausen(tagespausenData || []);
       setTageszeiten(tageszeitenData || []);
+      setTageszeitenGesamt(tageszeitenGesamtData || []);
       setUrlaub(urlaubData || []);
+      setUrlaubGesamt(urlaubGesamtData || []);
       setProjekte(projekteData || []);
       setProjektBereichMap(neueProjektBereichMap);
       setLoading(false);
@@ -383,6 +398,64 @@ const monat = new Date().toISOString().slice(0, 7);
     if (!jahr || !monatWert || !tag) return null;
 
     return new Date(jahr, monatWert - 1, tag);
+  }
+
+  function formatDateLocal(date: Date) {
+    const year = date.getFullYear();
+    const monthValue = String(date.getMonth() + 1).padStart(2, "0");
+    const dayValue = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${monthValue}-${dayValue}`;
+  }
+
+  function zaehleArbeitstageZeitraum(
+    startDatum: Date,
+    endDatum: Date,
+    freierWochentag?: string | null
+  ) {
+    let arbeitstage = 0;
+    const datum = new Date(
+      startDatum.getFullYear(),
+      startDatum.getMonth(),
+      startDatum.getDate()
+    );
+    const endeDatum = new Date(
+      endDatum.getFullYear(),
+      endDatum.getMonth(),
+      endDatum.getDate()
+    );
+
+    while (datum <= endeDatum) {
+      const wochentag = datum.getDay();
+      const istWochenende = wochentag === 0 || wochentag === 6;
+      const istFeiertag = istFeiertagSG(datum);
+      const istFreierTag = istFreierWochentag(datum, freierWochentag);
+
+      if (!istWochenende && !istFeiertag && !istFreierTag) arbeitstage++;
+
+      datum.setDate(datum.getDate() + 1);
+    }
+
+    return arbeitstage;
+  }
+
+  function abwesenheitstageImZeitraum(
+    eintrag: any,
+    startDatum: Date,
+    endDatum: Date,
+    freierWochentag?: string | null
+  ) {
+    const von = parseDatumLokal(eintrag?.von);
+    const bis = parseDatumLokal(eintrag?.bis);
+
+    if (!von || !bis) return Number(eintrag?.tage || 0);
+
+    const start = von > startDatum ? von : startDatum;
+    const ende = bis < endDatum ? bis : endDatum;
+
+    if (start > ende) return 0;
+
+    return zaehleArbeitstageZeitraum(start, ende, freierWochentag);
   }
 
   function berechneArbeitstageAbDatum(startDatum?: string | null, freierWochentag?: string | null) {
@@ -630,6 +703,95 @@ const gesamtUeberstunden =
   (sum, person) => sum + Number(person.gesamtUeberstunden || 0),
   0
 );
+
+  const heuteKeyGesamt = formatDateLocal(heute);
+
+  function berechneGesamtUeberstundenPerson(person: any) {
+    const arbeitstageProWoche = normalisiereArbeitstageProWoche(person);
+    const wochenstunden = Number(person.wochenstunden || 0);
+    const tagesSoll =
+      arbeitstageProWoche > 0 ? wochenstunden / arbeitstageProWoche : 0;
+    const startwert = Number(person.ueberstunden_start || 0);
+    const freierWochentag = normalisiereFreierWochentag(person);
+
+    const personTageszeitenGesamt = tageszeitenGesamt
+      .filter(
+        (tag) =>
+          tag.user_id === person.user_id &&
+          tag.status !== "Offen" &&
+          tag.datum
+      )
+      .sort((a, b) => String(a.datum || "").localeCompare(String(b.datum || "")));
+
+    const ersteTageszeit = personTageszeitenGesamt[0];
+
+    const startDatum =
+      parseDatumLokal(person.zeiterfassung_ab || person.eintrittsdatum) ||
+      parseDatumLokal(ersteTageszeit?.datum);
+
+    if (!startDatum || !tagesSoll) return startwert;
+
+    const startKey = formatDateLocal(startDatum);
+
+    const iststunden = personTageszeitenGesamt
+      .filter((tag) => tag.datum >= startKey && tag.datum <= heuteKeyGesamt)
+      .reduce((total, tag) => total + Number(tag.netto_stunden || 0), 0);
+
+    const personUrlaubGesamt = urlaubGesamt.filter(
+      (eintrag) =>
+        eintrag.user_id === person.user_id &&
+        eintrag.bis >= startKey &&
+        eintrag.von <= heuteKeyGesamt
+    );
+
+    const urlaubstageGesamt = personUrlaubGesamt
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Urlaub" && eintrag.status === "Genehmigt"
+      )
+      .reduce(
+        (total, eintrag) =>
+          total +
+          abwesenheitstageImZeitraum(eintrag, startDatum, heute, freierWochentag),
+        0
+      );
+
+    const kranktageGesamt = personUrlaubGesamt
+      .filter((eintrag) => eintrag.typ === "Krank")
+      .reduce(
+        (total, eintrag) =>
+          total +
+          abwesenheitstageImZeitraum(eintrag, startDatum, heute, freierWochentag),
+        0
+      );
+
+    const ueberstundenAbbauGesamt = personUrlaubGesamt
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Überstundenabbau" &&
+          eintrag.status === "Genehmigt"
+      )
+      .reduce((total, eintrag) => total + Number(eintrag.stunden || 0), 0);
+
+    const sollstunden =
+      zaehleArbeitstageZeitraum(startDatum, heute, freierWochentag) * tagesSoll;
+    const angerechneteStunden =
+      iststunden + (urlaubstageGesamt + kranktageGesamt) * tagesSoll;
+    const differenz =
+      angerechneteStunden - sollstunden - ueberstundenAbbauGesamt;
+
+    return startwert + differenz;
+  }
+
+  const mitarbeiterStatsMitGesamt = mitarbeiterStats.map((person) => ({
+    ...person,
+    ueberstundenGesamt: berechneGesamtUeberstundenPerson(person),
+  }));
+
+  const teamUeberstundenGesamt = mitarbeiterStatsMitGesamt.reduce(
+    (sum, person) => sum + Number(person.ueberstundenGesamt || 0),
+    0
+  );
 
 function toggleProjektBereich(bereich: string) {
   setProjektBereiche((aktuell) =>
@@ -1347,10 +1509,11 @@ function springeZu(id: string) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-black/25 p-2 text-center backdrop-blur-xl sm:p-3 md:grid-cols-4">
             <HeroMini label="Offen" value={offeneTage} orange={offeneTage > 0} dark />
             <HeroMini label="Prüfung" value={abgeschlosseneTage} orange={abgeschlosseneTage > 0} dark />
             <HeroMini label="Geprüft" value={gepruefteTage} green={gepruefteTage > 0} dark />
+            <HeroMini label="Ü-Gesamt" value={formatStunden(teamUeberstundenGesamt, true)} green={teamUeberstundenGesamt >= 0} orange={teamUeberstundenGesamt < 0} dark />
           </div>
         </div>
       </section>
@@ -2111,10 +2274,10 @@ function springeZu(id: string) {
           />
 
           <KpiCard
-            label="Team Überstunden"
-            value={loading ? "..." : formatStunden(teamDifferenz, true)}
-            green={teamDifferenz >= 0}
-            red={teamDifferenz < 0}
+            label="Überstunden gesamt"
+            value={loading ? "..." : formatStunden(teamUeberstundenGesamt, true)}
+            green={teamUeberstundenGesamt >= 0}
+            red={teamUeberstundenGesamt < 0}
           />
         </div>
 
@@ -2155,16 +2318,16 @@ function springeZu(id: string) {
           <section className="rounded-2xl border border-white/70 bg-white/45 p-5">
             <div className="mb-4 flex flex-col justify-between gap-2 md:flex-row md:items-end">
               <div>
-                <div className="text-xs font-black uppercase tracking-[0.22em] text-orange-800">Monat {monat}</div>
-                <h3 className="mt-1 text-xl font-black text-slate-950">Team Performance</h3>
+                <div className="text-xs font-black uppercase tracking-[0.22em] text-orange-800">Gesamt-Zeitkonto</div>
+                <h3 className="mt-1 text-xl font-black text-slate-950">Überstunden je Mitarbeiter</h3>
               </div>
               <div className="text-sm font-bold text-slate-500">
-                {mitarbeiterStats.length} Mitarbeiter
+                {mitarbeiterStatsMitGesamt.length} Mitarbeiter
               </div>
             </div>
 
             <div className="space-y-4 md:hidden">
-              {mitarbeiterStats.map((person) => {
+              {mitarbeiterStatsMitGesamt.map((person) => {
                 const detailsOffen = String(teamDetailsOffenId || "") === String(person.id);
 
                 return (
@@ -2185,12 +2348,12 @@ function springeZu(id: string) {
 
                       <span
                         className={`rounded-full border px-3 py-1 text-sm font-black ${
-                          person.differenz >= 0
+                          Number(person.ueberstundenGesamt || 0) >= 0
                             ? "border-green-400/30 bg-green-500/10 text-green-400"
                             : "border-red-400/30 bg-red-500/10 text-red-400"
                         }`}
                       >
-                        {formatStunden(Number(person.differenz || 0), true)}
+                        {formatStunden(Number(person.ueberstundenGesamt || 0), true)}
                       </span>
                     </div>
 
@@ -2210,9 +2373,10 @@ function springeZu(id: string) {
             </div>
 
             <div className="hidden space-y-3 md:block">
-              {mitarbeiterStats.map((person) => {
+              {mitarbeiterStatsMitGesamt.map((person) => {
                 const detailsOffen = String(teamDetailsOffenId || "") === String(person.id);
-                const differenz = Number(person.differenz || 0);
+                const differenz = Number(person.ueberstundenGesamt || 0);
+                const monatsDifferenz = Number(person.differenz || 0);
                 const istPlus = differenz >= 0;
 
                 return (
@@ -2278,13 +2442,13 @@ function springeZu(id: string) {
                           }`}
                         >
                           <div className="text-[10px] font-black uppercase tracking-[0.18em] opacity-70">
-                            Überstunden
+                            Ü-Gesamt
                           </div>
                           <div className="mt-1 whitespace-nowrap text-xl font-black">
                             {formatStunden(differenz, true)}
                           </div>
                           <div className="mt-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
-                            ÜA {formatStunden(-Number(person.ueberstundenAbbauStunden || 0))}
+                            Monat {formatStunden(monatsDifferenz, true)}
                           </div>
                         </div>
                       </div>
