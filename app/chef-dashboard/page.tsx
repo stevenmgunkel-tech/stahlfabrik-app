@@ -1138,19 +1138,24 @@ const abgeschlosseneTageListe = tageszeiten
   });
 
 function arbeitszeitenZurPruefung(tag: any) {
-  const alleEintraege = arbeitszeiten
+  return arbeitszeiten
     .filter(
       (zeit) =>
         zeit.user_id === tag.user_id &&
         zeit.datum === tag.datum
     )
-    .sort((a, b) => String(a.startzeit || "").localeCompare(String(b.startzeit || "")));
+    .sort((a, b) => {
+      const aIstBetriebsunterhalt =
+        String(a.projekt || "").trim().toLowerCase() === "betriebsunterhalt";
+      const bIstBetriebsunterhalt =
+        String(b.projekt || "").trim().toLowerCase() === "betriebsunterhalt";
 
-  const projektEintraege = alleEintraege.filter(
-    (zeit) => String(zeit.projekt || "").toLowerCase() !== "betriebsunterhalt"
-  );
+      if (aIstBetriebsunterhalt !== bIstBetriebsunterhalt) {
+        return aIstBetriebsunterhalt ? 1 : -1;
+      }
 
-  return projektEintraege.length > 0 ? projektEintraege : alleEintraege;
+      return String(a.startzeit || "").localeCompare(String(b.startzeit || ""));
+    });
 }
 
 function zeitVonBisText(eintrag: any) {
@@ -2784,6 +2789,54 @@ function springeZu(id: string) {
           opacity: 0.58;
           cursor: pointer;
         }
+
+        .chef-dashboard-v12 input,
+        .chef-dashboard-v12 select,
+        .chef-dashboard-v12 textarea {
+          color: #020617 !important;
+          -webkit-text-fill-color: #020617 !important;
+          color-scheme: light !important;
+        }
+
+        .chef-dashboard-v12 input::placeholder,
+        .chef-dashboard-v12 textarea::placeholder {
+          color: rgba(100, 116, 139, 0.62) !important;
+          -webkit-text-fill-color: rgba(100, 116, 139, 0.62) !important;
+        }
+
+        .chef-dashboard-v12 select option {
+          background: #ffffff !important;
+          color: #020617 !important;
+        }
+
+        .chef-dashboard-v12 input[type="date"],
+        .chef-dashboard-v12 input[type="month"],
+        .chef-dashboard-v12 input[type="datetime-local"] {
+          padding-right: 3rem !important;
+          background-repeat: no-repeat !important;
+          background-position: right 1rem center !important;
+          background-size: 1.15rem 1.15rem !important;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23020617' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E") !important;
+        }
+
+        .chef-dashboard-v12 input[type="time"] {
+          padding-right: 3rem !important;
+          background-repeat: no-repeat !important;
+          background-position: right 1rem center !important;
+          background-size: 1.15rem 1.15rem !important;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23020617' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E") !important;
+        }
+
+        .chef-dashboard-v12 input[type="date"]::-webkit-calendar-picker-indicator,
+        .chef-dashboard-v12 input[type="time"]::-webkit-calendar-picker-indicator,
+        .chef-dashboard-v12 input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+        .chef-dashboard-v12 input[type="month"]::-webkit-calendar-picker-indicator {
+          opacity: 0 !important;
+          cursor: pointer !important;
+          width: 2.75rem !important;
+          height: 100% !important;
+        }
+
       `}</style>
     </main>
   );

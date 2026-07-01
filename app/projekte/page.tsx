@@ -187,10 +187,10 @@ export default function ProjektePage() {
   }
 
   function statusFarbe(status: string) {
-    if (status === "Aktiv") return "border-green-400/30 bg-green-500/10 text-green-300";
-    if (status === "Pausiert") return "border-sky-300/30 bg-sky-300/10 text-sky-200";
-    if (status === "Abgeschlossen") return "border-white/15 bg-white/[0.06] text-white/65";
-    return "border-slate-300/30 bg-slate-300/10 text-slate-200";
+    if (status === "Aktiv") return "border-emerald-300/50 bg-emerald-100/70 text-emerald-800";
+    if (status === "Pausiert") return "border-orange-300/50 bg-orange-100/70 text-orange-800";
+    if (status === "Abgeschlossen") return "border-slate-300/60 bg-slate-100/70 text-slate-700";
+    return "border-slate-300/60 bg-slate-100/70 text-slate-700";
   }
 
   async function projektAbschliessen(projekt: Projekt) {
@@ -303,24 +303,24 @@ export default function ProjektePage() {
   const pageLoading = !seiteGeprueft || initialLoading;
 
   return (
-    <main className="space-y-8 text-slate-100">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
+    <main className="projekte-v12 space-y-6 text-slate-950">
+      <section className="v12-hero relative overflow-hidden rounded-[2rem] border border-white/60 bg-gradient-to-br from-[#302720]/90 via-[#26272a]/90 to-[#161719]/95 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.16)] lg:p-7">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.46]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
             style={{
               backgroundImage: "url('/berg.png')",
-              filter: "brightness(1.65) contrast(1.05)",
+              filter: "brightness(1.45) contrast(1.04) saturate(0.92)",
             }}
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#1a1512]/90 via-[#26231f]/60 to-[#f4eee5]/10" />
 
         <div className="relative z-10 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
           <div>
-            <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
-              ODZ SILVER · Projekte
+            <div className="inline-flex rounded-full border border-orange-200/30 bg-orange-300/20 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-orange-100">
+              ODZ V1.2 · Projekte
             </div>
 
             <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -349,15 +349,17 @@ export default function ProjektePage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <ActionCard href="#uebersicht" label="Übersicht" title="📋 Projekte" onClick={() => setUebersichtOffen(true)} />
-        <ActionCard href="/chef-dashboard" label="Zentrale" title="➕ Chef Dash" />
-        <ActionCard href="/projektanalyse" label="Auswertung" title="📊 Analyse" />
-        <ActionCard href="#uebersicht" label="Refresh" title={loading ? "⏳ Lädt" : "↻ Aktualisieren"} onClick={() => ladeProjekte(false)} />
+      <section className="rounded-[1.5rem] border border-white/60 bg-white/35 p-2 shadow-[0_14px_44px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+          <ActionCard href="#uebersicht" label="Übersicht" title="📋 Projekte" onClick={() => setUebersichtOffen(true)} />
+          <ActionCard href="/chef-dashboard" label="Zentrale" title="➕ Chef Dash" />
+          <ActionCard href="/projektanalyse" label="Auswertung" title="📊 Analyse" />
+          <ActionCard href="#uebersicht" label="Refresh" title={loading ? "⏳ Lädt" : "↻ Aktualisieren"} onClick={() => ladeProjekte(false)} />
+        </div>
       </section>
 
       {meldung && (
-        <div className="rounded-xl border border-slate-200/20 bg-slate-200/10 p-4 text-sm font-bold text-slate-100">
+        <div className="rounded-xl border border-orange-200/40 bg-orange-100/60 p-4 text-sm font-bold text-slate-950">
           {meldung}
         </div>
       )}
@@ -372,13 +374,13 @@ export default function ProjektePage() {
       >
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
           <label className="block">
-            <span className="mb-2 block text-sm font-black text-white/65">Suche</span>
+            <span className="mb-2 block text-sm font-black text-slate-600">Suche</span>
             <input
               type="text"
               value={suche}
               onChange={(event) => setSuche(event.target.value)}
               placeholder="🔍 Kunde, Projekt, Kommission, Bereich suchen..."
-              className="dark-input"
+              className="warm-input"
             />
           </label>
 
@@ -388,10 +390,10 @@ export default function ProjektePage() {
                 key={status}
                 type="button"
                 onClick={() => setStatusFilter(status)}
-                className={`rounded-2xl border px-4 py-3 text-sm font-black transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10 ${
+                className={`rounded-2xl border px-4 py-3 text-sm font-black transition hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-300/5 hover:shadow-lg hover:shadow-orange-900/10 ${
                   statusFilter === status
-                    ? "border-sky-300/30 bg-sky-300/10 text-sky-100"
-                    : "border-white/10 bg-white/[0.04] text-white/55"
+                    ? "border-orange-300/50 bg-orange-100/60 text-slate-950 shadow-lg shadow-orange-900/10"
+                    : "border-white/70 bg-white/55 text-slate-500"
                 }`}
               >
                 {status === "Abgeschlossen" ? "Archiv" : status}
@@ -406,7 +408,7 @@ export default function ProjektePage() {
           <KpiCard label="Archiv" value={abgeschlosseneProjekte} subvalue="abgeschlossen" />
         </div>
 
-        <div className="rounded-2xl border border-sky-300/20 bg-sky-300/5 p-4 text-sm font-bold text-sky-100">
+        <div className="rounded-2xl border border-orange-200/50 bg-orange-100/55 p-4 text-sm font-bold text-orange-900">
           Hinweis: Projekt abschließen ist hier erlaubt. Projekt erstellen, bearbeiten, löschen und Bereiche ändern läuft im Chef Dashboard.
         </div>
 
@@ -430,10 +432,10 @@ export default function ProjektePage() {
               ))}
             </div>
 
-            <div className="hidden overflow-hidden rounded-2xl border border-white/10 bg-black/25 md:block">
+            <div className="hidden overflow-hidden rounded-2xl border border-white/70 bg-white/55 shadow-[0_14px_44px_rgba(15,23,42,0.06)] md:block">
               <div className="overflow-x-auto">
                 <div className="min-w-[1180px]">
-                  <div className="grid grid-cols-[1.1fr_1.1fr_1.3fr_1fr_1.4fr_0.9fr] border-b border-white/10 bg-black/20 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white/50">
+                  <div className="grid grid-cols-[1.1fr_1.1fr_1.3fr_1fr_1.4fr_0.9fr] border-b border-white/70 bg-stone-900/5 px-5 py-4 text-sm font-black uppercase tracking-wide text-slate-500">
                     <div>Kunde</div>
                     <div>Kommission</div>
                     <div>Projekt</div>
@@ -449,11 +451,11 @@ export default function ProjektePage() {
                     return (
                       <div
                         key={projekt.id}
-                        className="grid grid-cols-[1.1fr_1.1fr_1.3fr_1fr_1.4fr_0.9fr] items-center border-b border-white/10 px-5 py-4 text-white/80 transition-colors last:border-b-0 hover:bg-sky-300/5 hover:text-white"
+                        className="grid grid-cols-[1.1fr_1.1fr_1.3fr_1fr_1.4fr_0.9fr] items-center border-b border-white/70 px-5 py-4 text-slate-700 transition-colors last:border-b-0 hover:bg-orange-300/5 hover:text-slate-950"
                       >
-                        <div className="font-black text-white">{projekt.kunde || "Intern"}</div>
+                        <div className="font-black text-slate-950">{projekt.kunde || "Intern"}</div>
                         <div>{projekt.kommission || "-"}</div>
-                        <div className="font-bold text-sky-100">{projektTitel(projekt)}</div>
+                        <div className="font-bold text-orange-800">{projektTitel(projekt)}</div>
                         <div>
                           <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(status)}`}>
                             {status}
@@ -461,12 +463,12 @@ export default function ProjektePage() {
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {bereiche.length === 0 ? (
-                            <span className="text-sm font-bold text-white/35">Keine Bereiche</span>
+                            <span className="text-sm font-bold text-slate-400">Keine Bereiche</span>
                           ) : (
                             bereiche.map((bereich) => (
                               <span
                                 key={`${projekt.id}-${bereich}`}
-                                className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-black text-white/60"
+                                className="rounded-full border border-white/70 bg-white/65 px-3 py-1 text-xs font-black text-slate-600"
                               >
                                 {bereich}
                               </span>
@@ -475,11 +477,11 @@ export default function ProjektePage() {
                         </div>
                         <div>
                           {status === "Abgeschlossen" ? (
-                            <span className="inline-flex rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-black uppercase tracking-widest text-white/35">
+                            <span className="inline-flex rounded-xl border border-white/70 bg-white/55 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-400">
                               Erledigt
                             </span>
                           ) : istSystemProjekt(projekt) ? (
-                            <span className="inline-flex rounded-xl border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-sky-100">
+                            <span className="inline-flex rounded-xl border border-orange-200/50 bg-orange-100/60 px-4 py-2 text-xs font-black uppercase tracking-widest text-orange-800">
                               System
                             </span>
                           ) : (
@@ -487,7 +489,7 @@ export default function ProjektePage() {
                               type="button"
                               onClick={() => projektAbschliessen(projekt)}
                               disabled={loading}
-                              className="rounded-xl border border-emerald-300/25 bg-emerald-400/10 px-4 py-2 text-sm font-black text-emerald-200 transition hover:-translate-y-1 hover:border-emerald-200/45 hover:bg-emerald-400/15 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="rounded-xl border border-emerald-900/30 bg-emerald-950/10 px-4 py-2 text-sm font-black text-emerald-800 transition hover:-translate-y-1 hover:border-emerald-900/45 hover:bg-emerald-950/15 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               ✓ Abschließen
                             </button>
@@ -504,30 +506,68 @@ export default function ProjektePage() {
       </DropdownPanel>
 
       <style jsx global>{`
-        .dark-input {
+        .warm-input {
           width: 100%;
           border-radius: 1rem;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(0, 0, 0, 0.28);
+          border: 1px solid rgba(255, 255, 255, 0.72);
+          background: rgba(255, 255, 255, 0.82);
           padding: 0.95rem 1rem;
-          color: white;
+          color: #020617;
           outline: none;
           transition: 0.2s ease;
+          color-scheme: light;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
         }
 
-        .dark-input:focus {
-          border-color: rgba(125, 211, 252, 0.45);
-          box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.1);
-          background: rgba(0, 0, 0, 0.38);
+        .warm-input:focus {
+          border-color: rgba(251, 146, 60, 0.55);
+          box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+          background: rgba(255, 255, 255, 0.94);
         }
 
-        .dark-input::placeholder {
-          color: rgba(255, 255, 255, 0.35);
+        .warm-input::placeholder {
+          color: rgba(15, 23, 42, 0.45);
+        }
+
+        .warm-input[type="date"],
+        .warm-input[type="month"],
+        .warm-input[type="datetime-local"] {
+          padding-right: 3rem !important;
+          background-repeat: no-repeat !important;
+          background-position: right 1rem center !important;
+          background-size: 1.15rem 1.15rem !important;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23020617' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E") !important;
+        }
+
+        .warm-input[type="time"] {
+          padding-right: 3rem !important;
+          background-repeat: no-repeat !important;
+          background-position: right 1rem center !important;
+          background-size: 1.15rem 1.15rem !important;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23020617' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E") !important;
+        }
+
+        .warm-input::-webkit-calendar-picker-indicator {
+          opacity: 0 !important;
+          cursor: pointer !important;
+          width: 2.75rem !important;
+          height: 100% !important;
+        }
+
+        .projekte-v12 .v12-hero .text-slate-950,
+        .projekte-v12 .v12-hero .text-slate-600,
+        .projekte-v12 .v12-hero .text-slate-500 {
+          color: rgba(255, 255, 255, 0.72) !important;
+        }
+
+        .projekte-v12 .v12-hero h1 {
+          color: #ffffff !important;
         }
       `}</style>
     </main>
   );
 }
+
 
 function ProjektMobileCard({
   projekt,
@@ -549,12 +589,12 @@ function ProjektMobileCard({
   const istSystem = titel.includes("betriebsunterhalt") || String(projekt.kunde || "").toLowerCase() === "intern";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-5 transition-colors hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="rounded-2xl border border-white/70 bg-white/60 p-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-xl font-black text-white">{projektTitel(projekt)}</div>
-          <div className="mt-2 text-sm text-white/60">Kunde: {projekt.kunde || "Intern"}</div>
-          <div className="mt-1 text-sm text-white/45">Kommission: {projekt.kommission || "-"}</div>
+          <div className="text-xl font-black text-slate-950">{projektTitel(projekt)}</div>
+          <div className="mt-2 text-sm text-slate-600">Kunde: {projekt.kunde || "Intern"}</div>
+          <div className="mt-1 text-sm text-slate-500">Kommission: {projekt.kommission || "-"}</div>
         </div>
 
         <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${statusFarbe(status)}`}>
@@ -564,12 +604,12 @@ function ProjektMobileCard({
 
       <div className="mt-5 flex flex-wrap gap-2">
         {bereiche.length === 0 ? (
-          <span className="text-sm font-bold text-white/35">Keine Bereiche</span>
+          <span className="text-sm font-bold text-slate-400">Keine Bereiche</span>
         ) : (
           bereiche.map((bereich) => (
             <span
               key={`${projekt.id}-${bereich}`}
-              className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-black text-white/60"
+              className="rounded-full border border-white/70 bg-white/65 px-3 py-1 text-xs font-black text-slate-600"
             >
               {bereich}
             </span>
@@ -579,11 +619,11 @@ function ProjektMobileCard({
 
       <div className="mt-5">
         {status === "Abgeschlossen" ? (
-          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center text-sm font-black uppercase tracking-widest text-white/35">
+          <div className="rounded-xl border border-white/70 bg-white/55 px-4 py-3 text-center text-sm font-black uppercase tracking-widest text-slate-400">
             Erledigt
           </div>
         ) : istSystem ? (
-          <div className="rounded-xl border border-sky-300/20 bg-sky-300/10 px-4 py-3 text-center text-sm font-black uppercase tracking-widest text-sky-100">
+          <div className="rounded-xl border border-orange-200/50 bg-orange-100/60 px-4 py-3 text-center text-sm font-black uppercase tracking-widest text-orange-800">
             Systemprojekt
           </div>
         ) : (
@@ -591,7 +631,7 @@ function ProjektMobileCard({
             type="button"
             onClick={() => onAbschliessen(projekt)}
             disabled={loading}
-            className="w-full rounded-xl border border-emerald-300/25 bg-emerald-400/10 px-4 py-3 font-black text-emerald-200 transition hover:-translate-y-1 hover:border-emerald-200/45 hover:bg-emerald-400/15 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-xl border border-emerald-900/30 bg-emerald-950/10 px-4 py-3 font-black text-emerald-800 transition hover:-translate-y-1 hover:border-emerald-900/45 hover:bg-emerald-950/15 disabled:cursor-not-allowed disabled:opacity-50"
           >
             ✓ Projekt abschließen
           </button>
@@ -600,6 +640,7 @@ function ProjektMobileCard({
     </div>
   );
 }
+
 
 function ActionCard({
   href,
@@ -616,13 +657,14 @@ function ActionCard({
     <Link
       href={href}
       onClick={onClick}
-      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+      className="group block w-full rounded-2xl border border-white/70 bg-white/55 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-lg hover:shadow-orange-900/10"
     >
-      <div className="text-sm text-white/50">{label}</div>
-      <div className="mt-2 text-lg font-black text-white">{title}</div>
+      <div className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">{label}</div>
+      <div className="mt-1 text-base font-black text-slate-950">{title}</div>
     </Link>
   );
 }
+
 
 function DropdownPanel({
   id,
@@ -642,27 +684,28 @@ function DropdownPanel({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30">
+    <section id={id} className="overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white/[0.08] to-white/[0.025] shadow-2xl shadow-slate-900/10">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition-colors hover:bg-sky-300/5 lg:flex-row lg:items-center lg:p-7"
+        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-orange-300/5 lg:flex-row lg:items-center lg:p-7"
       >
         <div>
-          <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">{eyebrow}</div>
-          <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
-          <p className="mt-1 text-white/55">{description}</p>
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-orange-800">{eyebrow}</div>
+          <h2 className="mt-2 text-2xl font-black text-slate-950">{title}</h2>
+          <p className="mt-1 text-slate-500">{description}</p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 transition hover:border-sky-300/35 hover:bg-sky-300/10 hover:text-sky-100">
+        <div className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-5 py-3 text-sm font-black text-slate-950 transition hover:border-orange-300/40 hover:bg-orange-300/10 hover:text-orange-700">
           {open ? "Schließen ▲" : "Öffnen ▼"}
         </div>
       </button>
 
-      {open && <div className="space-y-6 border-t border-white/10 p-6 lg:p-7">{children}</div>}
+      {open && <div className="space-y-6 border-t border-white/70 p-6 lg:p-7">{children}</div>}
     </section>
   );
 }
+
 
 function KpiCard({
   label,
@@ -677,11 +720,11 @@ function KpiCard({
   blue?: boolean;
   green?: boolean;
 }) {
-  const valueColor = green ? "text-green-300" : blue ? "text-sky-200" : "text-slate-100";
+  const valueColor = green ? "text-emerald-700" : blue ? "text-orange-800" : "text-slate-950";
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-6 shadow-2xl shadow-black/30 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
-      <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
+    <div className="rounded-3xl border border-white/70 bg-white/60 p-6 shadow-[0_16px_42px_rgba(15,23,42,0.08)] backdrop-blur-xl transition hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-orange-900/10">
+      <div className="text-xs font-black uppercase tracking-[0.22em] text-slate-500">
         {label}
       </div>
 
@@ -690,13 +733,14 @@ function KpiCard({
       </div>
 
       {subvalue && (
-        <div className="mt-2 break-words text-sm font-bold text-white/45">
+        <div className="mt-2 break-words text-sm font-bold text-slate-500">
           {subvalue}
         </div>
       )}
     </div>
   );
 }
+
 
 function HeroMini({
   label,
@@ -709,19 +753,19 @@ function HeroMini({
   blue?: boolean;
   green?: boolean;
 }) {
-  const color = blue ? "text-sky-200" : green ? "text-green-400" : "text-slate-100";
+  const color = blue ? "text-orange-200" : green ? "text-emerald-300" : "text-white";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition-colors hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.08] p-3 text-center transition hover:border-orange-200/40 hover:bg-orange-300/10">
       <div className={`text-xl font-black leading-tight md:text-2xl ${color}`}>{value}</div>
-      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">{label}</div>
+      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/50">{label}</div>
     </div>
   );
 }
 
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="min-h-[220px] rounded-xl border border-white/10 bg-black/25 p-5 text-sm font-bold text-white/45">
+    <div className="min-h-[220px] rounded-xl border border-white/70 bg-white/55 p-5 text-sm font-bold text-slate-500">
       {text}
     </div>
   );

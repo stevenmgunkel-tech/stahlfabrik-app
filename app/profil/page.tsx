@@ -383,8 +383,8 @@ export default function ProfilPage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-[60vh] items-center justify-center text-slate-100">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-5 font-black shadow-2xl shadow-black/30">
+      <main className="flex min-h-[60vh] items-center justify-center text-slate-950">
+        <div className="rounded-3xl border border-white/70 bg-white/75 px-6 py-5 font-black shadow-[0_22px_60px_rgba(15,23,42,0.12)] backdrop-blur-2xl">
           Profil wird geladen...
         </div>
       </main>
@@ -392,24 +392,24 @@ export default function ProfilPage() {
   }
 
   return (
-    <main className="space-y-8 text-slate-100">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
+    <main className="profil-v12 space-y-6 text-slate-950">
+      <section className="v12-hero relative overflow-hidden rounded-[2rem] border border-white/60 bg-gradient-to-br from-[#302720]/90 via-[#26272a]/90 to-[#161719]/95 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.16)] lg:p-7">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.46]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
             style={{
               backgroundImage: "url('/berg.png')",
-              filter: "brightness(1.65) contrast(1.05)",
+              filter: "brightness(1.45) contrast(1.04) saturate(0.92)",
             }}
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#1a1512]/90 via-[#26231f]/60 to-[#f4eee5]/10" />
 
         <div className="relative z-10 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
           <div>
-            <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
-              ODZ SILVER · Profil
+            <div className="inline-flex rounded-full border border-orange-200/30 bg-orange-300/20 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-orange-100">
+              ODZ V1.2 · Profil
             </div>
 
             <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -438,16 +438,18 @@ export default function ProfilPage() {
       </section>
 
       {meldung && (
-        <div className="rounded-xl border border-slate-200/20 bg-slate-200/10 p-4 text-sm font-bold text-slate-100">
+        <div className="rounded-xl border border-orange-200/40 bg-orange-100/60 p-4 text-sm font-bold text-slate-950">
           {meldung}
         </div>
       )}
 
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <ActionCard href="#daten" label="Profil" title="👤 Meine Daten" onClick={() => setDatenOffen(true)} />
-        <ActionCard href="#zeitkonto" label="Monat" title="◷ Zeitkonto" onClick={() => setZeitOffen(true)} />
-        <ActionCard href="#buchungen" label="Auswertung" title="▣ Buchungen" onClick={() => setBuchungenOffen(true)} />
-        <ActionCard href="#system" label="System" title="ODZ. V1.1" onClick={() => setSystemOffen(true)} />
+      <section className="rounded-[1.5rem] border border-white/60 bg-white/35 p-2 shadow-[0_14px_44px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+          <ActionCard href="#daten" label="Profil" title="👤 Meine Daten" onClick={() => setDatenOffen(true)} />
+          <ActionCard href="#zeitkonto" label="Monat" title="◷ Zeitkonto" onClick={() => setZeitOffen(true)} />
+          <ActionCard href="#buchungen" label="Auswertung" title="▣ Buchungen" onClick={() => setBuchungenOffen(true)} />
+          <ActionCard href="#system" label="System" title="ODZ. V1.2" onClick={() => setSystemOffen(true)} />
+        </div>
       </section>
 
       <DropdownPanel
@@ -502,7 +504,7 @@ export default function ProfilPage() {
           <InfoBox label="ÜA Abbau" value={formatStunden(berechnung.stats.ueberstundenabbau)} />
         </div>
 
-        <div className="rounded-2xl border border-sky-300/20 bg-sky-300/5 p-5 text-sm font-bold leading-6 text-sky-100">
+        <div className="rounded-2xl border border-orange-200/50 bg-orange-100/55 p-5 text-sm font-bold leading-6 text-orange-900">
           Merksatz: Echte Istzeit kommt aus dem Tagesabschluss. Projekte und Betriebsunterhalt zeigen nur, wohin diese Zeit verteilt wurde.
         </div>
       </DropdownPanel>
@@ -516,29 +518,29 @@ export default function ProfilPage() {
         onToggle={() => setBuchungenOffen(!buchungenOffen)}
       >
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-          <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-            <h3 className="text-xl font-black text-white">Letzte Tagesabschlüsse</h3>
-            <p className="mt-1 text-sm text-white/45">Datum, Von/Bis, Nettozeit und Status.</p>
+          <div className="rounded-2xl border border-white/70 bg-white/60 p-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)]">
+            <h3 className="text-xl font-black text-slate-950">Letzte Tagesabschlüsse</h3>
+            <p className="mt-1 text-sm text-slate-500">Datum, Von/Bis, Nettozeit und Status.</p>
 
             <div className="mt-5 space-y-3">
               {berechnung.letzteTage.length === 0 ? (
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-white/45">
+                <div className="rounded-xl border border-white/70 bg-white/55 p-4 text-slate-500">
                   Noch keine Tagesabschlüsse im aktuellen Monat.
                 </div>
               ) : (
                 berechnung.letzteTage.map((tag) => (
-                  <div key={tag.id || `${tag.datum}-${tag.startzeit}`} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                  <div key={tag.id || `${tag.datum}-${tag.startzeit}`} className="rounded-xl border border-white/70 bg-white/55 p-4">
                     <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
                       <div>
-                        <div className="font-black text-white">{formatDatum(tag.datum)}</div>
-                        <div className="mt-1 text-sm text-white/45">
+                        <div className="font-black text-slate-950">{formatDatum(tag.datum)}</div>
+                        <div className="mt-1 text-sm text-slate-500">
                           {String(tag.startzeit || "").slice(0, 5) || "--:--"} - {String(tag.endzeit || "").slice(0, 5) || "--:--"}
                         </div>
                       </div>
 
                       <div className="sm:text-right">
-                        <div className="text-lg font-black text-sky-100">{formatStunden(Number(tag.netto_stunden || 0))}</div>
-                        <div className="mt-1 text-xs font-black uppercase tracking-widest text-white/45">{tag.status || "Offen"}</div>
+                        <div className="text-lg font-black text-orange-800">{formatStunden(Number(tag.netto_stunden || 0))}</div>
+                        <div className="mt-1 text-xs font-black uppercase tracking-widest text-slate-500">{tag.status || "Offen"}</div>
                       </div>
                     </div>
                   </div>
@@ -547,24 +549,24 @@ export default function ProfilPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-            <h3 className="text-xl font-black text-white">Projektverteilung</h3>
-            <p className="mt-1 text-sm text-white/45">Projektzeit inklusive automatisch berechnetem Betriebsunterhalt.</p>
+          <div className="rounded-2xl border border-white/70 bg-white/60 p-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)]">
+            <h3 className="text-xl font-black text-slate-950">Projektverteilung</h3>
+            <p className="mt-1 text-sm text-slate-500">Projektzeit inklusive automatisch berechnetem Betriebsunterhalt.</p>
 
             <div className="mt-5 space-y-3">
               {berechnung.projektVerteilung.length === 0 ? (
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-white/45">
+                <div className="rounded-xl border border-white/70 bg-white/55 p-4 text-slate-500">
                   Noch keine Projektbuchungen im aktuellen Monat.
                 </div>
               ) : (
                 berechnung.projektVerteilung.map((projekt) => (
-                  <div key={projekt.name} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                  <div key={projekt.name} className="rounded-xl border border-white/70 bg-white/55 p-4">
                     <div className="flex justify-between gap-4">
                       <div className="min-w-0">
-                        <div className="truncate font-black text-white">{projekt.name}</div>
-                        <div className="mt-1 text-sm text-white/45">{projekt.buchungen} Buchung{projekt.buchungen === 1 ? "" : "en"}</div>
+                        <div className="truncate font-black text-slate-950">{projekt.name}</div>
+                        <div className="mt-1 text-sm text-slate-500">{projekt.buchungen} Buchung{projekt.buchungen === 1 ? "" : "en"}</div>
                       </div>
-                      <div className="shrink-0 text-lg font-black text-sky-100">{formatStunden(projekt.stunden)}</div>
+                      <div className="shrink-0 text-lg font-black text-orange-800">{formatStunden(projekt.stunden)}</div>
                     </div>
                   </div>
                 ))
@@ -584,20 +586,20 @@ export default function ProfilPage() {
       >
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <InfoBox label="App" value="StahlFabrik" />
-          <InfoBox label="Version" value="ODZ SILVER · V1.1" highlight="blue" />
+          <InfoBox label="Version" value="ODZ V1.2 · Warm Steel" highlight="blue" />
           <InfoBox label="Design" value="DESIGN NACH MASS" />
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
-          <h3 className="text-xl font-black text-white">Konto</h3>
-          <p className="mt-2 text-sm leading-6 text-white/50">
+        <div className="rounded-2xl border border-white/70 bg-white/60 p-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)]">
+          <h3 className="text-xl font-black text-slate-950">Konto</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
             Passwortänderung und persönliche Stammdaten-Bearbeitung kommen später sauber als eigener Prozess. Arbeitsmodell, Rolle und Startdaten bleiben Admin-Sache.
           </p>
 
           <button
             type="button"
             onClick={logout}
-            className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-5 py-3 font-black text-red-200 transition hover:-translate-y-1 hover:border-red-300/45 hover:bg-red-500/15"
+            className="mt-5 rounded-2xl border border-red-950/30 bg-red-950/10 px-5 py-3 font-black text-red-800 transition hover:-translate-y-1 hover:border-red-950/45 hover:bg-red-950/15"
           >
             Logout
           </button>
@@ -606,6 +608,7 @@ export default function ProfilPage() {
     </main>
   );
 }
+
 
 function HeroMini({
   label,
@@ -621,26 +624,27 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.08] p-3 text-center transition hover:border-orange-200/40 hover:bg-orange-300/10">
       <div
         className={`truncate text-xl font-black leading-tight md:text-2xl ${
           red
-            ? "text-red-400"
+            ? "text-red-300"
             : green
-              ? "text-green-400"
+              ? "text-emerald-300"
               : blue
-                ? "text-sky-200"
-                : "text-slate-100"
+                ? "text-orange-200"
+                : "text-white"
         }`}
       >
         {value}
       </div>
-      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
+      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/50">
         {label}
       </div>
     </div>
   );
 }
+
 
 function ActionCard({
   href,
@@ -657,13 +661,14 @@ function ActionCard({
     <a
       href={href}
       onClick={onClick}
-      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+      className="group block w-full rounded-2xl border border-white/70 bg-white/55 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-lg hover:shadow-orange-900/10"
     >
-      <div className="text-sm text-white/50">{label}</div>
-      <div className="mt-2 text-lg font-black text-white">{title}</div>
+      <div className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">{label}</div>
+      <div className="mt-1 text-base font-black text-slate-950">{title}</div>
     </a>
   );
 }
+
 
 function DropdownPanel({
   id,
@@ -683,24 +688,24 @@ function DropdownPanel({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30">
+    <section id={id} className="overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white/[0.08] to-white/[0.025] shadow-2xl shadow-slate-900/10">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-sky-300/5 lg:flex-row lg:items-center lg:p-7"
+        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-orange-300/5 lg:flex-row lg:items-center lg:p-7"
       >
         <div>
-          <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">{eyebrow}</div>
-          <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
-          <p className="mt-1 text-white/55">{description}</p>
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-orange-800">{eyebrow}</div>
+          <h2 className="mt-2 text-2xl font-black text-slate-950">{title}</h2>
+          <p className="mt-1 text-slate-500">{description}</p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 transition hover:border-sky-300/35 hover:bg-sky-300/10 hover:text-sky-100">
+        <div className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-5 py-3 text-sm font-black text-slate-950 transition hover:border-orange-300/40 hover:bg-orange-300/10 hover:text-orange-700">
           {open ? "Schließen ▲" : "Öffnen ▼"}
         </div>
       </button>
 
-      {open && <div className="space-y-6 border-t border-white/10 p-6 lg:p-7">{children}</div>}
+      {open && <div className="space-y-6 border-t border-white/70 p-6 lg:p-7">{children}</div>}
     </section>
   );
 }
@@ -716,16 +721,16 @@ function InfoBox({
 }) {
   const color =
     highlight === "green"
-      ? "text-green-400"
+      ? "text-emerald-700"
       : highlight === "red"
-        ? "text-red-400"
+        ? "text-red-800"
         : highlight === "blue"
-          ? "text-sky-100"
-          : "text-slate-100";
+          ? "text-orange-800"
+          : "text-slate-950";
 
   return (
-    <div className="min-w-0 rounded-2xl border border-white/10 bg-black/25 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10">
-      <div className="truncate text-xs font-black uppercase tracking-[0.2em] text-white/35">
+    <div className="min-w-0 rounded-2xl border border-white/70 bg-white/60 p-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-lg hover:shadow-orange-900/10">
+      <div className="truncate text-xs font-black uppercase tracking-[0.2em] text-slate-500">
         {label}
       </div>
       <div className={`mt-2 truncate text-2xl font-black ${color}`}>{value}</div>

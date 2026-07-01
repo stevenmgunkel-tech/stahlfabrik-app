@@ -436,31 +436,31 @@ export default function MitarbeiterPage() {
   const pageLoading = !seiteGeprueft || initialLoading;
 
   return (
-    <main className="space-y-8 text-slate-100">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
+    <main className="mitarbeiter-v12 space-y-6 text-slate-950">
+      <section className="v12-hero relative overflow-hidden rounded-[2rem] border border-white/60 bg-gradient-to-br from-[#302720]/90 via-[#26272a]/90 to-[#161719]/95 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.16)] lg:p-7">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.46]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
             style={{
               backgroundImage: "url('/berg.png')",
-              filter: "brightness(1.65) contrast(1.05)",
+              filter: "brightness(1.45) contrast(1.04) saturate(0.92)",
             }}
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#1a1512]/90 via-[#26231f]/60 to-[#f4eee5]/10" />
 
         <div className="relative z-10 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
           <div>
-            <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
-              ODZ SILVER · Personal
+            <div className="inline-flex rounded-full border border-orange-200/30 bg-orange-300/20 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-orange-100">
+              ODZ V1.2 · Personal
             </div>
 
             <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
               Mitarbeiter
             </h1>
 
-            <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-white/65 sm:text-base">
+            <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-950/65 sm:text-base">
               Teamübersicht, Rollen, Verträge, Ferien, Probezeit und Stärken in
               einer sauberen Personal-Zentrale.
             </p>
@@ -500,35 +500,37 @@ export default function MitarbeiterPage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <ActionCard
-          href="#team"
-          label="Übersicht"
-          title="👥 Team"
-          onClick={() => setTeamOffen(true)}
-        />
-        <ActionCard
-          href="#details"
-          label="Details"
-          title="📋 Personalakte"
-          onClick={() => setDetailsOffen(true)}
-        />
-        <ActionCard
-          href="#bearbeiten"
-          label="Verwalten"
-          title="✎ Bearbeiten"
-          onClick={() => selected && formularFuellen(selected)}
-        />
-        <ActionCard
-          href="#staerken"
-          label="Entwicklung"
-          title="🎯 Stärken"
-          onClick={() => setDetailsOffen(true)}
-        />
+      <section className="rounded-[1.5rem] border border-white/60 bg-white/35 p-2 shadow-[0_14px_44px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+          <ActionCard
+            href="#team"
+            label="Übersicht"
+            title="👥 Team"
+            onClick={() => setTeamOffen(true)}
+          />
+          <ActionCard
+            href="#details"
+            label="Details"
+            title="📋 Personalakte"
+            onClick={() => setDetailsOffen(true)}
+          />
+          <ActionCard
+            href="#bearbeiten"
+            label="Verwalten"
+            title="✎ Bearbeiten"
+            onClick={() => selected && formularFuellen(selected)}
+          />
+          <ActionCard
+            href="#staerken"
+            label="Entwicklung"
+            title="🎯 Stärken"
+            onClick={() => setDetailsOffen(true)}
+          />
+        </div>
       </section>
 
       {meldung && (
-        <div className="rounded-xl border border-slate-200/20 bg-slate-200/10 p-4 text-sm font-bold text-slate-100">
+        <div className="rounded-xl border border-orange-200/40 bg-orange-100/60 p-4 text-sm font-bold text-slate-950">
           {meldung}
         </div>
       )}
@@ -542,10 +544,10 @@ export default function MitarbeiterPage() {
         onToggle={() => setTeamOffen(!teamOffen)}
       >
         <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
-          <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-xl shadow-black/20 backdrop-blur-xl">
-            <div className="border-b border-white/10 p-5 sm:p-6">
-              <h2 className="text-xl font-black text-white">Team</h2>
-              <p className="mt-1 text-sm leading-6 text-white/50">
+          <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/60 shadow-xl shadow-slate-900/10 backdrop-blur-xl">
+            <div className="border-b border-white/70 p-5 sm:p-6">
+              <h2 className="text-xl font-black text-slate-950">Team</h2>
+              <p className="mt-1 text-sm leading-6 text-slate-500">
                 Mitarbeiter auswählen und Details bearbeiten.
               </p>
 
@@ -554,7 +556,7 @@ export default function MitarbeiterPage() {
                 value={suche}
                 onChange={(e) => setSuche(e.target.value)}
                 placeholder="Mitarbeiter suchen..."
-                className="dark-input mt-5"
+                className="warm-input mt-5"
               />
             </div>
 
@@ -571,18 +573,18 @@ export default function MitarbeiterPage() {
                       key={person.id}
                       type="button"
                       onClick={() => mitarbeiterAuswaehlen(person)}
-                      className={`w-full rounded-[1.5rem] border p-4 text-left transition-colors hover:border-sky-300/25 hover:bg-sky-300/5 ${
+                      className={`w-full rounded-[1.5rem] border p-4 text-left transition-colors hover:border-orange-300/40 hover:bg-orange-300/5 ${
                         aktiv
-                          ? "border-sky-300/35 bg-sky-300/10 shadow-lg shadow-sky-300/10"
-                          : "border-white/10 bg-black/25"
+                          ? "border-orange-300/50 bg-orange-100/60 shadow-lg shadow-orange-900/10"
+                          : "border-white/70 bg-white/55"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <div className="truncate text-lg font-black text-white">
+                          <div className="truncate text-lg font-black text-slate-950">
                             {person.name || "Ohne Name"}
                           </div>
-                          <div className="mt-1 text-sm font-bold text-white/45">
+                          <div className="mt-1 text-sm font-bold text-slate-500">
                             {person.vertragsart || "Vertrag offen"}
                           </div>
                         </div>
@@ -610,11 +612,11 @@ export default function MitarbeiterPage() {
 
           <div className="space-y-6">
             {pageLoading ? (
-              <div className="min-h-[420px] rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 text-sm font-bold text-white/45 shadow-xl shadow-black/20 backdrop-blur-xl">
+              <div className="min-h-[420px] rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 text-sm font-bold text-slate-500 shadow-xl shadow-black/20 backdrop-blur-xl">
                 Personalakte wird vorbereitet.
               </div>
             ) : !selected ? (
-              <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 text-white/55 shadow-xl shadow-black/20 backdrop-blur-xl">
+              <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 text-slate-500 shadow-xl shadow-black/20 backdrop-blur-xl">
                 Wähle links einen Mitarbeiter aus.
               </div>
             ) : (
@@ -630,12 +632,12 @@ export default function MitarbeiterPage() {
                   <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
                     <div>
                       <div className="flex flex-wrap items-center gap-3">
-                        <h2 className="text-3xl font-black text-white">
+                        <h2 className="text-3xl font-black text-slate-950">
                           {selected.name}
                         </h2>
                         <RoleBadge rolle={selected.rolle || "Mitarbeiter"} />
                       </div>
-                      <p className="mt-2 text-sm font-bold text-white/45">
+                      <p className="mt-2 text-sm font-bold text-slate-500">
                         {selected.vertragsart || "Vertrag offen"} · Eintritt{" "}
                         {formatDatum(selected.eintrittsdatum)}
                       </p>
@@ -645,7 +647,7 @@ export default function MitarbeiterPage() {
                       <button
                         type="button"
                         onClick={() => formularFuellen(selected)}
-                        className="rounded-2xl border border-sky-300/25 bg-sky-300/10 px-4 py-3 text-sm font-black text-sky-100 transition-colors hover:border-sky-300/35 hover:bg-sky-300/15"
+                        className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-4 py-3 text-sm font-black text-orange-800 transition-colors hover:border-orange-300/50 hover:bg-orange-100/80"
                       >
                         Bearbeiten
                       </button>
@@ -694,18 +696,18 @@ export default function MitarbeiterPage() {
 
                     <div
                       id="staerken"
-                      className="rounded-[1.5rem] border border-white/10 bg-black/25 p-5"
+                      className="rounded-[1.5rem] border border-white/70 bg-white/55 p-5"
                     >
                       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                         <div>
-                          <h3 className="text-xl font-black text-white">
+                          <h3 className="text-xl font-black text-slate-950">
                             Mitarbeiter-Stärken
                           </h3>
-                          <p className="mt-1 text-sm text-white/45">
+                          <p className="mt-1 text-sm text-slate-500">
                             Vorbereitet für die spätere Auswertung.
                           </p>
                         </div>
-                        <span className="rounded-full border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-sky-100">
+                        <span className="rounded-full border border-orange-200/50 bg-orange-100/60 px-4 py-2 text-xs font-black uppercase tracking-widest text-orange-800">
                           Bald aktiv
                         </span>
                       </div>
@@ -877,7 +879,7 @@ export default function MitarbeiterPage() {
                         </Field>
                       </div>
 
-                      <div className="rounded-2xl border border-sky-300/15 bg-sky-300/[0.06] p-4 text-sm font-bold text-sky-100">
+                      <div className="rounded-2xl border border-orange-200/50 bg-orange-100/50 p-4 text-sm font-bold text-orange-800">
                         100% = 42.5 h / 5 Tage · 80% = 34 h / 4 Tage à 8.5 h.
                         Der freie Wochentag zählt später nicht als Solltag.
                       </div>
@@ -887,7 +889,7 @@ export default function MitarbeiterPage() {
                           type="button"
                           onClick={mitarbeiterSpeichern}
                           disabled={saving}
-                          className="rounded-2xl border border-sky-300/25 bg-sky-300/10 px-5 py-3 font-black text-sky-100 transition-colors hover:border-sky-300/35 hover:bg-sky-300/15 disabled:opacity-50"
+                          className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-5 py-3 font-black text-orange-800 transition-colors hover:border-orange-300/50 hover:bg-orange-100/80 disabled:opacity-50"
                         >
                           {saving ? "Speichern..." : "Änderung speichern"}
                         </button>
@@ -895,7 +897,7 @@ export default function MitarbeiterPage() {
                         <button
                           type="button"
                           onClick={formularLeeren}
-                          className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 font-bold text-white transition-colors hover:border-sky-300/25 hover:bg-sky-300/5"
+                          className="rounded-2xl border border-white/70 bg-white/55 px-5 py-3 font-bold text-slate-950 transition-colors hover:border-orange-300/40 hover:bg-orange-300/5"
                         >
                           Abbrechen
                         </button>
@@ -903,7 +905,7 @@ export default function MitarbeiterPage() {
                         <button
                           type="button"
                           onClick={() => mitarbeiterLoeschen(selected.id)}
-                          className="rounded-2xl border border-red-400/25 bg-red-500/10 px-5 py-3 font-bold text-red-200 transition-colors hover:bg-red-500/15"
+                          className="rounded-2xl border border-red-400/25 bg-red-500/10 px-5 py-3 font-bold text-red-800 transition-colors hover:bg-red-500/15"
                         >
                           Löschen
                         </button>
@@ -918,41 +920,90 @@ export default function MitarbeiterPage() {
       </DropdownPanel>
 
       <style jsx global>{`
-        .dark-input {
+        .warm-input {
           width: 100%;
           border-radius: 1rem;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(0, 0, 0, 0.28);
+          border: 1px solid rgba(255, 255, 255, 0.72);
+          background: rgba(255, 255, 255, 0.82);
           padding: 0.95rem 1rem;
-          color: white;
+          color: #020617;
           outline: none;
           transition: 0.2s ease;
+          color-scheme: light;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
         }
 
-        .dark-input:focus {
-          border-color: rgba(125, 211, 252, 0.45);
-          box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.1);
-          background: rgba(0, 0, 0, 0.38);
+        .warm-input:focus {
+          border-color: rgba(251, 146, 60, 0.55);
+          box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+          background: rgba(255, 255, 255, 0.94);
         }
 
-        .dark-input::placeholder {
-          color: rgba(255, 255, 255, 0.35);
+        .warm-input::placeholder {
+          color: rgba(15, 23, 42, 0.45);
         }
 
-        .dark-input option {
-          background: #111315;
-          color: white;
+        .warm-input option {
+          background: #ffffff;
+          color: #020617;
         }
 
-        .dark-input::-webkit-calendar-picker-indicator {
-          filter: brightness(0) invert(1);
-          opacity: 1;
-          cursor: pointer;
+        .warm-input:read-only {
+          background: rgba(255, 255, 255, 0.62);
+          color: rgba(15, 23, 42, 0.72);
+        }
+
+        .warm-input::-webkit-datetime-edit,
+        .warm-input::-webkit-datetime-edit-fields-wrapper,
+        .warm-input::-webkit-datetime-edit-text,
+        .warm-input::-webkit-datetime-edit-month-field,
+        .warm-input::-webkit-datetime-edit-day-field,
+        .warm-input::-webkit-datetime-edit-year-field,
+        .warm-input::-webkit-datetime-edit-hour-field,
+        .warm-input::-webkit-datetime-edit-minute-field,
+        .warm-input::-webkit-datetime-edit-ampm-field {
+          color: #020617;
+        }
+
+        .warm-input[type="date"],
+        .warm-input[type="month"],
+        .warm-input[type="datetime-local"] {
+          padding-right: 3rem !important;
+          background-repeat: no-repeat !important;
+          background-position: right 1rem center !important;
+          background-size: 1.15rem 1.15rem !important;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23020617' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E") !important;
+        }
+
+        .warm-input[type="time"] {
+          padding-right: 3rem !important;
+          background-repeat: no-repeat !important;
+          background-position: right 1rem center !important;
+          background-size: 1.15rem 1.15rem !important;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23020617' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E") !important;
+        }
+
+        .warm-input::-webkit-calendar-picker-indicator {
+          opacity: 0 !important;
+          cursor: pointer !important;
+          width: 2.75rem !important;
+          height: 100% !important;
+        }
+
+        .mitarbeiter-v12 .v12-hero .text-slate-950,
+        .mitarbeiter-v12 .v12-hero .text-slate-600,
+        .mitarbeiter-v12 .v12-hero .text-slate-500 {
+          color: rgba(255, 255, 255, 0.72) !important;
+        }
+
+        .mitarbeiter-v12 .v12-hero h1 {
+          color: #ffffff !important;
         }
       `}</style>
     </main>
   );
 }
+
 
 function HeroMini({
   label,
@@ -968,26 +1019,27 @@ function HeroMini({
   red?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.08] p-3 text-center transition hover:border-orange-200/40 hover:bg-orange-300/10">
       <div
         className={`text-xl font-black leading-tight md:text-2xl ${
           red
-            ? "text-red-400"
+            ? "text-red-300"
             : green
-              ? "text-green-400"
+              ? "text-emerald-300"
               : blue
-                ? "text-sky-200"
-                : "text-slate-100"
+                ? "text-orange-200"
+                : "text-white"
         }`}
       >
         {value}
       </div>
-      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">
+      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/50">
         {label}
       </div>
     </div>
   );
 }
+
 
 function ActionCard({
   href,
@@ -1004,13 +1056,14 @@ function ActionCard({
     <a
       href={href}
       onClick={onClick}
-      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-colors hover:border-sky-300/25 hover:bg-sky-300/5"
+      className="group block w-full rounded-2xl border border-white/70 bg-white/55 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-lg hover:shadow-orange-900/10"
     >
-      <div className="text-sm text-white/50">{label}</div>
-      <div className="mt-2 text-lg font-black text-white">{title}</div>
+      <div className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">{label}</div>
+      <div className="mt-1 text-base font-black text-slate-950">{title}</div>
     </a>
   );
 }
+
 
 function DropdownPanel({
   id,
@@ -1032,28 +1085,28 @@ function DropdownPanel({
   return (
     <section
       id={id}
-      className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30"
+      className="overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white/[0.08] to-white/[0.025] shadow-2xl shadow-slate-900/10"
     >
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-sky-300/5 lg:flex-row lg:items-center lg:p-7"
+        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-orange-300/5 lg:flex-row lg:items-center lg:p-7"
       >
         <div>
-          <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-orange-800">
             {eyebrow}
           </div>
-          <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
-          <p className="mt-1 text-white/55">{description}</p>
+          <h2 className="mt-2 text-2xl font-black text-slate-950">{title}</h2>
+          <p className="mt-1 text-slate-500">{description}</p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 transition hover:border-sky-300/35 hover:bg-sky-300/10 hover:text-sky-100">
+        <div className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-5 py-3 text-sm font-black text-slate-950 transition hover:border-orange-300/40 hover:bg-orange-300/10 hover:text-orange-700">
           {open ? "Schließen ▲" : "Öffnen ▼"}
         </div>
       </button>
 
       {open && (
-        <div className="space-y-6 border-t border-white/10 p-6 lg:p-7">
+        <div className="space-y-6 border-t border-white/70 p-6 lg:p-7">
           {children}
         </div>
       )}
@@ -1061,17 +1114,18 @@ function DropdownPanel({
   );
 }
 
+
 function RoleBadge({ rolle }: { rolle: string }) {
   const style =
     rolle === "Admin"
-      ? "border-slate-200/30 bg-slate-200/10 text-slate-100"
+      ? "border-slate-300/70 bg-slate-100/80 text-slate-800"
       : rolle === "Lehrling"
-        ? "border-sky-300/30 bg-sky-300/10 text-sky-200"
+        ? "border-orange-300/50 bg-orange-100/70 text-orange-800"
         : rolle === "Temporär"
-          ? "border-violet-300/30 bg-violet-300/10 text-violet-200"
+          ? "border-violet-300/50 bg-violet-100/70 text-violet-800"
           : rolle === "Aushilfe"
-            ? "border-fuchsia-300/30 bg-fuchsia-300/10 text-fuchsia-200"
-            : "border-green-400/30 bg-green-500/10 text-green-300";
+            ? "border-fuchsia-300/50 bg-fuchsia-100/70 text-fuchsia-800"
+            : "border-emerald-300/50 bg-emerald-100/70 text-emerald-800";
 
   return (
     <span
@@ -1082,18 +1136,20 @@ function RoleBadge({ rolle }: { rolle: string }) {
   );
 }
 
+
 function MiniStat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-      <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+    <div className="rounded-2xl border border-white/70 bg-white/55 p-3">
+      <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
         {label}
       </div>
-      <div className="mt-2 truncate text-sm font-black text-sky-100">
+      <div className="mt-2 truncate text-sm font-black text-orange-800">
         {value}
       </div>
     </div>
   );
 }
+
 
 function InfoCard({
   label,
@@ -1104,11 +1160,11 @@ function InfoCard({
   value: string | number;
   tone?: "red";
 }) {
-  const color = tone === "red" ? "text-red-200" : "text-sky-100";
+  const color = tone === "red" ? "text-red-800" : "text-orange-800";
 
   return (
-    <div className="min-w-0 rounded-[1.5rem] border border-white/10 bg-black/25 p-4 transition-colors hover:border-sky-300/25 hover:bg-sky-300/5">
-      <div className="truncate text-[10px] font-black uppercase tracking-[0.14em] text-white/35">
+    <div className="min-w-0 rounded-[1.5rem] border border-white/70 bg-white/55 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80">
+      <div className="truncate text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
         {label}
       </div>
 
@@ -1119,16 +1175,17 @@ function InfoCard({
   );
 }
 
+
 function Strength({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+    <div className="rounded-2xl border border-white/70 bg-white/55 p-4">
       <div className="flex items-center justify-between gap-3">
-        <div className="font-black text-white">{label}</div>
-        <div className="text-sm font-black text-sky-100">{value}%</div>
+        <div className="font-black text-slate-950">{label}</div>
+        <div className="text-sm font-black text-orange-800">{value}%</div>
       </div>
-      <div className="mt-3 overflow-hidden rounded-full bg-black/40">
+      <div className="mt-3 overflow-hidden rounded-full bg-stone-900/10">
         <div
-          className="h-2 rounded-full bg-gradient-to-r from-sky-200 to-green-300"
+          className="h-2 rounded-full bg-gradient-to-r from-orange-300 to-emerald-300"
           style={{ width: `${value}%` }}
         />
       </div>
@@ -1136,10 +1193,11 @@ function Strength({ label, value }: { label: string; value: number }) {
   );
 }
 
+
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-bold text-white/70">
+      <label className="mb-2 block text-sm font-black text-slate-600">
         {label}
       </label>
       {children}
@@ -1167,10 +1225,11 @@ function Input({
       value={value}
       readOnly={readOnly}
       onChange={(e) => onChange(e.target.value)}
-      className="dark-input"
+      className="warm-input"
     />
   );
 }
+
 
 function Select({
   value,
@@ -1185,13 +1244,13 @@ function Select({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="dark-input"
+      className="warm-input"
     >
       {options.map((option) => (
         <option
           key={option || "leer"}
           value={option}
-          className="bg-[#111315] text-white"
+          className="bg-white text-slate-950"
         >
           {option || "Kein freier Tag"}
         </option>
@@ -1200,9 +1259,10 @@ function Select({
   );
 }
 
+
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="min-h-[360px] p-6 text-sm font-bold text-white/55">
+    <div className="min-h-[360px] p-6 text-sm font-bold text-slate-500">
       {text}
     </div>
   );

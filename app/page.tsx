@@ -34,6 +34,7 @@ type DashboardStats = {
   gesamtUeberstunden: number;
   ueberstundenStart: number;
   ueberstundenAbbau: number;
+  ueberstundenZeitraum: number;
 
   offeneAntraege: number;
 };
@@ -61,6 +62,7 @@ const initialStats: DashboardStats = {
   gesamtUeberstunden: 0,
   ueberstundenStart: 0,
   ueberstundenAbbau: 0,
+  ueberstundenZeitraum: 0,
 
   offeneAntraege: 0,
 };
@@ -404,8 +406,73 @@ export default function DashboardPage() {
     const angerechneteStundenMonat = monatIst + abwesenheitsstundenMonat;
     const monatDifferenz = angerechneteStundenMonat - monatSoll;
 
+    const ersteArbeitszeit = [...eigeneArbeitszeiten]
+      .filter((item) => item.datum)
+      .sort((a, b) => String(a.datum || "").localeCompare(String(b.datum || "")))[0];
+
+    const effektiverGesamtStartDate =
+      berechnungAbDate ||
+      parseDatumLokal(ersteArbeitszeit?.datum) ||
+      effektiverMonatsStartDate;
+
+    const effektiverGesamtStart = formatDateLocal(effektiverGesamtStartDate);
+
+    const gesamtZeiten = eigeneArbeitszeiten.filter(
+      (item) => item.datum >= effektiverGesamtStart && item.datum <= heute,
+    );
+
+    const gesamtBrutto = gesamtZeiten.reduce(
+      (sum, item) => sum + Number(item.stunden || 0),
+      0,
+    );
+
+    const gesamtIst =
+      gesamtBrutto - pausenFuerZeitraum(effektiverGesamtStart, heute);
+
+    const gesamtTage =
+      effektiverGesamtStart > heute
+        ? 0
+        : zaehleArbeitstage(effektiverGesamtStartDate, heuteDate, freieWochentage);
+
+    const gesamtSoll = tagesSoll * gesamtTage;
+
+    const urlaubstageGesamt = eigeneAbwesenheiten
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Urlaub" &&
+          eintrag.status === "Genehmigt" &&
+          eintrag.bis >= effektiverGesamtStart &&
+          eintrag.von <= heute,
+      )
+      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+
+    const kranktageGesamt = eigeneAbwesenheiten
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Krank" &&
+          eintrag.bis >= effektiverGesamtStart &&
+          eintrag.von <= heute,
+      )
+      .reduce((sum, eintrag) => sum + Number(eintrag.tage || 0), 0);
+
+    const ueberstundenAbbauStundenGesamt = eigeneAbwesenheiten
+      .filter(
+        (eintrag) =>
+          eintrag.typ === "Überstundenabbau" &&
+          eintrag.status === "Genehmigt" &&
+          eintrag.bis >= effektiverGesamtStart &&
+          eintrag.von <= heute,
+      )
+      .reduce((sum, eintrag) => sum + Number(eintrag.stunden || 0), 0);
+
+    const abwesenheitsstundenGesamt =
+      (urlaubstageGesamt + kranktageGesamt) * tagesSoll;
+
+    const angerechneteStundenGesamt = gesamtIst + abwesenheitsstundenGesamt;
+    const ueberstundenZeitraum = angerechneteStundenGesamt - gesamtSoll;
+
     const gesamtUeberstunden =
-      ueberstundenStart + monatDifferenz - ueberstundenAbbauStundenMonat;
+      ueberstundenStart + ueberstundenZeitraum - ueberstundenAbbauStundenGesamt;
 
     const lastTime = [...eigeneArbeitszeiten].sort((a, b) => {
       const datumVergleich = String(b.datum || "").localeCompare(
@@ -439,7 +506,8 @@ export default function DashboardPage() {
 
       gesamtUeberstunden,
       ueberstundenStart,
-      ueberstundenAbbau: ueberstundenAbbauStundenMonat,
+      ueberstundenAbbau: ueberstundenAbbauStundenGesamt,
+      ueberstundenZeitraum,
 
       offeneAntraege,
     });
@@ -642,7 +710,7 @@ return (
           <OvertimeCard
             value={stats.gesamtUeberstunden}
             startwert={stats.ueberstundenStart}
-            monat={stats.monatDifferenz}
+            zeitraum={stats.ueberstundenZeitraum}
             abbau={stats.ueberstundenAbbau}
           />
         </div>
@@ -847,12 +915,12 @@ function WorkTimeCard({
 function OvertimeCard({
   value,
   startwert,
-  monat,
+  zeitraum,
   abbau,
 }: {
   value: number;
   startwert: number;
-  monat: number;
+  zeitraum: number;
   abbau: number;
 }) {
   return (
@@ -866,7 +934,7 @@ function OvertimeCard({
           <h2 className="mt-2 text-2xl font-black text-slate-950">Überstunden</h2>
 
           <p className="mt-1 text-sm text-slate-500">
-            Startwert + Monat - Abbau
+            Startwert + laufender Zeitraum - Abbau
           </p>
         </div>
 
@@ -889,10 +957,10 @@ function OvertimeCard({
         <div className="mt-5 space-y-2 border-t border-white/70 pt-4">
           <MiniLine label="Startwert" value={formatKurz(startwert)} />
           <MiniLine
-            label="Monat"
-            value={formatKurz(monat)}
-            green={monat >= 0}
-            red={monat < 0}
+            label="Seit Start"
+            value={formatKurz(zeitraum)}
+            green={zeitraum >= 0}
+            red={zeitraum < 0}
           />
           <MiniLine label="Abbau" value={`-${abbau.toFixed(2)} h`} red />
         </div>

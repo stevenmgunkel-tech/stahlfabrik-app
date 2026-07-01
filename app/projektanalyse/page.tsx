@@ -292,24 +292,24 @@ export default function ProjektanalysePage() {
   );
 
   return (
-    <main className="space-y-8 text-slate-100">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-black/20 p-6 shadow-2xl shadow-black/30 lg:p-8">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
+    <main className="projektanalyse-v12 space-y-6 text-slate-950">
+      <section className="v12-hero relative overflow-hidden rounded-[2rem] border border-white/60 bg-gradient-to-br from-[#302720]/90 via-[#26272a]/90 to-[#161719]/95 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.16)] lg:p-7">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.46]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
             style={{
               backgroundImage: "url('/berg.png')",
-              filter: "brightness(1.65) contrast(1.05)",
+              filter: "brightness(1.45) contrast(1.04) saturate(0.92)",
             }}
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#1a1512]/90 via-[#26231f]/60 to-[#f4eee5]/10" />
 
         <div className="relative z-10 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
           <div>
-            <div className="inline-flex rounded-full border border-slate-400/25 bg-slate-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-slate-200">
-              ODZ SILVER · Projekte
+            <div className="inline-flex rounded-full border border-orange-200/30 bg-orange-300/20 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-orange-100">
+              ODZ V1.2 · Projektanalyse
             </div>
 
             <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -339,15 +339,17 @@ export default function ProjektanalysePage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <ActionCard href="#projekte" label="Ansicht" title="📋 Aktiv" onClick={() => setAnsicht("aktiv")} />
-        <ActionCard href="#projekte" label="Archiv" title="🗄️ Archiv" onClick={() => setAnsicht("archiv")} />
-        <ActionCard href="#bereiche" label="Bereiche" title="📊 Auswertung" onClick={() => setBereichOffen(true)} />
-        <ActionCard href="#analyse" label="Refresh" title={loading ? "⏳ Lädt" : "↻ Aktualisieren"} onClick={ladeDaten} />
+      <section className="rounded-[1.5rem] border border-white/60 bg-white/35 p-2 shadow-[0_14px_44px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+          <ActionCard href="#projekte" label="Ansicht" title="📋 Aktiv" onClick={() => setAnsicht("aktiv")} />
+          <ActionCard href="#projekte" label="Archiv" title="🗄️ Archiv" onClick={() => setAnsicht("archiv")} />
+          <ActionCard href="#bereiche" label="Bereiche" title="📊 Auswertung" onClick={() => setBereichOffen(true)} />
+          <ActionCard href="#analyse" label="Refresh" title={loading ? "⏳ Lädt" : "↻ Aktualisieren"} onClick={ladeDaten} />
+        </div>
       </section>
 
       {meldung && (
-        <div className="rounded-xl border border-slate-200/20 bg-slate-200/10 p-4 text-sm font-bold text-slate-100">
+        <div className="rounded-xl border border-orange-200/40 bg-orange-100/60 p-4 text-sm font-bold text-slate-950">
           {meldung}
         </div>
       )}
@@ -383,10 +385,10 @@ export default function ProjektanalysePage() {
           <button
             type="button"
             onClick={() => setAnsicht("aktiv")}
-            className={`rounded-2xl border px-4 py-3 text-sm font-black transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10 ${
+            className={`rounded-2xl border px-4 py-3 text-sm font-black transition hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-300/5 hover:shadow-lg hover:shadow-orange-900/10 ${
               ansicht === "aktiv"
-                ? "border-sky-300/25 bg-sky-300/10 text-sky-100"
-                : "border-white/10 bg-white/10 text-white/65"
+                ? "border-orange-300/50 bg-orange-100/60 text-slate-950 shadow-lg shadow-orange-900/10"
+                : "border-white/70 bg-white/55 text-slate-500"
             }`}
           >
             Aktive Projekte · {aktiveProjekte}
@@ -395,10 +397,10 @@ export default function ProjektanalysePage() {
           <button
             type="button"
             onClick={() => setAnsicht("archiv")}
-            className={`rounded-2xl border px-4 py-3 text-sm font-black transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10 ${
+            className={`rounded-2xl border px-4 py-3 text-sm font-black transition hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-300/5 hover:shadow-lg hover:shadow-orange-900/10 ${
               ansicht === "archiv"
-                ? "border-sky-300/25 bg-sky-300/10 text-sky-100"
-                : "border-white/10 bg-white/10 text-white/65"
+                ? "border-orange-300/50 bg-orange-100/60 text-slate-950 shadow-lg shadow-orange-900/10"
+                : "border-white/70 bg-white/55 text-slate-500"
             }`}
           >
             Archiv · {archivProjekte}
@@ -408,7 +410,7 @@ export default function ProjektanalysePage() {
             type="button"
             onClick={ladeDaten}
             disabled={loading}
-            className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-4 py-3 text-sm font-black text-slate-100 transition hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/10 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-4 py-3 text-sm font-black text-slate-950 transition hover:-translate-y-1 hover:border-orange-300/50 hover:bg-orange-100/80 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Lädt..." : "Daten aktualisieren"}
           </button>
@@ -432,34 +434,34 @@ export default function ProjektanalysePage() {
             {bereichDaten.map((bereich, index) => (
               <div
                 key={bereich.bereich}
-                className="rounded-3xl border border-white/10 bg-black/25 p-5 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+                className="rounded-3xl border border-white/70 bg-white/60 p-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-lg hover:shadow-orange-900/10"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-lg font-black text-white">
+                    <p className="truncate text-lg font-black text-slate-950">
                       {bereich.bereich}
                     </p>
-                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-white/35">
+                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
                       Rang {index + 1}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200">
+                  <div className="rounded-2xl border border-emerald-300/50 bg-emerald-100/70 px-3 py-2 text-xs font-black text-emerald-800">
                     {prozent(bereich.stunden, gesamtStunden).toFixed(0)}%
                   </div>
                 </div>
 
-                <div className="mt-5 text-3xl font-black text-sky-100">
+                <div className="mt-5 text-3xl font-black text-orange-800">
                   {formatStunden(bereich.stunden)}
                 </div>
 
-                <div className="mt-2 text-sm font-bold text-white/40">
+                <div className="mt-2 text-sm font-bold text-slate-500">
                   {formatDezimal(bereich.stunden)}
                 </div>
 
-                <div className="mt-5 overflow-hidden rounded-full bg-black/40">
+                <div className="mt-5 overflow-hidden rounded-full bg-stone-900/10">
                   <div
-                    className="h-2 rounded-full bg-gradient-to-r from-sky-200 to-emerald-300"
+                    className="h-2 rounded-full bg-gradient-to-r from-orange-300 to-emerald-300"
                     style={{
                       width: `${prozent(bereich.stunden, gesamtStunden)}%`,
                     }}
@@ -480,7 +482,7 @@ export default function ProjektanalysePage() {
         onToggle={() => setProjektOffen(!projektOffen)}
       >
         {!loading && projektDaten.length > 0 && (
-          <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-xs font-black text-white/55">
+          <div className="rounded-2xl border border-white/70 bg-white/55 px-4 py-3 text-xs font-black text-slate-500">
             {ersterProjektIndex}–{letzterProjektIndex} von {projektDaten.length}
           </div>
         )}
@@ -511,7 +513,7 @@ export default function ProjektanalysePage() {
             }
           />
         ) : (
-          <div className="divide-y divide-white/10 overflow-hidden rounded-2xl border border-white/10 bg-black/25">
+          <div className="divide-y divide-white/70 overflow-hidden rounded-2xl border border-white/70 bg-white/55 shadow-[0_14px_44px_rgba(15,23,42,0.06)]">
             {sichtbareProjekte.map((projekt, index) => (
               <ProjektBlock
                 key={projekt.projekt.id}
@@ -552,6 +554,7 @@ export default function ProjektanalysePage() {
 }
 
 
+
 function HeroMini({
   label,
   value,
@@ -563,15 +566,16 @@ function HeroMini({
   blue?: boolean;
   green?: boolean;
 }) {
-  const color = blue ? "text-sky-200" : green ? "text-green-400" : "text-slate-100";
+  const color = blue ? "text-orange-200" : green ? "text-emerald-300" : "text-white";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-center transition hover:border-sky-300/25 hover:bg-sky-300/5">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.08] p-3 text-center transition hover:border-orange-200/40 hover:bg-orange-300/10">
       <div className={`text-xl font-black leading-tight md:text-2xl ${color}`}>{value}</div>
-      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/45">{label}</div>
+      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/50">{label}</div>
     </div>
   );
 }
+
 
 function ActionCard({
   href,
@@ -588,13 +592,14 @@ function ActionCard({
     <a
       href={href}
       onClick={onClick}
-      className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+      className="group block w-full rounded-2xl border border-white/70 bg-white/55 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-lg hover:shadow-orange-900/10"
     >
-      <div className="text-sm text-white/50">{label}</div>
-      <div className="mt-2 text-lg font-black text-white">{title}</div>
+      <div className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">{label}</div>
+      <div className="mt-1 text-base font-black text-slate-950">{title}</div>
     </a>
   );
 }
+
 
 function DropdownPanel({
   id,
@@ -614,27 +619,28 @@ function DropdownPanel({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] shadow-2xl shadow-black/30">
+    <section id={id} className="overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white/[0.08] to-white/[0.025] shadow-2xl shadow-slate-900/10">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-sky-300/5 lg:flex-row lg:items-center lg:p-7"
+        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-orange-300/5 lg:flex-row lg:items-center lg:p-7"
       >
         <div>
-          <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">{eyebrow}</div>
-          <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
-          <p className="mt-1 text-white/55">{description}</p>
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-orange-800">{eyebrow}</div>
+          <h2 className="mt-2 text-2xl font-black text-slate-950">{title}</h2>
+          <p className="mt-1 text-slate-500">{description}</p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-3 text-sm font-black text-slate-100 transition hover:border-sky-300/35 hover:bg-sky-300/10 hover:text-sky-100">
+        <div className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-5 py-3 text-sm font-black text-slate-950 transition hover:border-orange-300/40 hover:bg-orange-300/10 hover:text-orange-700">
           {open ? "Schließen ▲" : "Öffnen ▼"}
         </div>
       </button>
 
-      {open && <div className="space-y-6 border-t border-white/10 p-6 lg:p-7">{children}</div>}
+      {open && <div className="space-y-6 border-t border-white/70 p-6 lg:p-7">{children}</div>}
     </section>
   );
 }
+
 
 function ProjektBlock({
   projekt,
@@ -652,24 +658,24 @@ function ProjektBlock({
   onToggle: () => void;
 }) {
   return (
-    <article className="p-5 transition hover:bg-sky-300/[0.03] sm:p-6">
+    <article className="p-5 transition hover:bg-orange-300/[0.03] sm:p-6">
       <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-black text-white/60">
+            <div className="rounded-2xl border border-white/70 bg-white/70 px-3 py-2 text-xs font-black text-slate-600">
               #{rang}
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-black/25 px-3 py-2 text-xs font-black text-white/45">
+            <div className="rounded-2xl border border-white/70 bg-white/55 px-3 py-2 text-xs font-black text-slate-500">
               {projekt.status}
             </div>
 
-            <h2 className="break-words text-2xl font-black text-white">
+            <h2 className="break-words text-2xl font-black text-slate-950">
               {projekt.titel}
             </h2>
           </div>
 
-          <p className="mt-3 text-sm text-white/45">
+          <p className="mt-3 text-sm text-slate-500">
             {projekt.kunde} · {projekt.buchungen.length} Buchungen ·{" "}
             {projekt.bereiche.length} Bereiche ·{" "}
             {prozent(projekt.stunden, gesamtStunden).toFixed(0)}% der Ansicht
@@ -677,18 +683,18 @@ function ProjektBlock({
         </div>
 
         <div className="lg:text-right">
-          <div className="text-3xl font-black text-sky-100">
+          <div className="text-3xl font-black text-orange-800">
             {formatStunden(projekt.stunden)}
           </div>
-          <div className="mt-1 text-sm font-bold text-white/40">
+          <div className="mt-1 text-sm font-bold text-slate-500">
             {formatDezimal(projekt.stunden)}
           </div>
         </div>
       </div>
 
-      <div className="mt-5 overflow-hidden rounded-full bg-black/40">
+      <div className="mt-5 overflow-hidden rounded-full bg-stone-900/10">
         <div
-          className="h-2 rounded-full bg-gradient-to-r from-sky-200 to-emerald-300"
+          className="h-2 rounded-full bg-gradient-to-r from-orange-300 to-emerald-300"
           style={{ width: `${prozent(projekt.stunden, gesamtStunden)}%` }}
         />
       </div>
@@ -698,17 +704,17 @@ function ProjektBlock({
           {projekt.bereiche.map((bereich) => (
             <div
               key={`${projekt.titel}-${bereich.bereich}`}
-              className="rounded-2xl border border-white/10 bg-black/25 p-4 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+              className="rounded-2xl border border-white/70 bg-white/55 p-4 transition hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-lg hover:shadow-orange-900/10"
             >
-              <div className="text-xs font-black uppercase tracking-[0.2em] text-white/35">
+              <div className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
                 {bereich.bereich}
               </div>
 
-              <div className="mt-3 text-2xl font-black text-white">
+              <div className="mt-3 text-2xl font-black text-slate-950">
                 {formatStunden(bereich.stunden)}
               </div>
 
-              <div className="mt-1 text-sm font-bold text-white/40">
+              <div className="mt-1 text-sm font-bold text-slate-500">
                 {formatDezimal(bereich.stunden)}
               </div>
             </div>
@@ -719,7 +725,7 @@ function ProjektBlock({
       <button
         type="button"
         onClick={onToggle}
-        className="mt-5 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-black text-white shadow-lg shadow-black/20 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10"
+        className="mt-5 rounded-2xl border border-white/70 bg-white/60 px-4 py-3 text-sm font-black text-slate-950 shadow-lg shadow-slate-900/10 transition hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-orange-900/10"
       >
         {istOffen ? "▲ Schließen" : "▼ Öffnen"}
       </button>
@@ -733,6 +739,7 @@ function ProjektBlock({
     </article>
   );
 }
+
 
 function DetailsBlock({
   buchungen,
@@ -754,24 +761,24 @@ function DetailsBlock({
   ).size;
 
   return (
-    <div className="mt-5 rounded-3xl border border-white/10 bg-black/25 p-5">
+    <div className="mt-5 rounded-3xl border border-white/70 bg-white/55 p-5">
       <div className="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div>
-          <h3 className="text-xl font-black text-white">Detailbuchungen</h3>
-          <p className="mt-1 text-sm text-white/50">
+          <h3 className="text-xl font-black text-slate-950">Detailbuchungen</h3>
+          <p className="mt-1 text-sm text-slate-500">
             {buchungen.length} Arbeitszeiten · {mitarbeiterAnzahl} Mitarbeiter · mit Von-Bis Übersicht
           </p>
         </div>
       </div>
 
       {buchungen.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-black/25 p-4 text-white/55">
+        <div className="rounded-2xl border border-white/70 bg-white/55 p-4 text-slate-500">
           Keine Arbeitszeiten zu diesem Projekt gefunden.
         </div>
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-2xl border border-white/10 lg:block">
-            <div className="grid grid-cols-[1fr_1.2fr_1.3fr_1fr_0.8fr] border-b border-white/10 bg-black/30 px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-white/40">
+          <div className="hidden overflow-hidden rounded-2xl border border-white/70 lg:block">
+            <div className="grid grid-cols-[1fr_1.2fr_1.3fr_1fr_0.8fr] border-b border-white/70 bg-stone-900/5 px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-slate-500">
               <div>Datum</div>
               <div>Mitarbeiter</div>
               <div>Auftrag / Bereich</div>
@@ -787,34 +794,34 @@ function DetailsBlock({
               return (
                 <div
                   key={zeit.id}
-                  className="grid grid-cols-[1fr_1.2fr_1.3fr_1fr_0.8fr] items-center border-b border-white/10 px-4 py-4 text-sm text-white/75 transition last:border-b-0 hover:bg-sky-300/5"
+                  className="grid grid-cols-[1fr_1.2fr_1.3fr_1fr_0.8fr] items-center border-b border-white/70 px-4 py-4 text-sm text-slate-700 transition last:border-b-0 hover:bg-orange-300/5"
                 >
-                  <div className="font-black text-white">
+                  <div className="font-black text-slate-950">
                     {formatDatum(zeit.datum)}
                   </div>
 
-                  <div className="font-bold text-white/75">
+                  <div className="font-bold text-slate-700">
                     {mitarbeiterName}
                   </div>
 
                   <div>
-                    <div className="font-black text-slate-100">
+                    <div className="font-black text-slate-950">
                       {zeit.projekt || "-"}
                     </div>
-                    <div className="mt-1 text-xs font-bold text-white/40">
+                    <div className="mt-1 text-xs font-bold text-slate-500">
                       {zeit.bereich || "Ohne Bereich"}
                     </div>
                   </div>
 
-                  <div className="font-black text-sky-100">
+                  <div className="font-black text-orange-800">
                     {formatVonBis(zeit.startzeit, zeit.endzeit)}
                   </div>
 
                   <div className="text-right">
-                    <div className="font-black text-slate-100">
+                    <div className="font-black text-slate-950">
                       {formatStunden(Number(zeit.stunden || 0))}
                     </div>
-                    <div className="mt-1 text-xs font-bold text-white/35">
+                    <div className="mt-1 text-xs font-bold text-slate-500">
                       {formatDezimal(Number(zeit.stunden || 0))}
                     </div>
                   </div>
@@ -832,36 +839,36 @@ function DetailsBlock({
               return (
                 <div
                   key={zeit.id}
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10"
+                  className="rounded-2xl border border-white/70 bg-white/60 p-4 transition hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-lg hover:shadow-orange-900/10"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className="font-black text-white">
+                      <div className="font-black text-slate-950">
                         {formatDatum(zeit.datum)}
                       </div>
-                      <div className="mt-1 text-sm font-bold text-white/55">
+                      <div className="mt-1 text-sm font-bold text-slate-500">
                         {mitarbeiterName}
                       </div>
-                      <div className="mt-3 rounded-xl border border-sky-300/20 bg-sky-300/5 px-3 py-2 text-sm font-black text-sky-100">
+                      <div className="mt-3 rounded-xl border border-orange-200/50 bg-orange-100/60 px-3 py-2 text-sm font-black text-orange-800">
                         {formatVonBis(zeit.startzeit, zeit.endzeit)}
                       </div>
                     </div>
 
                     <div className="text-right">
-                      <div className="text-xl font-black text-sky-100">
+                      <div className="text-xl font-black text-orange-800">
                         {formatStunden(Number(zeit.stunden || 0))}
                       </div>
-                      <div className="mt-1 text-xs font-bold text-white/35">
+                      <div className="mt-1 text-xs font-bold text-slate-500">
                         {formatDezimal(Number(zeit.stunden || 0))}
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3">
-                    <div className="text-sm font-black text-white">
+                  <div className="mt-4 rounded-xl border border-white/70 bg-white/55 p-3">
+                    <div className="text-sm font-black text-slate-950">
                       {zeit.projekt || "-"}
                     </div>
-                    <div className="mt-1 text-xs font-bold text-white/45">
+                    <div className="mt-1 text-xs font-bold text-slate-500">
                       {zeit.bereich || "Ohne Bereich"}
                     </div>
                   </div>
@@ -875,6 +882,7 @@ function DetailsBlock({
   );
 }
 
+
 function Pagination({
   seite,
   gesamtSeiten,
@@ -887,17 +895,17 @@ function Pagination({
   onWeiter: () => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-4 sm:px-6">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/70 px-5 py-4 sm:px-6">
       <button
         type="button"
         onClick={onZurueck}
         disabled={seite === 1}
-        className="rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-black text-white transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-30"
+        className="rounded-2xl border border-white/70 bg-white/60 px-4 py-2 text-sm font-black text-slate-950 transition hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-lg hover:shadow-orange-900/10 disabled:cursor-not-allowed disabled:opacity-30"
       >
         ◀ Zurück
       </button>
 
-      <div className="rounded-2xl border border-sky-300/20 bg-sky-300/10 px-4 py-2 text-xs font-black text-sky-100">
+      <div className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-4 py-2 text-xs font-black text-orange-800">
         Seite {seite} / {gesamtSeiten}
       </div>
 
@@ -905,13 +913,14 @@ function Pagination({
         type="button"
         onClick={onWeiter}
         disabled={seite === gesamtSeiten}
-        className="rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-black text-white transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-lg hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-30"
+        className="rounded-2xl border border-white/70 bg-white/60 px-4 py-2 text-sm font-black text-slate-950 transition hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-lg hover:shadow-orange-900/10 disabled:cursor-not-allowed disabled:opacity-30"
       >
         Weiter ▶
       </button>
     </div>
   );
 }
+
 
 function KpiCard({
   label,
@@ -923,17 +932,17 @@ function KpiCard({
   subvalue?: string;
 }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-6 shadow-2xl shadow-black/30 backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300/25 hover:bg-sky-300/5 hover:shadow-sky-300/10">
-      <div className="text-xs font-black uppercase tracking-[0.22em] text-white/40">
+    <div className="rounded-3xl border border-white/70 bg-white/60 p-6 shadow-[0_16px_42px_rgba(15,23,42,0.08)] backdrop-blur-xl transition hover:-translate-y-1 hover:border-orange-300/40 hover:bg-orange-50/80 hover:shadow-orange-900/10">
+      <div className="text-xs font-black uppercase tracking-[0.22em] text-slate-500">
         {label}
       </div>
 
-      <div className="mt-4 break-words text-4xl font-black leading-tight text-slate-100">
+      <div className="mt-4 break-words text-4xl font-black leading-tight text-slate-950">
         {value}
       </div>
 
       {subvalue && (
-        <div className="mt-2 break-words text-sm font-bold text-white/45">
+        <div className="mt-2 break-words text-sm font-bold text-slate-500">
           {subvalue}
         </div>
       )}
@@ -942,5 +951,5 @@ function KpiCard({
 }
 
 function EmptyState({ text }: { text: string }) {
-  return <div className="p-6 text-sm font-bold text-white/55">{text}</div>;
+  return <div className="p-6 text-sm font-bold text-slate-500">{text}</div>;
 }

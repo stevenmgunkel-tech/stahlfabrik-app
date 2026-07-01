@@ -281,9 +281,11 @@ export default function ArbeitszeitenPage() {
 
     const { data: tageszeitFuerBetriebsunterhalt } = await supabase
       .from("tageszeiten")
-      .select("startzeit, endzeit, pause")
+      .select("id, startzeit, endzeit, pause")
       .eq("user_id", userId)
       .eq("datum", datumWert)
+      .order("id", { ascending: true })
+      .limit(1)
       .maybeSingle();
 
     const zeitPayload = {
@@ -361,6 +363,8 @@ export default function ArbeitszeitenPage() {
     .select("*")
     .eq("user_id", userId)
     .eq("datum", datumWert)
+    .order("id", { ascending: true })
+    .limit(1)
     .maybeSingle();
 
   if (tagError) {
@@ -407,9 +411,11 @@ async function pruefeProjektUeberbuchung({
 }) {
   const { data: tag, error: tagError } = await supabase
     .from("tageszeiten")
-    .select("netto_stunden")
+    .select("id, netto_stunden")
     .eq("user_id", userId)
     .eq("datum", datumWert)
+    .order("id", { ascending: true })
+    .limit(1)
     .maybeSingle();
 
   if (tagError) {
@@ -418,7 +424,8 @@ async function pruefeProjektUeberbuchung({
   }
 
   // Ohne Tagesabschluss kennt die App die echte Nettozeit noch nicht.
-  // Dann darf die Buchung gespeichert werden und der Tagesabschluss wird aus Buchungen erzeugt.
+  // Projektbuchungen dürfen trotzdem gespeichert werden.
+  // Ein Tagesabschluss wird aber NICHT automatisch aus Projektbuchungen erzeugt.
   if (!tag) return;
 
   const nettoStunden = Number(tag.netto_stunden || 0);
@@ -463,27 +470,13 @@ async function tagesabschlussAusBuchungenAktualisieren(
   userId: string,
   datumWert: string
 ) {
-  const { data: buchungenData, error: buchungenError } = await supabase
-    .from("arbeitszeiten")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("datum", datumWert);
-
-  if (buchungenError) {
-    console.log("TAGESABSCHLUSS BUCHUNGEN FEHLER:", buchungenError);
-    throw buchungenError;
-  }
-
-  const buchungen = (buchungenData || []).filter(
-    (eintrag) =>
-      eintrag.projekt !== "Betriebsunterhalt" && !eintrag.auto_generiert
-  );
-
   const { data: vorhandenerTag, error: tagError } = await supabase
     .from("tageszeiten")
-    .select("*")
+    .select("id")
     .eq("user_id", userId)
     .eq("datum", datumWert)
+    .order("id", { ascending: true })
+    .limit(1)
     .maybeSingle();
 
   if (tagError) {
@@ -491,50 +484,10 @@ async function tagesabschlussAusBuchungenAktualisieren(
     throw tagError;
   }
 
-  if (vorhandenerTag) {
-    await betriebsunterhaltNeuBerechnen(userId, datumWert);
-    return;
-  }
-
-  if (buchungen.length === 0) {
-    await betriebsunterhaltNeuBerechnen(userId, datumWert);
-    return;
-  }
-
-  const startzeiten = buchungen
-    .map((eintrag) => eintrag.startzeit)
-    .filter(Boolean)
-    .sort();
-
-  const endzeiten = buchungen
-    .map((eintrag) => eintrag.endzeit)
-    .filter(Boolean)
-    .sort();
-
-  const projektStunden = buchungen.reduce(
-    (sum, eintrag) => sum + Number(eintrag.stunden || 0),
-    0
-  );
-
-  const payload = {
-    startzeit: startzeiten[0] || "07:00",
-    endzeit: endzeiten[endzeiten.length - 1] || startzeiten[0] || "07:00",
-    pause: 0,
-    zusatzpause_minuten: 0,
-    netto_stunden: Number(projektStunden.toFixed(2)),
-    status: "Abgeschlossen",
-  };
-
-  const { error } = await supabase.from("tageszeiten").insert({
-    user_id: userId,
-    datum: datumWert,
-    ...payload,
-  });
-
-  if (error) {
-    console.log("TAGESABSCHLUSS INSERT FEHLER:", error);
-    throw error;
-  }
+  // Wichtig: Projektbuchungen dürfen gespeichert werden,
+  // aber sie dürfen keinen Tagesabschluss automatisch erzeugen.
+  // Betriebsunterhalt wird nur berechnet, wenn Start/Stop oder manueller Tag existiert.
+  if (!vorhandenerTag) return;
 
   await betriebsunterhaltNeuBerechnen(userId, datumWert);
 }
@@ -554,7 +507,8 @@ async function tagesabschlussAusBuchungenAktualisieren(
       .select("*")
       .eq("user_id", user.id)
       .eq("datum", heute)
-      .eq("status", "Offen")
+      .order("id", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (sucheError) {
@@ -563,7 +517,35 @@ async function tagesabschlussAusBuchungenAktualisieren(
     }
 
     if (vorhandenerTag) {
-      setMeldung("Arbeitstag läuft bereits.");
+      setMeldung(
+        vorhandenerTag.status === "Offen"
+          ? "Arbeitstag läuft bereits."
+          : "Für heute wurde bereits ein Arbeitstag erfasst. Bitte nicht erneut starten. Nutze bei Korrekturen den manuellen Eintrag."
+      );
+      await ladeDaten();
+      return;
+    }
+
+    const { data: tagVorStart, error: tagVorStartError } = await supabase
+      .from("tageszeiten")
+      .select("id, status")
+      .eq("user_id", user.id)
+      .eq("datum", heute)
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (tagVorStartError) {
+      setMeldung(tagVorStartError.message);
+      return;
+    }
+
+    if (tagVorStart) {
+      setMeldung(
+        tagVorStart.status === "Offen"
+          ? "Arbeitstag läuft bereits."
+          : "Für heute wurde bereits ein Arbeitstag erfasst. Bitte nicht erneut starten."
+      );
       await ladeDaten();
       return;
     }
@@ -603,6 +585,8 @@ async function tagesabschlussAusBuchungenAktualisieren(
       .eq("user_id", user.id)
       .eq("datum", heute)
       .eq("status", "Offen")
+      .order("id", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (tageszeitError) {
@@ -779,6 +763,8 @@ const nettoStunden =
       .select("*")
       .eq("user_id", user.id)
       .eq("datum", manuellDatum)
+      .order("id", { ascending: true })
+      .limit(1)
       .maybeSingle();
 
     if (tagError) {
@@ -804,20 +790,53 @@ netto_stunden: Number(nettoStunden.toFixed(2)),
         return;
       }
     } else {
-      const { error } = await supabase.from("tageszeiten").insert({
-        user_id: user.id,
-        datum: manuellDatum,
-        startzeit: manuellStart,
-        endzeit: manuellEnde,
-        pause: pauseStunden,
+      const { data: tagVorInsert, error: tagVorInsertError } = await supabase
+        .from("tageszeiten")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("datum", manuellDatum)
+        .order("id", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (tagVorInsertError) {
+        setMeldung(tagVorInsertError.message);
+        return;
+      }
+
+      if (tagVorInsert?.id) {
+        const { error } = await supabase
+          .from("tageszeiten")
+          .update({
+            startzeit: manuellStart,
+            endzeit: manuellEnde,
+            pause: pauseStunden,
+zusatzpause_minuten: zusatzPauseMinuten,
+netto_stunden: Number(nettoStunden.toFixed(2)),
+            status: "Abgeschlossen",
+          })
+          .eq("id", tagVorInsert.id);
+
+        if (error) {
+          setMeldung(error.message);
+          return;
+        }
+      } else {
+        const { error } = await supabase.from("tageszeiten").insert({
+          user_id: user.id,
+          datum: manuellDatum,
+          startzeit: manuellStart,
+          endzeit: manuellEnde,
+          pause: pauseStunden,
 zusatzpause_minuten: zusatzPauseMinuten,
 netto_stunden: Number(nettoStunden.toFixed(2)),
 status: "Abgeschlossen",
-      });
+        });
 
-      if (error) {
-        setMeldung(error.message);
-        return;
+        if (error) {
+          setMeldung(error.message);
+          return;
+        }
       }
     }
 
@@ -1326,9 +1345,10 @@ status: "Abgeschlossen",
             <button
               type="button"
               onClick={arbeitstagManuellSpeichern}
-              className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-4 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/10 hover:shadow-sky-300/10"
+              disabled={saving}
+              className="rounded-2xl border border-slate-200/30 bg-slate-200/10 px-5 py-4 font-black text-slate-100 shadow-lg shadow-slate-200/10 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/35 hover:bg-sky-300/10 hover:shadow-sky-300/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Manuell berechnen
+              {saving ? "Speichert..." : "Manuell berechnen"}
             </button>
           </div>
         </div>
@@ -1626,10 +1646,29 @@ status: "Abgeschlossen",
           color: #020617;
         }
 
+        .dark-input[type="date"],
+        .dark-input[type="month"],
+        .dark-input[type="datetime-local"] {
+          padding-right: 3rem !important;
+          background-repeat: no-repeat !important;
+          background-position: right 1rem center !important;
+          background-size: 1.15rem 1.15rem !important;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23020617' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E") !important;
+        }
+
+        .dark-input[type="time"] {
+          padding-right: 3rem !important;
+          background-repeat: no-repeat !important;
+          background-position: right 1rem center !important;
+          background-size: 1.15rem 1.15rem !important;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23020617' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E") !important;
+        }
+
         .dark-input::-webkit-calendar-picker-indicator {
-          filter: none;
-          opacity: 0.75;
-          cursor: pointer;
+          opacity: 0 !important;
+          cursor: pointer !important;
+          width: 2.75rem !important;
+          height: 100% !important;
         }
 
         .arbeitszeiten-v12 section:not(.v12-hero) .bg-black\/25,
