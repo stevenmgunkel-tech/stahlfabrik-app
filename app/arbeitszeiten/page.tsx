@@ -1617,6 +1617,16 @@ status: "Abgeschlossen",
           color: rgba(100, 116, 139, 0.62);
         }
 
+        .dark-input,
+        .dark-input[type="date"],
+        .dark-input[type="time"],
+        .dark-input[type="number"],
+        .dark-input[type="text"] {
+          color: #020617 !important;
+          -webkit-text-fill-color: #020617 !important;
+          color-scheme: light !important;
+        }
+
         .dark-input::-webkit-datetime-edit,
         .dark-input::-webkit-datetime-edit-fields-wrapper,
         .dark-input::-webkit-datetime-edit-text,
@@ -1625,8 +1635,24 @@ status: "Abgeschlossen",
         .dark-input::-webkit-datetime-edit-year-field,
         .dark-input::-webkit-datetime-edit-hour-field,
         .dark-input::-webkit-datetime-edit-minute-field,
+        .dark-input::-webkit-datetime-edit-second-field,
         .dark-input::-webkit-datetime-edit-ampm-field {
-          color: #020617;
+          color: #020617 !important;
+          -webkit-text-fill-color: #020617 !important;
+        }
+
+        input.dark-input::-webkit-datetime-edit,
+        input.dark-input::-webkit-datetime-edit-fields-wrapper,
+        input.dark-input::-webkit-datetime-edit-text,
+        input.dark-input::-webkit-datetime-edit-month-field,
+        input.dark-input::-webkit-datetime-edit-day-field,
+        input.dark-input::-webkit-datetime-edit-year-field,
+        input.dark-input::-webkit-datetime-edit-hour-field,
+        input.dark-input::-webkit-datetime-edit-minute-field,
+        input.dark-input::-webkit-datetime-edit-second-field,
+        input.dark-input::-webkit-datetime-edit-ampm-field {
+          color: #020617 !important;
+          -webkit-text-fill-color: #020617 !important;
         }
 
         .dark-input:disabled,
@@ -1669,6 +1695,27 @@ status: "Abgeschlossen",
           cursor: pointer !important;
           width: 2.75rem !important;
           height: 100% !important;
+        }
+
+        .arbeitszeiten-v12 input,
+        .arbeitszeiten-v12 select,
+        .arbeitszeiten-v12 textarea {
+          color: #020617 !important;
+          -webkit-text-fill-color: #020617 !important;
+          caret-color: #020617 !important;
+          color-scheme: light !important;
+        }
+
+        .arbeitszeiten-v12 input::placeholder,
+        .arbeitszeiten-v12 textarea::placeholder {
+          color: rgba(100, 116, 139, 0.62) !important;
+          -webkit-text-fill-color: rgba(100, 116, 139, 0.62) !important;
+        }
+
+        .arbeitszeiten-v12 select option {
+          background: #ffffff !important;
+          color: #020617 !important;
+          -webkit-text-fill-color: #020617 !important;
         }
 
         .arbeitszeiten-v12 section:not(.v12-hero) .bg-black\/25,
