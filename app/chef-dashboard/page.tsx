@@ -73,6 +73,8 @@ const monat = new Date().toISOString().slice(0, 7);
     "Planung",
     "Lieferung",
     "Aufräumen",
+    "Lager",
+    "Showroom",
     "Sonstiges",
   ];
 

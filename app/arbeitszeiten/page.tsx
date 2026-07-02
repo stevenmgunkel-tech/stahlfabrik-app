@@ -48,6 +48,8 @@ export default function ArbeitszeitenPage() {
     "Planung",
     "Lieferung",
     "Aufräumen",
+    "Lager",
+    "Showroom",
     "Sonstiges",
   ];
 
@@ -177,6 +179,40 @@ export default function ArbeitszeitenPage() {
     return name;
   }
 
+  function istInternesWerkstattProjekt(projektItem: any) {
+    const kunde = String(projektItem?.kunde || "").trim().toLowerCase();
+    const name = String(
+      projektItem?.name ||
+        projektItem?.projektname ||
+        projektItem?.projekt_name ||
+        ""
+    )
+      .trim()
+      .toLowerCase();
+    const kommission = String(projektItem?.kommission || "")
+      .trim()
+      .toLowerCase();
+
+    return (
+      kunde === "intern" ||
+      name.includes("intern") ||
+      kommission.includes("intern") ||
+      name.includes("stahlfabrik")
+    );
+  }
+
+  function bereicheMitInternZusatz(bereiche: string[], projektItem: any) {
+    const basis = [...bereiche];
+
+    if (istInternesWerkstattProjekt(projektItem)) {
+      ["Lager", "Showroom"].forEach((bereich) => {
+        if (!basis.includes(bereich)) basis.push(bereich);
+      });
+    }
+
+    return basis;
+  }
+
   function kundeFuerProjekt(projektName: string) {
   if (projektName === "Betriebsunterhalt") {
     return "Intern";
@@ -248,7 +284,9 @@ export default function ArbeitszeitenPage() {
     }
 
     if (bereicheVomProjekt.length > 0) {
-      setProjektBereiche(bereicheAlsOptionen(bereicheVomProjekt));
+      setProjektBereiche(
+        bereicheAlsOptionen(bereicheMitInternZusatz(bereicheVomProjekt, projektObj))
+      );
       return;
     }
 
@@ -260,16 +298,26 @@ export default function ArbeitszeitenPage() {
 
     if (error) {
       console.log("PROJEKT BEREICHE FEHLER:", error);
-      setProjektBereiche(bereicheAlsOptionen(standardBereiche));
+      setProjektBereiche(
+        bereicheAlsOptionen(bereicheMitInternZusatz(standardBereiche, projektObj))
+      );
       return;
     }
 
     if (data && data.length > 0) {
-      setProjektBereiche(data);
+      const bereicheAusTabelle = data
+        .map((eintrag: any) => String(eintrag.bereich || "").trim())
+        .filter(Boolean);
+
+      setProjektBereiche(
+        bereicheAlsOptionen(bereicheMitInternZusatz(bereicheAusTabelle, projektObj))
+      );
       return;
     }
 
-    setProjektBereiche(bereicheAlsOptionen(standardBereiche));
+    setProjektBereiche(
+      bereicheAlsOptionen(bereicheMitInternZusatz(standardBereiche, projektObj))
+    );
   }
 
   async function betriebsunterhaltSpeichern(
