@@ -1474,8 +1474,8 @@ function springeZu(id: string) {
   }
 
   return (
-    <main className="chef-dashboard-v12 space-y-6 text-slate-950">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/60 bg-gradient-to-br from-[#302720]/90 via-[#26272a]/90 to-[#161719]/95 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.16)] lg:p-7">
+    <main className="chef-dashboard-v12 space-y-4 text-slate-950 sm:space-y-6">
+      <section className="relative overflow-hidden rounded-[1.5rem] border border-white/60 bg-gradient-to-br from-[#302720]/90 via-[#26272a]/90 to-[#161719]/95 p-4 sm:rounded-[2rem] sm:p-5 shadow-[0_24px_70px_rgba(15,23,42,0.16)] lg:p-7">
         <div className="pointer-events-none absolute inset-0 opacity-[0.46]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
@@ -1495,7 +1495,7 @@ function springeZu(id: string) {
             </div>
 
 
-            <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
               STAHLFABRIK
             </h1>
 
@@ -1595,7 +1595,7 @@ function springeZu(id: string) {
 
       <section
         id="kommandozentrale"
-        className="rounded-[2rem] border border-white/70 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-white/40 p-6 shadow-2xl shadow-slate-900/10 lg:p-7"
+        className="rounded-[1.5rem] border border-white/70 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-white/40 p-4 shadow-2xl shadow-slate-900/10 sm:rounded-[2rem] sm:p-6 lg:p-7"
       >
         <div className="mb-7 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
@@ -1610,7 +1610,7 @@ function springeZu(id: string) {
             </p>
           </div>
 
-          <div className="grid grid-cols-4 gap-3 text-center">
+          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4 sm:gap-3">
             <HeroMini label="Aktiv" value={aktiveProjekte} green={aktiveProjekte > 0} />
             <HeroMini label="Pausiert" value={pausierteProjekte} orange={pausierteProjekte > 0} />
             <HeroMini label="Archiv" value={abgeschlosseneProjekte} />
@@ -1619,11 +1619,11 @@ function springeZu(id: string) {
         </div>
 
         <div className="mb-6">
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
             <button
               type="button"
               onClick={() => setVerwaltungsModus("projekt")}
-              className={`rounded-2xl border px-5 py-4 font-black transition-all duration-300 hover:-translate-y-1 ${
+              className={`rounded-2xl border px-4 py-3 font-black transition-all duration-300 hover:-translate-y-1 sm:px-5 sm:py-4 ${
                 verwaltungsModus === "projekt"
                   ? "border-orange-300/50 bg-orange-100/60 text-slate-950 shadow-lg shadow-orange-900/10"
                   : "border-white/70 bg-white/50 text-slate-500 hover:border-orange-300/25 hover:bg-orange-300/5 hover:text-slate-950"
@@ -1635,7 +1635,7 @@ function springeZu(id: string) {
             <button
               type="button"
               onClick={() => setVerwaltungsModus("mitarbeiter")}
-              className={`rounded-2xl border px-5 py-4 font-black transition-all duration-300 hover:-translate-y-1 ${
+              className={`rounded-2xl border px-4 py-3 font-black transition-all duration-300 hover:-translate-y-1 sm:px-5 sm:py-4 ${
                 verwaltungsModus === "mitarbeiter"
                   ? "border-orange-300/50 bg-orange-100/60 text-slate-950 shadow-lg shadow-orange-900/10"
                   : "border-white/70 bg-white/50 text-slate-500 hover:border-orange-300/25 hover:bg-orange-300/5 hover:text-orange-700"
@@ -1647,7 +1647,7 @@ function springeZu(id: string) {
             <button
               type="button"
               onClick={() => setVerwaltungsModus("termine")}
-              className={`rounded-2xl border px-5 py-4 font-black transition-all duration-300 hover:-translate-y-1 ${
+              className={`rounded-2xl border px-4 py-3 font-black transition-all duration-300 hover:-translate-y-1 sm:px-5 sm:py-4 ${
                 verwaltungsModus === "termine"
                   ? "border-orange-300/50 bg-orange-100/60 text-slate-950 shadow-lg shadow-orange-900/10"
                   : "border-white/70 bg-white/50 text-slate-500 hover:border-orange-300/25 hover:bg-orange-300/5 hover:text-orange-700"
@@ -3162,22 +3162,22 @@ function DropdownPanel({
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-orange-300/5 lg:flex-row lg:items-center lg:p-7"
+        className="flex w-full flex-col justify-between gap-3 p-4 text-left transition hover:bg-orange-300/5 sm:gap-4 sm:p-6 lg:flex-row lg:items-center lg:p-7"
       >
         <div>
           <div className="text-xs font-black uppercase tracking-[0.24em] text-orange-800">
             {eyebrow}
           </div>
-          <h2 className="mt-2 text-2xl font-black text-slate-950">{title}</h2>
+          <h2 className="mt-2 text-xl font-black text-slate-950 sm:text-2xl">{title}</h2>
           <p className="mt-1 text-slate-500">{description}</p>
         </div>
 
-        <div className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-5 py-3 text-sm font-black text-slate-950 transition hover:border-orange-300/40 hover:bg-orange-300/10 hover:text-orange-700">
+        <div className="w-full rounded-2xl border border-orange-200/50 bg-orange-100/60 px-5 py-3 text-center text-sm font-black text-slate-950 transition hover:border-orange-300/40 hover:bg-orange-300/10 hover:text-orange-700 sm:w-auto">
           {open ? "Schließen ▲" : "Öffnen ▼"}
         </div>
       </button>
 
-      {open && <div className="space-y-6 border-t border-white/70 p-6 lg:p-7">{children}</div>}
+      {open && <div className="space-y-5 border-t border-white/70 p-4 sm:space-y-6 sm:p-6 lg:p-7">{children}</div>}
     </section>
   );
 }

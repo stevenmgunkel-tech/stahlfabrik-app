@@ -1238,8 +1238,8 @@ status: "Abgeschlossen",
   }
 
   return (
-    <main className="arbeitszeiten-v12 space-y-6 text-slate-950">
-      <section className="v12-hero relative overflow-hidden rounded-[2rem] border border-white/60 bg-gradient-to-br from-[#302720]/90 via-[#26272a]/90 to-[#161719]/95 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.16)] lg:p-7">
+    <main className="arbeitszeiten-v12 space-y-4 text-slate-950 sm:space-y-6">
+      <section className="v12-hero relative overflow-hidden rounded-[1.5rem] border border-white/60 bg-gradient-to-br from-[#302720]/90 via-[#26272a]/90 to-[#161719]/95 p-4 sm:rounded-[2rem] sm:p-5 shadow-[0_24px_70px_rgba(15,23,42,0.16)] lg:p-7">
         <div className="pointer-events-none absolute inset-0 opacity-[0.38]">
           <div
             className="h-full w-full bg-cover bg-[center_20%]"
@@ -1258,7 +1258,7 @@ status: "Abgeschlossen",
               ODZ V1.2 · Zeiterfassung
             </div>
 
-            <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
               Arbeitszeiten
             </h1>
 
@@ -1291,7 +1291,7 @@ status: "Abgeschlossen",
       </section>
 
       <section className="rounded-[1.5rem] border border-white/60 bg-white/35 p-2 shadow-[0_14px_44px_rgba(15,23,42,0.06)] backdrop-blur-xl">
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <ActionCard href="#arbeitstag" label="Start / Stop" title="▶ Arbeitstag" onClick={() => setArbeitstagOffen(true)} />
           <ActionCard href="#manuell" label="Nachtragen" title="🕒 Manuell" onClick={() => setManuellOffen(true)} />
           <ActionCard href="#buchen" label="Projekt" title="🏗️ Buchen" onClick={() => setBuchungOffen(true)} />
@@ -1370,7 +1370,7 @@ status: "Abgeschlossen",
         open={manuellOffen}
         onToggle={() => setManuellOffen(!manuellOffen)}
       >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-5">
           <Field label="Datum">
             <input type="date" value={manuellDatum} onChange={(e) => setManuellDatum(e.target.value)} className="dark-input" />
           </Field>
@@ -1389,7 +1389,7 @@ status: "Abgeschlossen",
             <p className="mt-2 text-sm font-bold text-slate-200">Gesamtpause: {15 + Number(manuellPause || 0)} Minuten</p>
           </Field>
 
-          <div className="flex flex-col justify-end">
+          <div className="col-span-2 flex flex-col justify-end xl:col-span-1">
             <button
               type="button"
               onClick={arbeitstagManuellSpeichern}
@@ -1421,7 +1421,7 @@ status: "Abgeschlossen",
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-6">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-6">
           <Field label="Datum">
             <input type="date" value={datum} onChange={(e) => setDatum(e.target.value)} className="dark-input" />
           </Field>
@@ -1490,7 +1490,7 @@ status: "Abgeschlossen",
         open={zusammenfassungOffen}
         onToggle={() => setZusammenfassungOffen(!zusammenfassungOffen)}
       >
-        <div className="mb-7 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto_auto] lg:items-end">
+        <div className="mb-5 grid grid-cols-1 gap-3 sm:mb-7 sm:gap-4 lg:grid-cols-[1fr_auto_auto] lg:items-end">
           <Field label="Datum suchen">
             <input type="date" value={datumSuche} onChange={(e) => setDatumSuche(e.target.value)} className="dark-input" />
           </Field>
@@ -1850,20 +1850,20 @@ function DropdownPanel({
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full flex-col justify-between gap-4 p-6 text-left transition hover:bg-orange-300/5 lg:flex-row lg:items-center lg:p-7"
+        className="flex w-full flex-col justify-between gap-3 p-4 text-left transition hover:bg-orange-300/5 sm:gap-4 sm:p-6 lg:flex-row lg:items-center lg:p-7"
       >
         <div>
           <div className="text-xs font-black uppercase tracking-[0.24em] text-orange-800">{eyebrow}</div>
-          <h2 className="mt-2 text-2xl font-black text-slate-950">{title}</h2>
+          <h2 className="mt-2 text-xl font-black text-slate-950 sm:text-2xl">{title}</h2>
           <p className="mt-1 text-slate-500">{description}</p>
         </div>
 
-        <div className="rounded-2xl border border-orange-200/50 bg-orange-100/60 px-5 py-3 text-sm font-black text-slate-950 transition hover:border-orange-300/40 hover:bg-orange-300/10 hover:text-orange-700">
+        <div className="w-full rounded-2xl border border-orange-200/50 bg-orange-100/60 px-5 py-3 text-center text-sm font-black text-slate-950 transition hover:border-orange-300/40 hover:bg-orange-300/10 hover:text-orange-700 sm:w-auto">
           {open ? "Schließen ▲" : "Öffnen ▼"}
         </div>
       </button>
 
-      {open && <div className="space-y-6 border-t border-white/70 p-6 lg:p-7">{children}</div>}
+      {open && <div className="space-y-5 border-t border-white/70 p-4 sm:space-y-6 sm:p-6 lg:p-7">{children}</div>}
     </section>
   );
 }
