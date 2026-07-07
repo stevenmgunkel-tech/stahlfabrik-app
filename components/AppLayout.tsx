@@ -145,13 +145,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.44),transparent_28%,transparent_72%,rgba(15,23,42,0.10))]" />
 
       {/* Mobile Header */}
-      <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/50 bg-[#1a1b1d]/90 px-4 shadow-[0_18px_55px_rgba(15,23,42,0.22)] backdrop-blur-2xl lg:hidden">
-        <BrandLogo small />
+      <header className="fixed left-0 right-0 top-0 z-40 flex h-[4.25rem] items-center gap-3 border-b border-white/50 bg-[#1a1b1d]/92 px-3 shadow-[0_18px_55px_rgba(15,23,42,0.22)] backdrop-blur-2xl lg:hidden">
+        <div className="min-w-0 flex-1">
+          <BrandLogo small />
+        </div>
 
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="rounded-2xl border border-orange-300/40 bg-orange-400/20 px-4 py-2 text-sm font-black text-orange-50 shadow-lg shadow-black/20 transition hover:border-orange-200/50 hover:bg-orange-400/20"
+          className="shrink-0 rounded-2xl border border-orange-300/40 bg-orange-400/20 px-4 py-2 text-sm font-black text-orange-50 shadow-lg shadow-black/20 transition hover:border-orange-200/50 hover:bg-orange-400/20"
         >
           Menü
         </button>
@@ -192,7 +194,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <ODZInitialSplash active={initialSplash} />
 
       {/* Main */}
-      <main className="relative z-10 pt-16 lg:ml-[292px] lg:pt-0">
+      <main className="relative z-10 pt-[4.25rem] lg:ml-[292px] lg:pt-0">
         <div className="mx-auto min-h-screen w-full max-w-[1520px] px-4 py-5 md:px-6 lg:px-8 lg:py-7">
           {children}
         </div>
@@ -412,18 +414,18 @@ function Sidebar({
 function BrandLogo({ small = false }: { small?: boolean }) {
   if (small) {
     return (
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <div className="text-xl font-black uppercase leading-none tracking-[0.14em] text-white">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="shrink-0">
+          <div className="text-lg font-black uppercase leading-none tracking-[0.14em] text-white sm:text-xl">
             ODZ.
           </div>
 
-          <div className="mt-1 inline-flex rounded-full border border-orange-200/25 bg-white/[0.06] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-orange-100">
+          <div className="mt-1 inline-flex rounded-full border border-orange-200/25 bg-white/[0.06] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.14em] text-orange-100 sm:text-[9px]">
             v1.2
           </div>
         </div>
 
-        <div className="text-xl font-black leading-none">
+        <div className="min-w-0 truncate text-lg font-black leading-none sm:text-xl">
           <span className="text-white">Stahl</span>
           <span className="text-orange-400">Fabrik</span>
         </div>
